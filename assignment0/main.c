@@ -3,6 +3,24 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
+char* substr(char* s, int x, int y) {
+    char* ret = malloc(strlen(s) + 1);
+    char* p = ret;
+    char* q = &s[x];
+
+    if (ret == NULL) {
+        fprintf(stderr, "Can not copy string.");
+        exit(-1);
+    } else {
+        while (x < y) {
+            *p++ = *q++;
+            x++;
+        }
+        *p = '\0';
+    }
+    return ret;
+}
+
 int main(int argc, char* argv[]) {
     static int maxInputFileNameLength = 100;
     static char* outputFileSuffix = "_out.ppm";
@@ -39,43 +57,40 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
-    char inputImSizeKeyword[6];
-    char width[4];
-    char height[4];
-
     int i = 0;
     while (inputFileContents[i] != '\n' && inputFileContents[i] != '\t' && inputFileContents[i] != ' ') {
-        inputImSizeKeyword[i] = inputFileContents[i];
         i++;
     }
-    inputImSizeKeyword[i] = '\0';
+    char* inputImSizeKeyword = substr(inputFileContents, 0, i);
 
     // skip whitespace character.
     i++;
 
-//    while (inputFileContents[i] != '\n' && inputFileContents[i] != '\t' && inputFileContents[i] != ' ') {
-//        printf("%c\n", inputFileContents[i]);
-//        width[i] = inputFileContents[i];
-//        i++;
-//    }
-//    width[i] = '\0';
-//
-//    // skip whitespace character.
-//    i++;
-//
-//    while (inputFileContents[i] != '\n' && inputFileContents[i] != '\t' && inputFileContents[i] != ' ') {
-//        height[i] = inputFileContents[i];
-//        i++;
-//    }
-//    height[i] = '\0';
+    int widthStart = i;
+    while (inputFileContents[i] != '\n' && inputFileContents[i] != '\t' && inputFileContents[i] != ' ') {
+        i++;
+    }
+    char* inputWidth = substr(inputFileContents, widthStart, i);
+
+    // skip whitespace character.
+    i++;
+
+    int heightStart = i;
+    while (inputFileContents[i] != '\n' && inputFileContents[i] != '\t' && inputFileContents[i] != ' ') {
+        i++;
+    }
+    char* inputHeight = substr(inputFileContents, heightStart, i);
 
     if (strcmp(inputImSizeKeyword, "imsize") != 0) {
         fprintf(stderr, "Improper input file format. The keyword 'imsize' must come first.");
     }
 
+    int width = (int) strtol(inputWidth, (char **)NULL, 10);
+    int height = (int) strtol(inputHeight, (char **)NULL, 10);
+
     printf("imsize keyword: %s\n", inputImSizeKeyword);
-    printf("width: %s\n", width);
-    printf("height: %s\n", height);
+    printf("width: %d\n", width);
+    printf("height: %d\n", height);
 
     char outputFileName[maxInputFileNameLength + 9];
     snprintf(outputFileName, sizeof(outputFileName), "%s%s", inputFileName, outputFileSuffix);
