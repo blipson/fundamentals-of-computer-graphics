@@ -5,9 +5,9 @@
 
 static int maxInputFileNameLength = 100;
 /*
- * 17 is the minimum number of chars required to allow for an input.txt file
- * with the maximum display resolution of 7680x4320 with this format:
-                    imsize 7680 4320
+* 17 is the minimum number of chars required to allow for an input.txt file
+* with the maximum display resolution of 7680x4320 with this format:
+                        imsize 7680 4320
 */
 static int maxInputFileSize = 17;
 static char* imSizeKeyword = "imsize";
@@ -15,10 +15,10 @@ static char* outputFileSuffix = "_out.ppm";
 static char* magicNumber = "P3";
 static char* maxColorComponentValue = "255";
 /*
-     * 5 is chosen to ensure a max line length of 70 character. If each pixel
-     * is the maximum character count "255 255 255" with "\t" in between,
-     * it makes 12 char per pixel, meaning 5 pixels per line to stay below 70.
-     */
+* 5 is chosen to ensure a max line length of 70 character. If each pixel
+* is the maximum character count "255 255 255" with "\t" in between,
+* it makes 12 char per pixel, meaning 5 pixels per line to stay below 70.
+*/
 static int maxPixelsOnLine = 5;
 
 char* substr(char* s, int x, int y) {
@@ -70,8 +70,15 @@ void getInputFileContent(char* inputFileName, char* inputFileContents) {
         }
 
         fgets(inputFileContents, maxInputFileSize, inputFilePtr);
+
+        char extraLines[maxInputFileSize];
+        fgets(extraLines, maxInputFileSize, inputFilePtr);
+        if (strlen(extraLines) > 0) {
+            fprintf(stderr, "Improper file format. No extra lines should be included beyond 'imsize <width> <height>'");
+            exit(-1);
+        }
     } else {
-        fprintf(stderr, "Unable to open the input.txt file specified.");
+        fprintf(stderr, "Unable to open the input file specified.");
         exit(-1);
     }
 }
@@ -104,21 +111,31 @@ void readFileContent(char* inputFileContents, char** fileContent) {
         i++;
     }
     fileContent[2] = substr(inputFileContents, heightStart, i);
+
+    int extraStart = i;
+    while (inputFileContents[i] != '\0') {
+        i++;
+    }
+    char* extraInput = substr(inputFileContents, extraStart, i);
+    if (strlen(extraInput) > 1) {
+        fprintf(stderr, "Improper file format. No extra info should be included beyond 'imsize <width> <height>'.");
+        exit(-1);
+    }
 }
 
 void checkFileContent(char** fileContent) {
     if (strcmp(fileContent[0], imSizeKeyword) != 0) {
-        fprintf(stderr, "Improper input.txt file format. The keyword 'imsize' must come first.");
+        fprintf(stderr, "Improper file format. The keyword 'imsize' must come first.");
         exit(-1);
     }
 
-    if (strlen(fileContent[1]) > 4) {
-        fprintf(stderr, "Improper input.txt file format. Width must be max of 4 characters long.");
+    if (strlen(fileContent[1]) > 4 || strlen(fileContent[1]) <= 0) {
+        fprintf(stderr, "Improper file format. Width must be present and be max of 4 characters long.");
         exit(-1);
     }
 
-    if (strlen(fileContent[2]) > 4) {
-        fprintf(stderr, "Improper input.txt file format. Height must be max of 4 characters long.");
+    if (strlen(fileContent[2]) > 4 || strlen(fileContent[2]) <= 0) {
+        fprintf(stderr, "Improper file format. Height must be present and be max of 4 characters long.");
         exit(-1);
     }
 }
@@ -127,11 +144,11 @@ int convertStringToPositiveInt(char* s) {
     char* end;
     int i = (int) strtol(s, &end, 10);
     if (strcmp("", end) != 0 && *end != 0) {
-        fprintf(stderr, "Improper input.txt file format. Width and height must both be valid integers.");
+        fprintf(stderr, "Improper file format. Width and height must both be valid integers.");
         exit(-1);
     }
     if (i < 0) {
-        fprintf(stderr, "Improper input.txt file format. Width and height must both be positive integers.");
+        fprintf(stderr, "Improper file format. Width and height must both be positive integers.");
         exit(-1);
     }
     return i;
