@@ -10,6 +10,16 @@ static int maxInputFileNameLength = 100;
                     imsize 7680 4320
 */
 static int maxInputFileSize = 17;
+static char* imSizeKeyword = "imsize";
+static char* outputFileSuffix = "_out.ppm";
+static char* magicNumber = "P3";
+static char* maxColorComponentValue = "255";
+/*
+     * 5 is chosen to ensure a max line length of 70 character. If each pixel
+     * is the maximum character count "255 255 255" with "\t" in between,
+     * it makes 12 char per pixel, meaning 5 pixels per line to stay below 70.
+     */
+static int maxPixelsOnLine = 5;
 
 char* substr(char* s, int x, int y) {
     char* ret = malloc(strlen(s) + 1);
@@ -97,7 +107,7 @@ void readFileContent(char* inputFileContents, char** fileContent) {
 }
 
 void checkFileContent(char** fileContent) {
-    if (strcmp(fileContent[0], "imsize") != 0) {
+    if (strcmp(fileContent[0], imSizeKeyword) != 0) {
         fprintf(stderr, "Improper input.txt file format. The keyword 'imsize' must come first.");
         exit(-1);
     }
@@ -113,51 +123,33 @@ void checkFileContent(char** fileContent) {
     }
 }
 
-int convertStringToInt(char* s) {
+int convertStringToPositiveInt(char* s) {
     char* end;
     int i = (int) strtol(s, &end, 10);
     if (strcmp("", end) != 0 && *end != 0) {
         fprintf(stderr, "Improper input.txt file format. Width and height must both be valid integers.");
         exit(-1);
     }
+    if (i < 0) {
+        fprintf(stderr, "Improper input.txt file format. Width and height must both be positive integers.");
+        exit(-1);
+    }
     return i;
 }
 
-int main(int argc, char* argv[]) {
-
-    static char* outputFileSuffix = "_out.ppm";
-    static char* imSizeKeyword = "imsize";
-    /*
-     * 5 is chosen to ensure a max line length of 70 character. If each pixel
-     * is the maximum character count "255 255 255" with "\t" in between,
-     * it makes 12 char per pixel, meaning 5 pixels per line to stay below 70.
-     */
-    static int maxPixelsOnLine = 5;
-
-    checkArgs(argc, argv);
-
-    char inputFileContent[maxInputFileSize];
-    getInputFileContent(argv[1], inputFileContent);
-
-    char* fileContent[3];
-    readFileContent(inputFileContent, fileContent);
-    checkFileContent(fileContent);
-
-    int width = convertStringToInt(fileContent[1]);
-    int height = convertStringToInt(fileContent[2]);
-
-    printf("imsize keyword: %s\n", fileContent[0]);
-    printf("width: %d\n", width);
-    printf("height: %d\n", height);
-
-    char outputFileName[maxInputFileNameLength + 9];
-    snprintf(outputFileName, sizeof(outputFileName), "%s%s", argv[1], outputFileSuffix);
+FILE* openOutputFile(char* inputFileName) {
     FILE* outputFilePtr;
+    char outputFileName[maxInputFileNameLength + 9];
+    snprintf(outputFileName, sizeof(outputFileName), "%s%s", inputFileName, outputFileSuffix);
     outputFilePtr = fopen(outputFileName, "w");
+    return outputFilePtr;
+}
 
+void writeHeader(FILE* outputFilePtr, int width, int height) {
+    fprintf(outputFilePtr, "%s\n%d %d\n%s\n", magicNumber, width, height, maxColorComponentValue);
+}
 
-    fprintf(outputFilePtr, "P3\n%d %d\n255\n", width, height);
-
+void writeContents(FILE* outputFilePtr, int width, int height) {
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             fprintf(outputFilePtr, "255 222 111");
@@ -168,7 +160,29 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+}
 
+int main(int argc, char* argv[]) {
+    checkArgs(argc, argv);
+
+    char inputFileContent[maxInputFileSize];
+    getInputFileContent(argv[1], inputFileContent);
+
+    char* fileContent[3];
+    readFileContent(inputFileContent, fileContent);
+    checkFileContent(fileContent);
+
+    int width = convertStringToPositiveInt(fileContent[1]);
+    int height = convertStringToPositiveInt(fileContent[2]);
+
+    printf("imsize keyword: %s\n", fileContent[0]);
+    printf("width: %d\n", width);
+    printf("height: %d\n", height);
+
+    FILE* outputFilePtr = openOutputFile(argv[1]);
+    writeHeader(outputFilePtr, width, height);
+    writeContents(outputFilePtr, width, height);
     fclose(outputFilePtr);
+
     return 0;
 }
