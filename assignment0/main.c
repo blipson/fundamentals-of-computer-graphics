@@ -23,8 +23,20 @@ char* substr(char* s, int x, int y) {
 
 int main(int argc, char* argv[]) {
     static int maxInputFileNameLength = 100;
+    /*
+     * 17 is the minimum number of chars required to allow for an input.txt file
+     * with the maximum display resolution of 7680x4320 with this format:
+                        imsize 7680 4320
+    */
+    static int maxInputFileSize = 17;
     static char* outputFileSuffix = "_out.ppm";
     static char* imSizeKeyword = "imsize";
+    /*
+     * 5 is chosen to ensure a max line length of 70 character. If each pixel
+     * is the maximum character count "255 255 255" with "\t" in between,
+     * it makes 12 char per pixel, meaning 5 pixels per line to stay below 70.
+     */
+    static int maxPixelsOnLine = 5;
 
     char* inputFileName = argv[1];
 
@@ -33,11 +45,7 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
-    /* 17 is the minimum number of chars required to allow for an input.txt file
-     * with the maximum display resolution of 7680x4320 with this format:
-                        imsize 7680 4320
-    */
-    static int maxInputFileSize = 17;
+
     FILE* inputFilePtr;
     inputFilePtr = fopen(inputFileName, "r");
     char inputFileContents[maxInputFileSize];
@@ -123,14 +131,13 @@ int main(int argc, char* argv[]) {
 
     fprintf(outputFilePtr, "P3\n%d %d\n255\n", width, height);
 
-    static int maxPixelsOnLine = 5;
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            fprintf(outputFilePtr, "0 0 255");
-            if (w % (maxPixelsOnLine - 1) == (maxPixelsOnLine - 2)) {
+            fprintf(outputFilePtr, "255 222 111");
+            if (w % (maxPixelsOnLine) == (maxPixelsOnLine - 1)) {
                 fprintf(outputFilePtr, "\n");
             } else {
-                fprintf(outputFilePtr, "\t\t\t");
+                fprintf(outputFilePtr, "\t");
             }
         }
     }
