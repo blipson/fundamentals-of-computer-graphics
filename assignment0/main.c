@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
-    /* 17 is the minimum number of chars required to allow for an input file
+    /* 17 is the minimum number of chars required to allow for an input.txt file
      * with the maximum display resolution of 7680x4320 with this format:
                         imsize 7680 4320
     */
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 
         fgets(inputFileContents, maxInputFileSize, inputFilePtr);
     } else {
-        fprintf(stderr, "Unable to open the input file specified.");
+        fprintf(stderr, "Unable to open the input.txt file specified.");
         exit(-1);
     }
 
@@ -82,11 +82,34 @@ int main(int argc, char* argv[]) {
     char* inputHeight = substr(inputFileContents, heightStart, i);
 
     if (strcmp(inputImSizeKeyword, "imsize") != 0) {
-        fprintf(stderr, "Improper input file format. The keyword 'imsize' must come first.");
+        fprintf(stderr, "Improper input.txt file format. The keyword 'imsize' must come first.");
+        exit(-1);
     }
 
-    int width = (int) strtol(inputWidth, (char **)NULL, 10);
-    int height = (int) strtol(inputHeight, (char **)NULL, 10);
+    if (strlen(inputWidth) > 4) {
+        fprintf(stderr, "Improper input.txt file format. Width must be max of 4 characters long.");
+        exit(-1);
+    }
+
+    if (strlen(inputHeight) > 4) {
+        fprintf(stderr, "Improper input.txt file format. Height must be max of 4 characters long.");
+        exit(-1);
+    }
+
+    char* widthEnd;
+    int width = (int) strtol(inputWidth, &widthEnd, 10);
+    if (strcmp("", widthEnd) != 0 && *widthEnd != 0) {
+        fprintf(stderr, "Improper input.txt file format. Width must be a valid integer.");
+        exit(-1);
+    }
+
+
+    char* heightEnd;
+    int height = (int) strtol(inputHeight, &heightEnd, 10);
+    if (strcmp("", heightEnd) != 0 && *heightEnd != 0) {
+        fprintf(stderr, "Improper input.txt file format. Height must be a valid integer.");
+        exit(-1);
+    }
 
     printf("imsize keyword: %s\n", inputImSizeKeyword);
     printf("width: %d\n", width);
@@ -94,15 +117,24 @@ int main(int argc, char* argv[]) {
 
     char outputFileName[maxInputFileNameLength + 9];
     snprintf(outputFileName, sizeof(outputFileName), "%s%s", inputFileName, outputFileSuffix);
-
     FILE* outputFilePtr;
     outputFilePtr = fopen(outputFileName, "w");
 
-    fprintf(outputFilePtr, "P3 4 4 15\n"
-                  "0  0  0    0  0  0    0  0  0   15  0 15\n"
-                  " 0  0  0    0 15  7    0  0  0    0  0  0\n"
-                  " 0  0  0    0  0  0    0 15  7    0  0  0\n"
-                  "15  0 15    0  0  0    0  0  0    0  0  0\n");
+
+    fprintf(outputFilePtr, "P3\n%d %d\n255\n", width, height);
+
+    static int maxPixelsOnLine = 5;
+    for (int h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
+            fprintf(outputFilePtr, "0 0 255");
+            if (w % (maxPixelsOnLine - 1) == (maxPixelsOnLine - 2)) {
+                fprintf(outputFilePtr, "\n");
+            } else {
+                fprintf(outputFilePtr, "\t\t\t");
+            }
+        }
+    }
+
     fclose(outputFilePtr);
     return 0;
 }
