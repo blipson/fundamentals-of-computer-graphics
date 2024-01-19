@@ -53,8 +53,8 @@ void checkArgs(int argc, char* argv[]) {
         exit(-1);
     } else if (argc > 2) {
         if (strcmp(argv[2], "solid") != 0 && strcmp(argv[2], "grid") != 0 && strcmp(argv[2], "mandelbrot") != 0 &&
-                strcmp(argv[2], "julia") != 0) {
-            fprintf(stderr, "Incorrect usage. Pattern options are [solid, grid, mandelbrot, julia].");
+                strcmp(argv[2], "julia") != 0 && strcmp(argv[2], "checkerboard") != 0 && strcmp(argv[2], "gaussian") != 0) {
+            fprintf(stderr, "Incorrect usage. Pattern options are [solid, grid, mandelbrot, julia, checkerboard, gaussian].");
             exit(-1);
         }
     }
@@ -144,12 +144,12 @@ void checkFileContent(char** fileContent) {
     }
 
     if (strlen(fileContent[1]) > 4 || strlen(fileContent[1]) <= 0) {
-        fprintf(stderr, "Improper file format. Width must be present and be max of 4 characters long.");
+        fprintf(stderr, "Improper file format. width must be present and be max of 4 characters long.");
         exit(-1);
     }
 
     if (strlen(fileContent[2]) > 4 || strlen(fileContent[2]) <= 0) {
-        fprintf(stderr, "Improper file format. Height must be present and be max of 4 characters long.");
+        fprintf(stderr, "Improper file format. height must be present and be max of 4 characters long.");
         exit(-1);
     }
 }
@@ -158,11 +158,11 @@ int convertStringToPositiveInt(char* s) {
     char* end;
     int i = (int) strtol(s, &end, 10);
     if (strcmp("", end) != 0 && *end != 0) {
-        fprintf(stderr, "Improper file format. Width and height must both be valid integers.");
+        fprintf(stderr, "Improper file format. width and height must both be valid integers.");
         exit(-1);
     }
     if (i < 0) {
-        fprintf(stderr, "Improper file format. Width and height must both be positive integers.");
+        fprintf(stderr, "Improper file format. width and height must both be positive integers.");
         exit(-1);
     }
     return i;
@@ -316,6 +316,39 @@ void writeJuliaContents(FILE* outputFilePtr, int width, int height) {
     }
 }
 
+void writeCheckerboardContents(FILE* outputFilePtr, int width, int height) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int color = ((x / 32) % 2 == 0) ^ ((y / 32) % 2 == 0) ? 255 : 0;
+            fprintf(outputFilePtr, "%d %d %d", color, color, color);
+            enforceMaxPixelsOnLine(x, outputFilePtr);
+        }
+    }
+}
+
+
+double generateGaussianNoise() {
+    double u1 = ((double)rand() / RAND_MAX);
+    double u2 = ((double)rand() / RAND_MAX);
+    double z = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
+    return (z + 3.0) / 6.0;
+}
+
+void writeGaussianNoiseContents(FILE* outputFilePtr, int width, int height) {
+    double intensity = 30.0;
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            double noise = generateGaussianNoise() * intensity;
+            int color = (int)(noise * 255);
+            fprintf(outputFilePtr, "%d %d %d", color, color, color);
+            RGBColor pixelColor = julia(x, y, width, height, 1000);
+            fprintf(outputFilePtr, "%d %d %d", pixelColor.red, pixelColor.green, pixelColor.blue);
+            enforceMaxPixelsOnLine(x, outputFilePtr);
+        }
+    }
+}
+
+
 int main(int argc, char* argv[]) {
     checkArgs(argc, argv);
 
@@ -344,6 +377,10 @@ int main(int argc, char* argv[]) {
         writeMandelbrotContents(outputFilePtr, width, height);
     } else if (strcmp(optionalPattern, "julia") == 0) {
         writeJuliaContents(outputFilePtr, width, height);
+    } else if (strcmp(optionalPattern, "checkerboard") == 0) {
+        writeCheckerboardContents(outputFilePtr, width, height);
+    } else if (strcmp(optionalPattern, "gaussian") == 0) {
+        writeGaussianNoiseContents(outputFilePtr, width, height);
     }
 
     fclose(outputFilePtr);
