@@ -1,2 +1,2 @@
-assignment0: assignment0.c
-	cc assignment0.c -o assignment0
+assignment0: main.c
+	cc main.c -o assignment0

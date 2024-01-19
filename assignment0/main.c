@@ -41,9 +41,14 @@ char* substr(char* s, int x, int y) {
 }
 
 void checkArgs(int argc, char* argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Incorrect usage. Correct usage is `./assignment0 <path/to/input_file.txt>.");
+    if (argc > 3) {
+        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./assignment0 <path/to/input_file.txt> <pattern>`");
         exit(-1);
+    } else if (argc > 2) {
+        if (strcmp(argv[2], "solid") != 0 && strcmp(argv[2], "grid") != 0) {
+            fprintf(stderr, "Incorrect usage. Pattern options are [solid, grid].");
+            exit(-1);
+        }
     }
 
     if (strlen(argv[1]) > maxInputFileNameLength) {
@@ -167,7 +172,7 @@ void writeHeader(FILE* outputFilePtr, int width, int height) {
     fprintf(outputFilePtr, "%s\n%d %d\n%s\n", magicNumber, width, height, maxColorComponentValue);
 }
 
-void writeContents(FILE* outputFilePtr, int width, int height) {
+void writeSolidColorContents(FILE* outputFilePtr, int width, int height) {
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             fprintf(outputFilePtr, "255 222 111");
@@ -183,6 +188,11 @@ void writeContents(FILE* outputFilePtr, int width, int height) {
 int main(int argc, char* argv[]) {
     checkArgs(argc, argv);
 
+    char* optionalPattern;
+    if (argc == 3) {
+        optionalPattern = argv[2];
+    }
+
     char inputFileContent[maxInputFileSize];
     getInputFileContent(argv[1], inputFileContent);
 
@@ -193,13 +203,11 @@ int main(int argc, char* argv[]) {
     int width = convertStringToPositiveInt(fileContent[1]);
     int height = convertStringToPositiveInt(fileContent[2]);
 
-    printf("imsize keyword: %s\n", fileContent[0]);
-    printf("width: %d\n", width);
-    printf("height: %d\n", height);
-
     FILE* outputFilePtr = openOutputFile(argv[1]);
     writeHeader(outputFilePtr, width, height);
-    writeContents(outputFilePtr, width, height);
+    if (argc == 2 || strcmp(optionalPattern, "solid") == 0) {
+        writeSolidColorContents(outputFilePtr, width, height);
+    }
     fclose(outputFilePtr);
 
     return 0;

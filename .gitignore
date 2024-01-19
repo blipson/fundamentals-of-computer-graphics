@@ -1,5 +1,7 @@
-.DS_Store
 .idea
+.DS_Store
+
+main
 
 assignment0/*.ppm
 assignment0/*.txt
