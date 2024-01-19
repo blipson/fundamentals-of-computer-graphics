@@ -1,6 +1,6 @@
 .DS_Store
 .idea
-cmake-build-debug
-main
+
 assignment0/*.ppm
 assignment0/*.txt
+assignment0/assignment0

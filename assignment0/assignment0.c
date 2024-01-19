@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 
 static int maxInputFileNameLength = 100;
 /*
@@ -157,7 +158,7 @@ int convertStringToPositiveInt(char* s) {
 FILE* openOutputFile(char* inputFileName) {
     FILE* outputFilePtr;
     char outputFileName[maxInputFileNameLength + 9];
-    snprintf(outputFileName, sizeof(outputFileName), "%s%s", inputFileName, outputFileSuffix);
+    snprintf(outputFileName, sizeof(outputFileName), "%s%s", substr(inputFileName, 0, strlen(inputFileName) - 4), outputFileSuffix);
     outputFilePtr = fopen(outputFileName, "w");
     return outputFilePtr;
 }
