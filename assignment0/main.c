@@ -185,6 +185,37 @@ void writeSolidColorContents(FILE* outputFilePtr, int width, int height) {
     }
 }
 
+void writeGridContents(FILE* outputFilePtr, int width, int height) {
+    bool firstColor = true;
+    int pixelNum = 0;
+    int squareSize = width/10;
+    bool dividesWithoutRemainder = width%10 == 0;
+    printf("%d", width/10);
+    for (int h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
+            if (!dividesWithoutRemainder && w == 0) {
+
+            } else if (w % squareSize == 0) {
+                firstColor = !firstColor;
+            }
+            if (firstColor) {
+                fprintf(outputFilePtr, "255 222 111");
+            } else {
+                fprintf(outputFilePtr, "0 0 200");
+            }
+            if (w % (maxPixelsOnLine) == (maxPixelsOnLine - 1)) {
+                fprintf(outputFilePtr, "\n");
+            } else {
+                fprintf(outputFilePtr, "\t");
+            }
+            pixelNum++;
+        }
+        if (h % squareSize == 0) {
+            firstColor = !firstColor;
+        }
+    }
+}
+
 int main(int argc, char* argv[]) {
     checkArgs(argc, argv);
 
@@ -207,6 +238,8 @@ int main(int argc, char* argv[]) {
     writeHeader(outputFilePtr, width, height);
     if (argc == 2 || strcmp(optionalPattern, "solid") == 0) {
         writeSolidColorContents(outputFilePtr, width, height);
+    } else if (strcmp(optionalPattern, "grid") == 0) {
+        writeGridContents(outputFilePtr, width, height);
     }
     fclose(outputFilePtr);
 
