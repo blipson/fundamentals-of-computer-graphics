@@ -161,9 +161,10 @@ int convertStringToPositiveInt(char* s) {
 }
 
 FILE* openOutputFile(char* inputFileName) {
-    FILE* outputFilePtr;
     char outputFileName[maxInputFileNameLength + 9];
     snprintf(outputFileName, sizeof(outputFileName), "%s%s", substr(inputFileName, 0, strlen(inputFileName) - 4), outputFileSuffix);
+
+    FILE* outputFilePtr;
     outputFilePtr = fopen(outputFileName, "w");
     return outputFilePtr;
 }
@@ -172,30 +173,30 @@ void writeHeader(FILE* outputFilePtr, int width, int height) {
     fprintf(outputFilePtr, "%s\n%d %d\n%s\n", magicNumber, width, height, maxColorComponentValue);
 }
 
+void enforceMaxPixelsOnLine(int w, FILE* outputFilePtr) {
+    if (w % (maxPixelsOnLine) == (maxPixelsOnLine - 1)) {
+        fprintf(outputFilePtr, "\n");
+    } else {
+        fprintf(outputFilePtr, "\t");
+    }
+}
+
 void writeSolidColorContents(FILE* outputFilePtr, int width, int height) {
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             fprintf(outputFilePtr, "255 222 111");
-            if (w % (maxPixelsOnLine) == (maxPixelsOnLine - 1)) {
-                fprintf(outputFilePtr, "\n");
-            } else {
-                fprintf(outputFilePtr, "\t");
-            }
+            enforceMaxPixelsOnLine(w, outputFilePtr);
         }
     }
 }
 
 void writeGridContents(FILE* outputFilePtr, int width, int height) {
     bool firstColor = true;
-    int pixelNum = 0;
     int squareSize = width/10;
     bool dividesWithoutRemainder = width%10 == 0;
-    printf("%d", width/10);
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            if (!dividesWithoutRemainder && w == 0) {
-
-            } else if (w % squareSize == 0) {
+            if ((w % squareSize == 0) && (dividesWithoutRemainder || w != 0)) {
                 firstColor = !firstColor;
             }
             if (firstColor) {
@@ -203,12 +204,7 @@ void writeGridContents(FILE* outputFilePtr, int width, int height) {
             } else {
                 fprintf(outputFilePtr, "0 0 200");
             }
-            if (w % (maxPixelsOnLine) == (maxPixelsOnLine - 1)) {
-                fprintf(outputFilePtr, "\n");
-            } else {
-                fprintf(outputFilePtr, "\t");
-            }
-            pixelNum++;
+            enforceMaxPixelsOnLine(w, outputFilePtr);
         }
         if (h % squareSize == 0) {
             firstColor = !firstColor;
@@ -241,7 +237,7 @@ int main(int argc, char* argv[]) {
     } else if (strcmp(optionalPattern, "grid") == 0) {
         writeGridContents(outputFilePtr, width, height);
     }
-    fclose(outputFilePtr);
 
+    fclose(outputFilePtr);
     return 0;
 }
