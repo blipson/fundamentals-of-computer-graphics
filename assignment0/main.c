@@ -3,6 +3,13 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <stdbool.h>
+#include <math.h>
+
+typedef struct {
+    unsigned char red;
+    unsigned char green;
+    unsigned char blue;
+} RGBColor;
 
 static int maxInputFileNameLength = 100;
 /*
@@ -45,8 +52,9 @@ void checkArgs(int argc, char* argv[]) {
         fprintf(stderr, "Incorrect usage. Correct usage is `$ ./assignment0 <path/to/input_file.txt> <pattern>`");
         exit(-1);
     } else if (argc > 2) {
-        if (strcmp(argv[2], "solid") != 0 && strcmp(argv[2], "grid") != 0) {
-            fprintf(stderr, "Incorrect usage. Pattern options are [solid, grid].");
+        if (strcmp(argv[2], "solid") != 0 && strcmp(argv[2], "grid") != 0 && strcmp(argv[2], "mandelbrot") != 0 &&
+                strcmp(argv[2], "julia") != 0) {
+            fprintf(stderr, "Incorrect usage. Pattern options are [solid, grid, mandelbrot, julia].");
             exit(-1);
         }
     }
@@ -173,8 +181,8 @@ void writeHeader(FILE* outputFilePtr, int width, int height) {
     fprintf(outputFilePtr, "%s\n%d %d\n%s\n", magicNumber, width, height, maxColorComponentValue);
 }
 
-void enforceMaxPixelsOnLine(int w, FILE* outputFilePtr) {
-    if (w % (maxPixelsOnLine) == (maxPixelsOnLine - 1)) {
+void enforceMaxPixelsOnLine(int x, FILE* outputFilePtr) {
+    if (x % (maxPixelsOnLine) == (maxPixelsOnLine - 1)) {
         fprintf(outputFilePtr, "\n");
     } else {
         fprintf(outputFilePtr, "\t");
@@ -182,10 +190,10 @@ void enforceMaxPixelsOnLine(int w, FILE* outputFilePtr) {
 }
 
 void writeSolidColorContents(FILE* outputFilePtr, int width, int height) {
-    for (int h = 0; h < height; h++) {
-        for (int w = 0; w < width; w++) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
             fprintf(outputFilePtr, "255 222 111");
-            enforceMaxPixelsOnLine(w, outputFilePtr);
+            enforceMaxPixelsOnLine(x, outputFilePtr);
         }
     }
 }
@@ -194,9 +202,9 @@ void writeGridContents(FILE* outputFilePtr, int width, int height) {
     bool firstColor = true;
     int squareSize = width/10;
     bool dividesWithoutRemainder = width%10 == 0;
-    for (int h = 0; h < height; h++) {
-        for (int w = 0; w < width; w++) {
-            if ((w % squareSize == 0) && (dividesWithoutRemainder || w != 0)) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            if ((x % squareSize == 0) && (dividesWithoutRemainder || x != 0)) {
                 firstColor = !firstColor;
             }
             if (firstColor) {
@@ -204,10 +212,106 @@ void writeGridContents(FILE* outputFilePtr, int width, int height) {
             } else {
                 fprintf(outputFilePtr, "0 0 200");
             }
-            enforceMaxPixelsOnLine(w, outputFilePtr);
+            enforceMaxPixelsOnLine(x, outputFilePtr);
         }
-        if (h % squareSize == 0) {
+        if (y % squareSize == 0) {
             firstColor = !firstColor;
+        }
+    }
+}
+
+RGBColor mandelbrot(int x, int y, int width, int height, int maxIter) {
+    double real = (x - width / 2.0) * 4.0 / width;
+    double imaginary = (y - height / 2.0) * 4.0 / height;
+
+    double realTemp, imagTemp;
+    double realSquared, imagSquared;
+
+    int i = 0;
+
+    realTemp = real;
+    imagTemp = imaginary;
+
+    while (i < maxIter) {
+        realSquared = real * real - imaginary * imaginary;
+        imagSquared = 2.0 * real * imaginary;
+
+        real = realSquared + realTemp;
+        imaginary = imagSquared + imagTemp;
+
+        if (real * real + imaginary * imaginary > 16.0) {
+            break;
+        }
+
+        i++;
+    }
+
+    double squaredMagnitudeLog = log(real * real + imaginary * imaginary) / 2.0;
+    double smoothIterationCount = log(squaredMagnitudeLog / log(2.0)) / log(2.0);
+    i = (int)(i + 1 - smoothIterationCount);
+
+    RGBColor color;
+    color.red = (i * 5) % 255;
+    color.green = (i * 10) % 255;
+    color.blue = (i * 20) % 255;
+
+    if (i >= maxIter) {
+        RGBColor black;
+        black.red = 0;
+        black.green = 0;
+        black.blue = 0;
+        return black;
+    }
+
+    return color;
+}
+
+void writeMandelbrotContents(FILE* outputFilePtr, int width, int height) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            RGBColor pixelColor = mandelbrot(x, y, width, height, 1000);
+            fprintf(outputFilePtr, "%d %d %d", pixelColor.red, pixelColor.green, pixelColor.blue);
+            enforceMaxPixelsOnLine(x, outputFilePtr);
+        }
+    }
+}
+
+RGBColor julia(int x, int y, int width, int height, int maxIter) {
+    double zx = 1.5 * (x - width / 2.0) / (0.5 * width);
+    double zy = (y - height / 2.0) / (0.5 * height);
+
+    double realSquared, imagSquared;
+
+    int i = 0;
+
+    while (i < maxIter) {
+        realSquared = zx * zx - zy * zy;
+        imagSquared = 2.0 * zx * zy;
+
+        zx = realSquared - 0.7;
+        zy = imagSquared + 0.27015;
+
+        if (realSquared + imagSquared > 16.0) {
+            break;
+        }
+
+        i++;
+    }
+
+    RGBColor color;
+    color.red = (i * 5) % 255;
+    color.green = (i * 10) % 255;
+    color.blue = (i * 20) % 255;
+
+    return color;
+}
+
+void writeJuliaContents(FILE* outputFilePtr, int width, int height) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            RGBColor pixelColor = julia(x, y, width, height, 1000);
+            fprintf(outputFilePtr, "%d %d %d", pixelColor.red, pixelColor.green, pixelColor.blue);
+            enforceMaxPixelsOnLine(x, outputFilePtr);
         }
     }
 }
@@ -236,6 +340,10 @@ int main(int argc, char* argv[]) {
         writeSolidColorContents(outputFilePtr, width, height);
     } else if (strcmp(optionalPattern, "grid") == 0) {
         writeGridContents(outputFilePtr, width, height);
+    } else if (strcmp(optionalPattern, "mandelbrot") == 0) {
+        writeMandelbrotContents(outputFilePtr, width, height);
+    } else if (strcmp(optionalPattern, "julia") == 0) {
+        writeJuliaContents(outputFilePtr, width, height);
     }
 
     fclose(outputFilePtr);

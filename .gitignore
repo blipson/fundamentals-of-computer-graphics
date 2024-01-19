@@ -1,6 +1,9 @@
 .idea
 .DS_Store
 
+cmake-build-debug
+main.dSYM
+
 main
 
 assignment0/*.ppm
