@@ -3,7 +3,7 @@
 
 cmake-build-debug
 main.dSYM
-
+*/*.zip
 main
 
 assignment0/*.ppm

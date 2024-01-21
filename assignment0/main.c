@@ -48,7 +48,7 @@ char* substr(char* s, int x, int y) {
 }
 
 void checkArgs(int argc, char* argv[]) {
-    if (argc > 3) {
+    if (argc > 3 || argc < 2) {
         fprintf(stderr, "Incorrect usage. Correct usage is `$ ./assignment0 <path/to/input_file.txt> <pattern>`");
         exit(-1);
     } else if (argc > 2) {
@@ -168,9 +168,9 @@ int convertStringToPositiveInt(char* s) {
     return i;
 }
 
-FILE* openOutputFile(char* inputFileName) {
+FILE* openOutputFile(char* inputFileName, char* optionalPattern) {
     char outputFileName[maxInputFileNameLength + 9];
-    snprintf(outputFileName, sizeof(outputFileName), "%s%s", substr(inputFileName, 0, strlen(inputFileName) - 4), outputFileSuffix);
+    snprintf(outputFileName, sizeof(outputFileName), "%s_%s%s", substr(inputFileName, 0, strlen(inputFileName) - 4), optionalPattern, outputFileSuffix);
 
     FILE* outputFilePtr;
     outputFilePtr = fopen(outputFileName, "w");
@@ -269,14 +269,14 @@ RGBColor mandelbrot(int x, int y, int width, int height, int maxIter) {
 void writeMandelbrotContents(FILE* outputFilePtr, int width, int height) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            RGBColor pixelColor = mandelbrot(x, y, width, height, 1000);
+            RGBColor pixelColor = mandelbrot(x, y, width, height, 100000);
             fprintf(outputFilePtr, "%d %d %d", pixelColor.red, pixelColor.green, pixelColor.blue);
             enforceMaxPixelsOnLine(x, outputFilePtr);
         }
     }
 }
 
-RGBColor julia(int x, int y, int width, int height, int maxIter) {
+RGBColor julia(int x, int y, int width, int height, int maxIter, double realConstant, double imaginaryConstant) {
     double zx = 1.5 * (x - width / 2.0) / (0.5 * width);
     double zy = (y - height / 2.0) / (0.5 * height);
 
@@ -288,8 +288,8 @@ RGBColor julia(int x, int y, int width, int height, int maxIter) {
         realSquared = zx * zx - zy * zy;
         imagSquared = 2.0 * zx * zy;
 
-        zx = realSquared - 0.7;
-        zy = imagSquared + 0.27015;
+        zx = realSquared + realConstant;
+        zy = imagSquared + imaginaryConstant;
 
         if (realSquared + imagSquared > 16.0) {
             break;
@@ -309,7 +309,7 @@ RGBColor julia(int x, int y, int width, int height, int maxIter) {
 void writeJuliaContents(FILE* outputFilePtr, int width, int height) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            RGBColor pixelColor = julia(x, y, width, height, 1000);
+            RGBColor pixelColor = julia(x, y, width, height, 1000000, -0.7, 0.27015);
             fprintf(outputFilePtr, "%d %d %d", pixelColor.red, pixelColor.green, pixelColor.blue);
             enforceMaxPixelsOnLine(x, outputFilePtr);
         }
@@ -341,8 +341,6 @@ void writeGaussianNoiseContents(FILE* outputFilePtr, int width, int height) {
             double noise = generateGaussianNoise() * intensity;
             int color = (int)(noise * 255);
             fprintf(outputFilePtr, "%d %d %d", color, color, color);
-            RGBColor pixelColor = julia(x, y, width, height, 1000);
-            fprintf(outputFilePtr, "%d %d %d", pixelColor.red, pixelColor.green, pixelColor.blue);
             enforceMaxPixelsOnLine(x, outputFilePtr);
         }
     }
@@ -367,7 +365,7 @@ int main(int argc, char* argv[]) {
     int width = convertStringToPositiveInt(fileContent[1]);
     int height = convertStringToPositiveInt(fileContent[2]);
 
-    FILE* outputFilePtr = openOutputFile(argv[1]);
+    FILE* outputFilePtr = openOutputFile(argv[1], argv[2]);
     writeHeader(outputFilePtr, width, height);
     if (argc == 2 || strcmp(optionalPattern, "solid") == 0) {
         writeSolidColorContents(outputFilePtr, width, height);

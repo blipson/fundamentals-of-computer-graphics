@@ -7,7 +7,7 @@ This is a program to generate a valid output file in the ASCII PPM file format.
 # Usage
 `$ ./assignment0 path/to/input.txt <pattern>`
 
-Pattern is an optional param that can be `[solid|grid]`.
+Pattern is an optional param that can be `[solid|grid|mandelbrot|julia|checkerboard|gaussian]`.
 
 # Docs
 The main function calls a number of helper functions. Documentation for those helper functions can be found here.
@@ -15,7 +15,6 @@ The main function calls a number of helper functions. Documentation for those he
 **NOTE: This documentation section is taking the place of explanatory comments baked within my code in order to stay in line with the [industry standard](https://bpoplauschi.github.io/2021/01/20/Clean-Code-Comments-by-Uncle-Bob-part-2.html) on code commenting.**
 
 ### Main
-This function both runs the program, and describes at a high level what's happening within the program. `checkArgs()` will perform validation to ensure that the command line arguments passed in are correct, then it will read the optional `pattern` argument to determine which pattern to draw. Next, it reads the input file contents and validates that it has the correct content. Next it converts the width and height into valid positive integers, throwing exceptions if they're negative or invalid. Finally, it opens the output file and writes the header and content to it. Once finished, it closes the file and ends the program.
 ```c
 int main(int argc, char* argv[]) {
     checkArgs(argc, argv); // Perform validation to ensure the command line args passed in are correct.
@@ -83,8 +82,8 @@ char* substr(char* s, int x, int y) {
 ### checkArgs
 ```c
 void checkArgs(int argc, char* argv[]) {
-    if (argc > 3) {
-        // Too many args passed in.
+    if (argc > 3 || argc < 2) {
+        // Too many or too few args passed in.
         fprintf(stderr, "Incorrect usage. Correct usage is `$ ./assignment0 <path/to/input_file.txt> <pattern>`");
         exit(-1);
     } else if (argc > 2) {
@@ -415,7 +414,7 @@ void writeMandelbrotContents(FILE* outputFilePtr, int width, int height) {
 
 ### writeJuliaContents
 ```c
-RGBColor julia(int x, int y, int width, int height, int maxIter) {
+RGBColor julia(int x, int y, int width, int height, int maxIter, double realConstant, double imaginaryConstant) {
     // Map pixel coordinates to the complex plane
     double zx = 1.5 * (x - width / 2.0) / (0.5 * width);
     double zy = (y - height / 2.0) / (0.5 * height);
@@ -429,8 +428,8 @@ RGBColor julia(int x, int y, int width, int height, int maxIter) {
         imagSquared = 2.0 * zx * zy;
 
         // Update the complex numbers based on the Julia set formula
-        zx = realSquared - 0.7;
-        zy = imagSquared + 0.27015;
+        zx = realSquared + realConstant;
+        zy = imagSquared + imaginaryConstant;
 
         // Check if the point has escaped the set
         if (realSquared + imagSquared > 16.0) {
@@ -454,7 +453,8 @@ void writeJuliaContents(FILE* outputFilePtr, int width, int height) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             // Get the pixel color in the Julia set and write it
-            RGBColor pixelColor = julia(x, y, width, height, 1000);
+            // The constants -0.7 and 0.27015 were chosen to get a "classic" Julia set image
+            RGBColor pixelColor = julia(x, y, width, height, 1000, -0.7, 0.27015);
             fprintf(outputFilePtr, "%d %d %d", pixelColor.red, pixelColor.green, pixelColor.blue);
             enforceMaxPixelsOnLine(x, outputFilePtr);
         }
