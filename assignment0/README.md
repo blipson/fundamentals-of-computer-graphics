@@ -1,6 +1,8 @@
 # Assignment 0
 This is a program to generate a valid output file in the ASCII PPM file format.
 
+I decided to accept `pattern` as a command line argument, rather than as part of my input file, so that I could keep the input files small and concise.
+
 # Building
 `$ make`
 
@@ -271,6 +273,19 @@ void writeHeader(FILE* outputFilePtr, int width, int height) {
 }
 ```
 
+### enforceMaxPixelsOnLine
+```c
+void enforceMaxPixelsOnLine(int x, FILE* outputFilePtr) {
+    if (x % (maxPixelsOnLine) == (maxPixelsOnLine - 1)) {
+        // If we've hit our max number of pixels, go to the next line.
+        fprintf(outputFilePtr, "\n");
+    } else {
+        // Otherwise, put a tab between pixels for easy reading.
+        fprintf(outputFilePtr, "\t");
+    }
+}
+```
+
 ### writeSolidColorContents
 ```c
 void enforceMaxPixelsOnLine(int x, FILE* outputFilePtr) {
@@ -298,24 +313,14 @@ void writeSolidColorContents(FILE* outputFilePtr, int width, int height) {
 
 ### writeGridContents
 ```c
-void enforceMaxPixelsOnLine(int x, FILE* outputFilePtr) {
-    if (x % (maxPixelsOnLine) == (maxPixelsOnLine - 1)) {
-        // If we've hit our max number of pixels, go to the next line.
-        fprintf(outputFilePtr, "\n");
-    } else {
-        // Otherwise, put a tab between pixels for easy reading.
-        fprintf(outputFilePtr, "\t");
-    }
-}
-
 void writeGridContents(FILE* outputFilePtr, int width, int height) {
     // Use a boolean to track which color we're currently writing.
     bool firstColor = true;
     // Determine the square size based on the width. This allows it to scale to any resolution.
     // There will always be 10 total full squares.
-    int squareSize = width/10;
+    int squareSize = width / 10;
     // We'll need to know if the width is divisible by 10 for the later logic.
-    bool dividesWithoutRemainder = width%10 == 0;
+    bool dividesWithoutRemainder = width % 10 == 0;
     // Loop through the height and width.
     for (int y = 0; y < height; y++) {
         for (int x = 0; w < width; x++) {
@@ -326,15 +331,11 @@ void writeGridContents(FILE* outputFilePtr, int width, int height) {
                 // The last check for w != 0 handles flipping the color when you go to the next row.
                 firstColor = !firstColor;
             }
+            RGBColor color;
             
-            // Choose between the two colors based on the boolean.
-            if (firstColor) {
-                // I chose yellow because I like yellow.
-                fprintf(outputFilePtr, "255 222 111");
-            } else {
-                // I chose blue because I like blue.
-                fprintf(outputFilePtr, "0 0 200");
-            }
+            // Choose between white or black based on the boolean.
+            int color = firstColor ? 255 : 0;
+            fprintf(outputFilePtr, "%d %d %d", color, color, color);
             enforceMaxPixelsOnLine(w, outputFilePtr);
         }
         // Flip the color based on the rows as well so that we get a grid instead of lines.
@@ -456,6 +457,45 @@ void writeJuliaContents(FILE* outputFilePtr, int width, int height) {
             // The constants -0.7 and 0.27015 were chosen to get a "classic" Julia set image
             RGBColor pixelColor = julia(x, y, width, height, 1000, -0.7, 0.27015);
             fprintf(outputFilePtr, "%d %d %d", pixelColor.red, pixelColor.green, pixelColor.blue);
+            enforceMaxPixelsOnLine(x, outputFilePtr);
+        }
+    }
+}
+```
+
+### writeCheckerboardContents
+```c
+int pointInsideCircle(int x, int y, int centerX, int centerY, int radius) {
+    int distance = (x - centerX) * (x - centerX) + (y - centerY) * (y - centerY);
+    return distance <= radius * radius;
+}
+
+void writeCheckerboardContents(FILE* outputFilePtr, int width, int height) {
+    // Second implementation of a grid algorithm.
+    // Determine the square size based on the width. This allows it to scale to any resolution.
+    // There will always be 10 total full squares.
+    int squareSize = width / 10;
+    // Loop through the height and width.
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+           // Flip the color if we've reached our square size of 10 pixels
+            bool alternatingColor = ((x / squareSize) % 2 == 0) ^ ((y / squareSize) % 2 == 0);
+            RGBColor color;
+            // red vs black depending on the alternating color.
+            int gridColor = alternatingColor ? 255 : 0;
+            color.red = gridColor;
+            color.green = 0;
+            color.blue = 0;
+            int circleX = x % squareSize;
+            int circleY = y % squareSize;
+            // Check if the point is inside the circle for our checker piece.
+            if (pointInsideCircle(circleX, circleY, squareSize / 2, squareSize / 2, squareSize / 3)) {
+                // If it is, make it the opposide color of the background.
+                color.red = alternatingColor ? 0 : 255;
+                color.green = 0;
+                color.blue = 0;
+            }
+            fprintf(outputFilePtr, "%d %d %d", color.red, color.green, color.blue);
             enforceMaxPixelsOnLine(x, outputFilePtr);
         }
     }

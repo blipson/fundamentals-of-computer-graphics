@@ -200,18 +200,15 @@ void writeSolidColorContents(FILE* outputFilePtr, int width, int height) {
 
 void writeGridContents(FILE* outputFilePtr, int width, int height) {
     bool firstColor = true;
-    int squareSize = width/10;
-    bool dividesWithoutRemainder = width%10 == 0;
+    int squareSize = width / 10;
+    bool dividesWithoutRemainder = width % 10 == 0;
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             if ((x % squareSize == 0) && (dividesWithoutRemainder || x != 0)) {
                 firstColor = !firstColor;
             }
-            if (firstColor) {
-                fprintf(outputFilePtr, "255 222 111");
-            } else {
-                fprintf(outputFilePtr, "0 0 200");
-            }
+            int color = firstColor ? 255 : 0;
+            fprintf(outputFilePtr, "%d %d %d", color, color, color);
             enforceMaxPixelsOnLine(x, outputFilePtr);
         }
         if (y % squareSize == 0) {
@@ -316,16 +313,33 @@ void writeJuliaContents(FILE* outputFilePtr, int width, int height) {
     }
 }
 
+int pointInsideCircle(int x, int y, int centerX, int centerY, int radius) {
+    int distance = (x - centerX) * (x - centerX) + (y - centerY) * (y - centerY);
+    return distance <= radius * radius;
+}
+
 void writeCheckerboardContents(FILE* outputFilePtr, int width, int height) {
+    int squareSize = width / 10;
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            int color = ((x / 32) % 2 == 0) ^ ((y / 32) % 2 == 0) ? 255 : 0;
-            fprintf(outputFilePtr, "%d %d %d", color, color, color);
+            bool alternatingColor = ((x / squareSize) % 2 == 0) ^ ((y / squareSize) % 2 == 0);
+            RGBColor color;
+            int gridColor = alternatingColor ? 255 : 0;
+            color.red = gridColor;
+            color.green = 0;
+            color.blue = 0;
+            int circleX = x % squareSize;
+            int circleY = y % squareSize;
+            if (pointInsideCircle(circleX, circleY, squareSize / 2, squareSize / 2, squareSize / 3)) {
+                color.red = alternatingColor ? 0 : 255;
+                color.green = 0;
+                color.blue = 0;
+            }
+            fprintf(outputFilePtr, "%d %d %d", color.red, color.green, color.blue);
             enforceMaxPixelsOnLine(x, outputFilePtr);
         }
     }
 }
-
 
 double generateGaussianNoise() {
     double u1 = ((double)rand() / RAND_MAX);
