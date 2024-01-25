@@ -1,0 +1,10 @@
+eye 1 2 3
+viewdir 1 2 3
+updir 1 2 3
+hfoy 12
+imsize 7680 4320
+bkgcolor 1 1 1
+mtlcolor 1 1 1
+sphere 1 1 1 1
+parallel 1
+ellipse 123 123 123 123 123 123
