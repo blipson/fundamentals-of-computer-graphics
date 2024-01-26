@@ -79,7 +79,6 @@ int main(int argc, char* argv[]) {
             while (inputFileWordsByLine[objectLine][0] != NULL &&
                     strcmp(inputFileWordsByLine[objectLine][0], "mtlcolor") != 0) {
                 if (strcmp(inputFileWordsByLine[objectLine][0], "sphere") == 0) {
-                    printf("adding sphere...");
                     Sphere* newSpheres = (Sphere *) realloc(spheres, (sphereCount + 1) * sizeof(Sphere));
                     if (newSpheres == NULL) {
                         fprintf(stderr, "Memory allocation failed for sphere.");
