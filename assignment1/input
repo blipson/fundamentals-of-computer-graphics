@@ -3,7 +3,7 @@ updir 1 2 3
 hfov 12
 bkgcolor 1 2 3
 eye 1 2 3
-imsize 7680 4320
+imsize 1920 1080
 parallel 1
 
 mtlcolor 1 2 3

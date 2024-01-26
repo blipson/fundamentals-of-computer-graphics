@@ -1,4 +1,5 @@
 #include "inputhandler.h"
+#include "outputhandler.h"
 
 int main(int argc, char* argv[]) {
     checkArgs(argc, argv);
@@ -16,12 +17,16 @@ int main(int argc, char* argv[]) {
     int mtlColorCount = 0;
 
     int line = 0;
-    readInputHeader(inputFileWordsByLine, &line, &eye, &viewDir, &upDir, &hfov, &imSize, &bkgColor, &parallel);
+    readInputScene(inputFileWordsByLine, &line, &eye, &viewDir, &upDir, &hfov, &imSize, &bkgColor, &parallel);
     readInputObjects(inputFileWordsByLine, &line, &mtlColors, &mtlColorCount);
 
     freeInputFileWordsByLine(inputFileWordsByLine);
 
     printInput(eye, viewDir, upDir, hfov, imSize, bkgColor, parallel, mtlColors, mtlColorCount);
+
+    FILE* outputFilePtr = openOutputFile(argv[1]);
+    writeHeader(outputFilePtr, imSize.width, imSize.height);
+    writeJuliaContents(outputFilePtr, imSize.width, imSize.height);
 
     freeInput(mtlColors, mtlColorCount);
     exit(0);

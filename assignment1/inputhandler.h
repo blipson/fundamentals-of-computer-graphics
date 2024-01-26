@@ -156,7 +156,7 @@ int convertStringToInt(char* s) {
     return i;
 }
 
-void readInputHeader(
+void readInputScene(
         char*** inputFileWordsByLine,
         int* line,
         VectorOrPoint3D* eye,
