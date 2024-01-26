@@ -1,5 +1,5 @@
-#ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_INPUTOUTPUTHANDLER_H
-#define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_INPUTOUTPUTHANDLER_H
+#ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_INPUTHANDLER_H
+#define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_INPUTHANDLER_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,8 +8,8 @@
 #include <stdbool.h>
 #include <_ctype.h>
 
-#define MAX_LINE_COUNT 5000
-#define MAX_WORDS_PER_LINE 8
+#define MAX_LINE_COUNT 500
+#define MAX_WORDS_PER_LINE 8 // This will wrap if they have more than this many words in a line and cause weird behavior
 #define MAX_LINE_LENGTH 33
 #define KEYWORD_COUNT 10
 
@@ -18,7 +18,6 @@ void checkArgs(int argc, char* argv[]) {
         fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1a <path/to/input_file>`");
         exit(-1);
     }
-// todo: uncomment
 //    if (strcmp(argv[0], "./raytracer1a") != 0) {
 //        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1a <path/to/input_file>`");
 //        exit(-1);
@@ -44,7 +43,7 @@ char* substr(char* s, int x, int y) {
 }
 
 char** readLine(char* line, char** wordsInLine) {
-    char* delimiters = " \t";
+    char* delimiters = " \t\n";
     char* token = strtok(line, delimiters);
     int wordIdx = 0;
 
@@ -80,27 +79,13 @@ char** readLine(char* line, char** wordsInLine) {
 }
 
 bool isKeyword(const char* target) {
-    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfoy", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse"};
+    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse"};
     for (size_t i = 0; i < KEYWORD_COUNT; i++) {
         if (strcmp(target, keywords[i]) == 0) {
             return true;
         }
     }
     return false;
-}
-
-int convertStringToPositiveInt(char* s) {
-    char* end;
-    int i = (int) strtol(s, &end, 10);
-    if (strcmp("", end) != 0 && *end != 0) {
-        fprintf(stderr, "Improper file format. All values must be valid integers.");
-        exit(-1);
-    }
-    if (i < 0) {
-        fprintf(stderr, "Improper file format. All values must be positive integers.");
-        exit(-1);
-    }
-    return i;
 }
 
 char*** readInputFile(char* inputFileName) {
@@ -120,10 +105,16 @@ char*** readInputFile(char* inputFileName) {
         char currentLine[MAX_LINE_LENGTH];
         int line = 0;
         while (
-                line < MAX_LINE_COUNT &&
                 (inputFileWordsByLine[line] = malloc(MAX_WORDS_PER_LINE * sizeof(char*))) != NULL &&
                 fgets(currentLine, MAX_LINE_LENGTH, inputFilePtr) != NULL
         ) {
+            if (currentLine[0] == '\n' || currentLine[0] == '\0') {
+                continue;
+            }
+            if (line > MAX_LINE_COUNT) {
+                fprintf(stderr, "Invalid file format. Too many lines.");
+                exit(-1);
+            }
             readLine(currentLine, inputFileWordsByLine[line]);
             if (!isKeyword(inputFileWordsByLine[line][0])) {
                 fprintf(stderr, "Invalid keyword in input file: %s", inputFileWordsByLine[line][0]);
