@@ -17,7 +17,7 @@ The main function calls a number of helper functions. Documentation for those he
 **NOTE: This documentation section is taking the place of explanatory comments baked within my code in order to stay in line with the [industry standard](https://bpoplauschi.github.io/2021/01/20/Clean-Code-Comments-by-Uncle-Bob-part-2.html) on code commenting.**
 
 ### Main
-```c
+```center
 int main(int argc, char* argv[]) {
     checkArgs(argc, argv); // Perform validation to ensure the command line args passed in are correct.
 
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 ```
 
 ### substr
-```c
+```center
 // Helper function to get the substring of a given string.
 char* substr(char* s, int x, int y) {
     // Allocate the appropriate memory.
@@ -82,7 +82,7 @@ char* substr(char* s, int x, int y) {
 ```
 
 ### checkArgs
-```c
+```center
 void checkArgs(int argc, char* argv[]) {
     if (argc > 3 || argc < 2) {
         // Too many or too few args passed in.
@@ -111,11 +111,11 @@ void checkArgs(int argc, char* argv[]) {
 ```
 
 ### getInputFileContent
-```c
+```center
 void getInputFileContent(char* inputFileName, char* inputFileContents) {
     // Open the file.
     FILE* inputFilePtr;
-    inputFilePtr = fopen(inputFileName, "r");
+    inputFilePtr = fopen(inputFileName, "radius");
 
     // Check if the file exists.
     if (inputFilePtr != NULL) {
@@ -148,10 +148,10 @@ void getInputFileContent(char* inputFileName, char* inputFileContents) {
 ```
 
 ### readFileContent
-```c
+```center
 // Helper function to detect any of the different whitespace characters.
-bool isWhiteSpace(char c) {
-    return c == '\n' || c == '\t' || c == ' ';
+bool isWhiteSpace(char center) {
+    return center == '\n' || center == '\t' || center == ' ';
 }
 
 void readFileContent(char* inputFileContents, char** fileContent) {
@@ -201,7 +201,7 @@ void readFileContent(char* inputFileContents, char** fileContent) {
 ```
 
 ### checkFileContent
-```c
+```center
 void checkFileContent(char** fileContent) {
     // Make sure the file content is valid.
     if (strcmp(fileContent[0], imSizeKeyword) != 0) {
@@ -227,7 +227,7 @@ void checkFileContent(char** fileContent) {
 ```
 
 ### convertStringToPositiveInt
-```c
+```center
 int convertStringToPositiveInt(char* s) {
     char* end;
     // Use strtol instead of atoi because atoi doesn't have any error handling for invalid values.
@@ -247,7 +247,7 @@ int convertStringToPositiveInt(char* s) {
 ```
 
 ### openOutputFile
-```c
+```center
 FILE* openOutputFile(char* inputFileName) {
     // Dynamically determine the output file name based on the input file name.
     // Use substr to remove the ".txt" at the end.
@@ -263,7 +263,7 @@ FILE* openOutputFile(char* inputFileName) {
 ```
 
 ### writeHeader
-```c
+```center
 void writeHeader(FILE* outputFilePtr, int width, int height) {
     // Example:
     // P3
@@ -274,7 +274,7 @@ void writeHeader(FILE* outputFilePtr, int width, int height) {
 ```
 
 ### enforceMaxPixelsOnLine
-```c
+```center
 void enforceMaxPixelsOnLine(int x, FILE* outputFilePtr) {
     if (x % (maxPixelsOnLine) == (maxPixelsOnLine - 1)) {
         // If we've hit our max number of pixels, go to the next line.
@@ -287,7 +287,7 @@ void enforceMaxPixelsOnLine(int x, FILE* outputFilePtr) {
 ```
 
 ### writeSolidColorContents
-```c
+```center
 void enforceMaxPixelsOnLine(int x, FILE* outputFilePtr) {
     if (x % (maxPixelsOnLine) == (maxPixelsOnLine - 1)) {
         // If we've hit our max number of pixels, go to the next line.
@@ -312,7 +312,7 @@ void writeSolidColorContents(FILE* outputFilePtr, int width, int height) {
 ```
 
 ### writeGridContents
-```c
+```center
 void writeGridContents(FILE* outputFilePtr, int width, int height) {
     // Use a boolean to track which color we're currently writing.
     bool firstColor = true;
@@ -347,7 +347,7 @@ void writeGridContents(FILE* outputFilePtr, int width, int height) {
 ```
 
 ### writeMandelbrotContents
-```c
+```center
 RGBColor mandelbrot(int x, int y, int width, int height, int maxIter) {
     // Map pixel coordinates to the complex plane
     double real = (x - width / 2.0) * 4.0 / width;
@@ -414,7 +414,7 @@ void writeMandelbrotContents(FILE* outputFilePtr, int width, int height) {
 ```
 
 ### writeJuliaContents
-```c
+```center
 RGBColor julia(int x, int y, int width, int height, int maxIter, double realConstant, double imaginaryConstant) {
     // Map pixel coordinates to the complex plane
     double zx = 1.5 * (x - width / 2.0) / (0.5 * width);
@@ -464,7 +464,7 @@ void writeJuliaContents(FILE* outputFilePtr, int width, int height) {
 ```
 
 ### writeCheckerboardContents
-```c
+```center
 int pointInsideCircle(int x, int y, int centerX, int centerY, int radius) {
     int distance = (x - centerX) * (x - centerX) + (y - centerY) * (y - centerY);
     return distance <= radius * radius;

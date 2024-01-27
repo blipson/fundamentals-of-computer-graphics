@@ -2,14 +2,14 @@
 #define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_TYPES_H
 
 typedef struct {
-    int x;
-    int y;
-    int z;
-} VectorOrPoint3D;
+    double x;
+    double y;
+    double z;
+} Vector3;
 
 typedef struct {
-    int h;
-} HorizontalFOV;
+    double h;
+} FieldOfView;
 
 typedef struct {
     int width;
@@ -23,23 +23,17 @@ typedef struct {
 } RGBColor;
 
 typedef struct {
-    int frustumWidth;
+    double frustumWidth;
 } Parallel;
 
 typedef struct {
-    int x;
-    int y;
-    int z;
-    int r;
+    Vector3 center;
+    double radius;
 } Sphere;
 
 typedef struct {
-    int cx;
-    int cy;
-    int cz;
-    int rx;
-    int ry;
-    int rz;
+    Vector3 center;
+    Vector3 radius;
 } Ellipse;
 
 typedef struct {
@@ -49,5 +43,17 @@ typedef struct {
     Ellipse* ellipses;
     int ellipseCount;
 } MtlColor;
+
+typedef struct {
+    Vector3 eye;
+    Vector3 viewDir;
+    Vector3 upDir;
+    FieldOfView fov;
+    ImSize imSize;
+    RGBColor bkgColor;
+    Parallel parallel;
+    MtlColor* mtlColors;
+    int mtlColorCount;
+} Scene;
 
 #endif
