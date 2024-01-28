@@ -72,7 +72,7 @@ Vector3 divide(Vector3 v, double c) {
     return divided;
 }
 
-Vector3 createRay(Scene scene, int x, int y) {
+Ray createRay(Scene scene, int x, int y) {
     // define the viewing parameters?
     // Q: why is it more computationally efficient to start with u and not v?
     // Q: why do we normalize w and u but not v?
@@ -116,14 +116,18 @@ Vector3 createRay(Scene scene, int x, int y) {
     Vector3 dh = divide(subtract(ur, ul), (scene.imSize.width - 1));
     Vector3 dv = divide(subtract(ll, ul), (scene.imSize.height - 1));
     Vector3 viewingWindowLocation = add(add(ul, multiply(dh, x)), multiply(dv, y));
-    return viewingWindowLocation;
+    Ray ray = {
+            .origin = scene.eye,
+            .direction = viewingWindowLocation
+    };
+    return ray;
 }
 
-bool intersects(Vector3 ray, Sphere sphere, Vector3 eye) {
-    Vector3 rayDir = normalize(subtract(ray, eye));
+bool intersects(Ray ray, Sphere sphere) {
+    Vector3 rayDir = normalize(subtract(ray.direction, ray.origin));
     double A = (rayDir.x * rayDir.x) + (rayDir.y * rayDir.y) + (rayDir.z * rayDir.z);
-    double B = 2 * ((rayDir.x * (eye.x - sphere.center.x)) + (rayDir.y * (eye.y - sphere.center.y)) + (rayDir.z * (eye.z - sphere.center.z)));
-    double C = ((eye.x - sphere.center.x) * (eye.x - sphere.center.x)) + ((eye.y - sphere.center.y) * (eye.y - sphere.center.y)) + ((eye.z - sphere.center.z) * (eye.z - sphere.center.z)) - (sphere.radius * sphere.radius);
+    double B = 2 * ((rayDir.x * (ray.origin.x - sphere.center.x)) + (rayDir.y * (ray.origin.y - sphere.center.y)) + (rayDir.z * (ray.origin.z - sphere.center.z)));
+    double C = ((ray.origin.x - sphere.center.x) * (ray.origin.x - sphere.center.x)) + ((ray.origin.y - sphere.center.y) * (ray.origin.y - sphere.center.y)) + ((ray.origin.z - sphere.center.z) * (ray.origin.z - sphere.center.z)) - (sphere.radius * sphere.radius);
 
     double discriminant = B * B - 4 * A * C;
 

@@ -7,11 +7,7 @@ typedef struct {
     double z;
 } Vector3;
 
-typedef struct {
-    double x;
-    double y;
-    double z;
-} Point3;
+// should I have a Point3???
 
 typedef struct {
     Vector3 direction;
@@ -39,14 +35,14 @@ typedef struct {
 } Parallel;
 
 typedef struct {
-    Point3 center;
+    Vector3 center;
     double radius;
     int mtlColorIdx;
 } Sphere;
 
 typedef struct {
-    Point3 center;
-    Point3 radius;
+    Vector3 center;
+    Vector3 radius;
     int mtlColorIdx;
 } Ellipse;
 

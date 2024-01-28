@@ -239,7 +239,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                     }
                     (*scene).spheres = newSpheres;
                     // todo: handle if there's too many or two few values in any
-                    Point3 spherePosition = {
+                    Vector3 spherePosition = {
                             .x = convertStringToDouble(inputFileWordsByLine[objectLine][1]),
                             .y = convertStringToDouble(inputFileWordsByLine[objectLine][2]),
                             .z = convertStringToDouble(inputFileWordsByLine[objectLine][3])
@@ -255,12 +255,12 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                         exit(-1);
                     }
                     (*scene).ellipses = newEllipses;
-                    Point3 ellipseCenter = {
+                    Vector3 ellipseCenter = {
                             .x = convertStringToDouble(inputFileWordsByLine[objectLine][1]),
                             .y = convertStringToDouble(inputFileWordsByLine[objectLine][2]),
                             .z = convertStringToDouble(inputFileWordsByLine[objectLine][3])
                     };
-                    Point3 ellipseRadius = {
+                    Vector3 ellipseRadius = {
                             .x = convertStringToDouble(inputFileWordsByLine[objectLine][4]),
                             .y = convertStringToDouble(inputFileWordsByLine[objectLine][5]),
                             .z = convertStringToDouble(inputFileWordsByLine[objectLine][6])
