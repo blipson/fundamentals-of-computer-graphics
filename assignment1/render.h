@@ -3,6 +3,7 @@
 
 #include <math.h>
 
+// Q: why did she use float instead of double?
 double magnitude(Vector3 v) {
     return sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
 }
@@ -71,10 +72,6 @@ Vector3 divide(Vector3 v, double c) {
     return divided;
 }
 
-void printVector3(Vector3 v) {
-    printf("{ %lf, %lf, %lf }\n", v.x, v.y, v.z);
-}
-
 Vector3 createRay(Scene scene, int x, int y) {
     // define the viewing parameters?
     // Q: why is it more computationally efficient to start with u and not v?
@@ -122,6 +119,26 @@ Vector3 createRay(Scene scene, int x, int y) {
     return viewingWindowLocation;
 }
 
+bool intersects(Vector3 ray, Sphere sphere, Vector3 eye) {
+    Vector3 rayDir = normalize(subtract(ray, eye));
+    double A = (rayDir.x * rayDir.x) + (rayDir.y * rayDir.y) + (rayDir.z * rayDir.z);
+    double B = 2 * ((rayDir.x * (eye.x - sphere.center.x)) + (rayDir.y * (eye.y - sphere.center.y)) + (rayDir.z * (eye.z - sphere.center.z)));
+    double C = ((eye.x - sphere.center.x) * (eye.x - sphere.center.x)) + ((eye.y - sphere.center.y) * (eye.y - sphere.center.y)) + ((eye.z - sphere.center.z) * (eye.z - sphere.center.z)) - (sphere.radius * sphere.radius);
 
+    double discriminant = B * B - 4 * A * C;
+
+    if (discriminant >= 0) {
+        double sqrtDiscriminant = sqrt(discriminant);
+        double t1 = (-B + sqrtDiscriminant) / (2 * A);
+        double t2 = (-B - sqrtDiscriminant) / (2 * A);
+
+        // Check if either t1 or t2 is greater than or equal to 0
+        if (t1 >= 0 || t2 >= 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 #endif

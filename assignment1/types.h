@@ -8,6 +8,17 @@ typedef struct {
 } Vector3;
 
 typedef struct {
+    double x;
+    double y;
+    double z;
+} Point3;
+
+typedef struct {
+    Vector3 direction;
+    Vector3 origin;
+} Ray;
+
+typedef struct {
     double h;
     double v;
 } FieldOfView;
@@ -28,22 +39,16 @@ typedef struct {
 } Parallel;
 
 typedef struct {
-    Vector3 center;
+    Point3 center;
     double radius;
+    int mtlColorIdx;
 } Sphere;
 
 typedef struct {
-    Vector3 center;
-    Vector3 radius;
+    Point3 center;
+    Point3 radius;
+    int mtlColorIdx;
 } Ellipse;
-
-typedef struct {
-    RGBColor color;
-    Sphere* spheres;
-    int sphereCount;
-    Ellipse* ellipses;
-    int ellipseCount;
-} MtlColor;
 
 typedef struct {
     Vector3 eye;
@@ -53,8 +58,12 @@ typedef struct {
     ImSize imSize;
     RGBColor bkgColor;
     Parallel parallel;
-    MtlColor* mtlColors;
+    RGBColor* mtlColors;
     int mtlColorCount;
+    Sphere* spheres;
+    int sphereCount;
+    Ellipse* ellipses;
+    int ellipseCount;
 } Scene;
 
 #endif

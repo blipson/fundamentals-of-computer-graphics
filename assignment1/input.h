@@ -217,76 +217,62 @@ void readSceneSetup(
 void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     while (inputFileWordsByLine[*line][0] != NULL) {
         if (strcmp(inputFileWordsByLine[*line][0], "mtlcolor") == 0) {
-            Sphere* spheres = NULL;
-            Ellipse* ellipses = NULL;
-            int objectLine = (*line) + 1;
-            int sphereCount = 0;
-            int ellipseCount = 0;
-            while (inputFileWordsByLine[objectLine][0] != NULL &&
-                   strcmp(inputFileWordsByLine[objectLine][0], "mtlcolor") != 0) {
-                if (strcmp(inputFileWordsByLine[objectLine][0], "sphere") == 0) {
-                    Sphere* newSpheres = (Sphere *) realloc(spheres, (sphereCount + 1) * sizeof(Sphere));
-                    if (newSpheres == NULL) {
-                        fprintf(stderr, "Memory allocation failed for sphere.");
-                        exit(-1);
-                    }
-                    spheres = newSpheres;
-                    // todo: handle if there's too many or two few values in any
-                    Vector3 spherePosition = {
-                            .x = convertStringToDouble(inputFileWordsByLine[objectLine][1]),
-                            .y = convertStringToDouble(inputFileWordsByLine[objectLine][2]),
-                            .z = convertStringToDouble(inputFileWordsByLine[objectLine][3])
-                    };
-                    spheres[sphereCount].center = spherePosition;
-                    spheres[sphereCount].radius = convertStringToDouble(inputFileWordsByLine[objectLine][4]);
-                    sphereCount++;
-                } else if (strcmp(inputFileWordsByLine[objectLine][0], "ellipse") == 0) {
-                    Ellipse* newEllipses = (Ellipse *) realloc(ellipses, (ellipseCount + 1) * sizeof(Ellipse));
-                    if (newEllipses == NULL) {
-                        fprintf(stderr, "Memory allocation failed for ellipse.");
-                        exit(-1);
-                    }
-                    ellipses = newEllipses;
-                    Vector3 ellipsePosition = {
-                            .x = convertStringToDouble(inputFileWordsByLine[objectLine][1]),
-                            .y = convertStringToDouble(inputFileWordsByLine[objectLine][2]),
-                            .z = convertStringToDouble(inputFileWordsByLine[objectLine][3])
-                    };
-                    Vector3 ellipseRadius = {
-                            .x = convertStringToDouble(inputFileWordsByLine[objectLine][4]),
-                            .y = convertStringToDouble(inputFileWordsByLine[objectLine][5]),
-                            .z = convertStringToDouble(inputFileWordsByLine[objectLine][6])
-                    };
-                    // todo: handle if there's too many or two few values in any
-                    ellipses[ellipseCount].center.x = convertStringToDouble(inputFileWordsByLine[objectLine][1]);
-                    ellipses[ellipseCount].center.y = convertStringToDouble(inputFileWordsByLine[objectLine][2]);
-                    ellipses[ellipseCount].center.z = convertStringToDouble(inputFileWordsByLine[objectLine][3]);
-                    ellipses[ellipseCount].radius.x = convertStringToDouble(inputFileWordsByLine[objectLine][4]);
-                    ellipses[ellipseCount].radius.y = convertStringToDouble(inputFileWordsByLine[objectLine][5]);
-                    ellipses[ellipseCount].radius.z = convertStringToDouble(inputFileWordsByLine[objectLine][6]);
-                    ellipseCount++;
-                }
-                objectLine++;
-            }
-            MtlColor* newMtlColors = (MtlColor *) realloc((*scene).mtlColors, ((*scene).mtlColorCount + 1) * sizeof(MtlColor));
+            RGBColor* newMtlColors = (RGBColor*) realloc((*scene).mtlColors, ((*scene).mtlColorCount + 1) * sizeof(RGBColor));
             if (newMtlColors == NULL) {
                 fprintf(stderr, "Memory allocation failed for material color.");
                 exit(-1);
             }
             (*scene).mtlColors = newMtlColors;
-
-            RGBColor color;
             // todo: handle if there's too many or two few values in any
-            color.red = convertDoubleToUnsignedChar(convertStringToDouble(inputFileWordsByLine[*line][1]));
-            color.green = convertDoubleToUnsignedChar(convertStringToDouble(inputFileWordsByLine[*line][2]));
-            color.blue = convertDoubleToUnsignedChar(convertStringToDouble(inputFileWordsByLine[*line][3]));
+            (*scene).mtlColors[(*scene).mtlColorCount].red = convertDoubleToUnsignedChar(convertStringToDouble(inputFileWordsByLine[*line][1]));
+            (*scene).mtlColors[(*scene).mtlColorCount].green = convertDoubleToUnsignedChar(convertStringToDouble(inputFileWordsByLine[*line][2]));
+            (*scene).mtlColors[(*scene).mtlColorCount].blue = convertDoubleToUnsignedChar(convertStringToDouble(inputFileWordsByLine[*line][3]));
 
-
-            (*scene).mtlColors[(*scene).mtlColorCount].spheres = spheres;
-            (*scene).mtlColors[(*scene).mtlColorCount].sphereCount = sphereCount;
-            (*scene).mtlColors[(*scene).mtlColorCount].ellipses = ellipses;
-            (*scene).mtlColors[(*scene).mtlColorCount].ellipseCount = ellipseCount;
-            (*scene).mtlColors[(*scene).mtlColorCount].color = color;
+            int objectLine = (*line) + 1;
+            while (inputFileWordsByLine[objectLine][0] != NULL &&
+                   strcmp(inputFileWordsByLine[objectLine][0], "mtlcolor") != 0) {
+                if (strcmp(inputFileWordsByLine[objectLine][0], "sphere") == 0) {
+                    Sphere* newSpheres = (Sphere*) realloc((*scene).spheres, ((*scene).sphereCount + 1) * sizeof(Sphere));
+                    if (newSpheres == NULL) {
+                        fprintf(stderr, "Memory allocation failed for sphere.");
+                        exit(-1);
+                    }
+                    (*scene).spheres = newSpheres;
+                    // todo: handle if there's too many or two few values in any
+                    Point3 spherePosition = {
+                            .x = convertStringToDouble(inputFileWordsByLine[objectLine][1]),
+                            .y = convertStringToDouble(inputFileWordsByLine[objectLine][2]),
+                            .z = convertStringToDouble(inputFileWordsByLine[objectLine][3])
+                    };
+                    (*scene).spheres[(*scene).sphereCount].center = spherePosition;
+                    (*scene).spheres[(*scene).sphereCount].radius = convertStringToDouble(inputFileWordsByLine[objectLine][4]);
+                    (*scene).spheres[(*scene).sphereCount].mtlColorIdx = (*scene).mtlColorCount;
+                    (*scene).sphereCount++;
+                } else if (strcmp(inputFileWordsByLine[objectLine][0], "ellipse") == 0) {
+                    Ellipse* newEllipses = (Ellipse *) realloc((*scene).ellipses, ((*scene).ellipseCount + 1) * sizeof(Ellipse));
+                    if (newEllipses == NULL) {
+                        fprintf(stderr, "Memory allocation failed for ellipse.");
+                        exit(-1);
+                    }
+                    (*scene).ellipses = newEllipses;
+                    Point3 ellipseCenter = {
+                            .x = convertStringToDouble(inputFileWordsByLine[objectLine][1]),
+                            .y = convertStringToDouble(inputFileWordsByLine[objectLine][2]),
+                            .z = convertStringToDouble(inputFileWordsByLine[objectLine][3])
+                    };
+                    Point3 ellipseRadius = {
+                            .x = convertStringToDouble(inputFileWordsByLine[objectLine][4]),
+                            .y = convertStringToDouble(inputFileWordsByLine[objectLine][5]),
+                            .z = convertStringToDouble(inputFileWordsByLine[objectLine][6])
+                    };
+                    // todo: handle if there's too many or two few values in any
+                    (*scene).ellipses[(*scene).ellipseCount].center = ellipseCenter;
+                    (*scene).ellipses[(*scene).ellipseCount].radius = ellipseRadius;
+                    (*scene).ellipses[(*scene).ellipseCount].mtlColorIdx = (*scene).mtlColorCount;
+                    (*scene).ellipseCount++;
+                }
+                objectLine++;
+            }
             (*scene).mtlColorCount++;
             *line = objectLine;
         } else {
@@ -305,32 +291,38 @@ void printInput(Scene scene) {
     printf("parallel: %lf\n", scene.parallel.frustumWidth);
     if (scene.mtlColors != NULL) {
         for (int mtlColorIdx = 0; mtlColorIdx < scene.mtlColorCount; mtlColorIdx++) {
-            printf("mtlcolor: %d %d %d\n", scene.mtlColors[mtlColorIdx].color.red, scene.mtlColors[mtlColorIdx].color.green, scene.mtlColors[mtlColorIdx].color.blue);
-            for (int sphereIdx = 0; sphereIdx < scene.mtlColors[mtlColorIdx].sphereCount; sphereIdx++) {
-                printf("sphere: %lf %lf %lf %lf\n", scene.mtlColors[mtlColorIdx].spheres[sphereIdx].center.x, scene.mtlColors[mtlColorIdx].spheres[sphereIdx].center.y, scene.mtlColors[mtlColorIdx].spheres[sphereIdx].center.z, scene.mtlColors[mtlColorIdx].spheres[sphereIdx].radius);
+            printf("mtlcolor: %d %d %d\n", scene.mtlColors[mtlColorIdx].red, scene.mtlColors[mtlColorIdx].green, scene.mtlColors[mtlColorIdx].blue);
+            for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
+                if (scene.spheres[sphereIdx].mtlColorIdx == mtlColorIdx) {
+                    printf("sphere: %lf %lf %lf %lf\n", scene.spheres[sphereIdx].center.x, scene.spheres[sphereIdx].center.y, scene.spheres[sphereIdx].center.z, scene.spheres[sphereIdx].radius);
+                }
             }
-            for (int ellipseIdx = 0; ellipseIdx < scene.mtlColors[mtlColorIdx].ellipseCount; ellipseIdx++) {
-                printf(
-                        "ellipse: %lf %lf %lf %lf %lf %lf\n",
-                        scene.mtlColors[mtlColorIdx].ellipses[ellipseIdx].center.x,
-                        scene.mtlColors[mtlColorIdx].ellipses[ellipseIdx].center.y,
-                        scene.mtlColors[mtlColorIdx].ellipses[ellipseIdx].center.z,
-                        scene.mtlColors[mtlColorIdx].ellipses[ellipseIdx].radius.x,
-                        scene.mtlColors[mtlColorIdx].ellipses[ellipseIdx].radius.y,
-                        scene.mtlColors[mtlColorIdx].ellipses[ellipseIdx].radius.z
-                );
+            for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
+                if (scene.ellipses[ellipseIdx].mtlColorIdx == mtlColorIdx) {
+                    printf(
+                            "ellipse: %lf %lf %lf %lf %lf %lf\n",
+                            scene.ellipses[ellipseIdx].center.x,
+                            scene.ellipses[ellipseIdx].center.y,
+                            scene.ellipses[ellipseIdx].center.z,
+                            scene.ellipses[ellipseIdx].radius.x,
+                            scene.ellipses[ellipseIdx].radius.y,
+                            scene.ellipses[ellipseIdx].radius.z
+                    );
+                }
             }
         }
     }
 }
 
-void freeInput(MtlColor* mtlColors, int mtlColorCount) {
-    if (mtlColors != NULL) {
-        for (int i = 0; i < mtlColorCount; i++) {
-            free(mtlColors[i].spheres);
-            free(mtlColors[i].ellipses);
-        }
-        free(mtlColors);
+void freeInput(Scene scene) {
+    if (scene.mtlColors != NULL) {
+        free(scene.mtlColors);
+    }
+    if (scene.spheres != NULL) {
+        free(scene.spheres);
+    }
+    if (scene.ellipses != NULL) {
+        free(scene.ellipses);
     }
 }
 
