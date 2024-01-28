@@ -1,5 +1,5 @@
-#ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_INPUTHANDLER_H
-#define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_INPUTHANDLER_H
+#ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_INPUT_H
+#define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_INPUT_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -177,7 +177,7 @@ unsigned char convertDoubleToUnsignedChar(double normalizedValue) {
     return result;
 }
 
-void readInputScene(
+void readSceneSetup(
         char*** inputFileWordsByLine,
         int* line,
         Scene* scene
@@ -198,6 +198,8 @@ void readInputScene(
             scene->upDir.z = convertStringToDouble(inputFileWordsByLine[*line][3]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "hfov") == 0) {
             scene->fov.h = convertStringToDouble(inputFileWordsByLine[*line][1]);
+            // todo: fov.v
+            // compute the vertical fov angle to match the aspect ratio with the horizontal fov angle
         } else if (strcmp(inputFileWordsByLine[*line][0], "imsize") == 0) {
             scene->imSize.width = convertStringToInt(inputFileWordsByLine[*line][1]);
             scene->imSize.height = convertStringToInt(inputFileWordsByLine[*line][2]);
@@ -212,7 +214,7 @@ void readInputScene(
     }
 }
 
-void readInputObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
+void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     while (inputFileWordsByLine[*line][0] != NULL) {
         if (strcmp(inputFileWordsByLine[*line][0], "mtlcolor") == 0) {
             Sphere* spheres = NULL;

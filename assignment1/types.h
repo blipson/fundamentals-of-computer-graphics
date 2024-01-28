@@ -9,6 +9,7 @@ typedef struct {
 
 typedef struct {
     double h;
+    double v;
 } FieldOfView;
 
 typedef struct {
