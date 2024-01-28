@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 
     char*** inputFileWordsByLine = readInputFile(argv[1]);
 
-    // do we want to default?
+    // Default because the arrays must be instantiated with null to avoid seg faults
     Scene scene = {
             .eye = { .x = 0, .y = 0, .z = 0 },
             .viewDir = { .x = 0, .y = 0, .z = 0 },
