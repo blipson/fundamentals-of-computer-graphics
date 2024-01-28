@@ -73,19 +73,15 @@ Vector3 divide(Vector3 v, double c) {
 Ray createRay(Scene scene, int x, int y) {
     // define the viewing parameters?
     // Q: why is it more computationally efficient to start with u and not v?
-    // Q: why do we normalize w and u but not v?
-    //     I guess v is already normalized because it's taking the cross product of two normalized vectors.
-    //     why normalize at all though?
     // Q: why can't we use triangle rules with cos and sin and tan to define these?
     // Q: can you go over field of view ratio vs aspect ratio again?
     //     why can't we do 0.5 * fov.h when aspect ratio is 2?
     //     why can't we use pythagorean theorem on the fov?
-    // Q: we don't ask the user to specify d. Why not?
 
     // step 1: w u and v
     Vector3 w = normalize(multiply(scene.viewDir, -1));
     Vector3 u = normalize(cross(w, scene.upDir));
-    Vector3 v = normalize(cross(u, w));
+    Vector3 v = cross(u, w);
 
     // step 2: d
     double aspectRatio = (double) scene.imSize.width / (double) scene.imSize.height;
@@ -101,7 +97,7 @@ Ray createRay(Scene scene, int x, int y) {
     Vector3 ul = add(subtract(add(scene.eye, multiply(w, d)), multiply(u, (width/2))), multiply(v, (height/2)));
     Vector3 ur = add(add(add(scene.eye, multiply(w, d)), multiply(u, (width/2))), multiply(v, (height/2)));
     Vector3 ll = add(subtract(subtract(scene.eye, multiply(w, d)), multiply(u, (width/2))), multiply(v, (height/2)));
-    // lr is never used??
+    // Q: lr is never used??
 
     // step 5: change in horizontal and vertical??
     Vector3 dh = divide(subtract(ur, ul), (scene.imSize.width - 1));
@@ -129,7 +125,6 @@ bool intersects(Ray ray, Sphere sphere) {
         double t1 = (-B + sqrtDiscriminant) / (2 * A);
         double t2 = (-B - sqrtDiscriminant) / (2 * A);
 
-        // Check if either t1 or t2 is greater than or equal to 0
         if (t1 >= 0 || t2 >= 0) {
             return true;
         }
