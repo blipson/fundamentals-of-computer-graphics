@@ -1,7 +1,6 @@
 #ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_RENDER_H
 #define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_RENDER_H
 
-
 // Q: why did she use float instead of double?
 double magnitude(Vector3 v) {
     return sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
