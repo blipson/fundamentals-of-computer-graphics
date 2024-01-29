@@ -85,8 +85,8 @@ Ray createRay(Scene scene, int x, int y) {
 
     // step 1: normalize the viewdir w, get the horizontal dir u and the vertical dir v
     Vector3 w = normalize(multiply(scene.viewDir, -1));
-    Vector3 u = normalize(cross(scene.viewDir, scene.upDir));
-    Vector3 v = normalize(cross(u, scene.viewDir));
+    Vector3 u = normalize(cross(w, scene.upDir));
+    Vector3 v = cross(u, w);
 
 
     // step 2: calculate the distance away
