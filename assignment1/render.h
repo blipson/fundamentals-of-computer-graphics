@@ -116,12 +116,8 @@ Ray createRay(Scene scene, int x, int y) {
     Vector3 dh = divide(subtract(ur, ul), (scene.imSize.width - 1));
     Vector3 dv = divide(subtract(ll, ul), (scene.imSize.height - 1));
 
-    // ---- GOOD -----
     // step 6: find the viewing window location
     Vector3 viewingWindowLocation = add(add(ul, multiply(dh, x)), multiply(dv, y));
-    if (x == 15 && y == 17) {
-        printVector(viewingWindowLocation);
-    }
     Ray ray = {
             .origin = scene.eye,
             .direction = normalize(subtract(scene.eye, viewingWindowLocation)),
