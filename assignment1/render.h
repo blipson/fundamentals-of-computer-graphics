@@ -70,6 +70,10 @@ Vector3 divide(Vector3 v, double c) {
     return divided;
 }
 
+void printVector(Vector3 v) {
+    printf("%lf, %lf, %lf\n", v.x, v.y, v.z);
+}
+
 Ray createRay(Scene scene, int x, int y) {
     // Q: why is it more computationally efficient to start with u and not v?
     // Q: why can't we use triangle rules with cos and sin and tan to define these?
@@ -80,7 +84,8 @@ Ray createRay(Scene scene, int x, int y) {
     // step 1: normalize the viewdir w, get the horizontal dir u and the vertical dir v
     Vector3 w = normalize(multiply(scene.viewDir, -1));
     Vector3 u = normalize(cross(scene.viewDir, scene.upDir));
-    Vector3 v = cross(u, scene.viewDir);
+    Vector3 v = normalize(cross(u, scene.viewDir));
+
 
     // step 2: calculate the distance away
     double aspectRatio = (double) scene.imSize.width / scene.imSize.height;
@@ -88,50 +93,37 @@ Ray createRay(Scene scene, int x, int y) {
     // Q: how does d interact with halfWidth halfHeight width and height? How to properly calculate d?
     double d = 1.0;
 
+
     // step 3: width and height of the viewing window
     double width = 2 * d * tan(scene.fov.h / 2);
-    double height = 2 * d * (aspectRatio * tan(scene.fov.h / 2)); // compute the height based on the width
-    printf("(width, height): (%f, %f)\n", width, height);
+    double height = 2 * d * (tan(scene.fov.h / 2) / aspectRatio); // compute the height based on the width
 
     // step 4: 4 corners of the viewing window
     double halfWidth = width/2;
     double halfHeight = height/2;
     Vector3 widthTimesHorizontal = multiply(u, halfWidth);
-    printf("widthTimesHorizontal: %f %f %f\n", widthTimesHorizontal.x, widthTimesHorizontal.y, widthTimesHorizontal.z);
     Vector3 heightTimesVertical = multiply(v, halfHeight);
-    printf("heightTimesVertical: %f %f %f\n", heightTimesVertical.x, heightTimesVertical.y, heightTimesVertical.z);
     Vector3 eyePlusViewVector = add(scene.eye, multiply(w, d));
-    printf("eyePlusViewVector: %f %f %f\n", eyePlusViewVector.x, eyePlusViewVector.y, eyePlusViewVector.z);
     Vector3 perspectiveMinusDimensions = subtract(eyePlusViewVector, widthTimesHorizontal);
-    printf("perspectiveMinusDimensions: %f %f %f\n", perspectiveMinusDimensions.x, perspectiveMinusDimensions.y,perspectiveMinusDimensions.z);
     Vector3 perspectivePlusDimensions = add(eyePlusViewVector, widthTimesHorizontal);
-    printf("perspectivePlusDimensions: %f %f %f\n", perspectivePlusDimensions.x, perspectivePlusDimensions.y, perspectivePlusDimensions.z);
 
     Vector3 ul = add(perspectiveMinusDimensions, heightTimesVertical);
     Vector3 ur = add(perspectivePlusDimensions, heightTimesVertical);
     Vector3 ll = subtract(perspectiveMinusDimensions, heightTimesVertical);
-    Vector3 lr = subtract(perspectivePlusDimensions, heightTimesVertical); // never used??
-
-//    printf("ul: %f %f %f\n", ul.x, ul.y, ul.z);
-//    printf("ur: %f %f %f\n", ur.x, ur.y, ur.z);
-//    printf("ll: %f %f %f\n", ll.x, ll.y, ll.z);
-//    printf("lr: %f %f %f\n", lr.x, lr.y, lr.z);
-
-
+    Vector3 lr = subtract(perspectivePlusDimensions, heightTimesVertical);
 
     // step 5: change in horizontal and vertical??
-    Vector3 test1 = subtract(ur, ul);
-    Vector3 dh = divide(test1, (scene.imSize.width - 1));
-    Vector3 test2 = subtract(ll, ul);
-    Vector3 dv = divide(test2, (scene.imSize.height - 1));
-    printf("dh: %f %f %f\n", dh.x, dh.y, dh.z);
-    printf("dv: %f %f %f\n", dv.x, dv.y, dv.z);
+    Vector3 dh = divide(subtract(ur, ul), (scene.imSize.width - 1));
+    Vector3 dv = divide(subtract(ll, ul), (scene.imSize.height - 1));
 
+    // ---- GOOD -----
     // step 6: find the viewing window location
     Vector3 viewingWindowLocation = add(add(ul, multiply(dh, x)), multiply(dv, y));
+    if (x == 15 && y == 17) {
+        printVector(viewingWindowLocation);
+    }
     Ray ray = {
             .origin = scene.eye,
-            //.direction = normalize(subtract(viewingWindowLocation, scene.eye))
             .direction = normalize(subtract(scene.eye, viewingWindowLocation)),
     };
     return ray;
