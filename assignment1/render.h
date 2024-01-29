@@ -84,15 +84,13 @@ Ray createRay(Scene scene, int x, int y) {
 
     // step 2: calculate the distance away
     double aspectRatio = (double) scene.imSize.width / scene.imSize.height;
-    double tanHFov = tan(scene.fov.h / 2);
-    double tanVFov = tan(scene.fov.h / 2) * aspectRatio;
 
     // Q: how does d interact with halfWidth halfHeight width and height? How to properly calculate d?
-    double d = 1.0 / tanHFov;
+    double d = 1.0;
 
     // step 3: width and height of the viewing window
-    double width = 2 * d * (0.5 * tanHFov);
-    double height = 2 * d * (0.5 * tanVFov);
+    double width = 2 * d * tan(scene.fov.h / 2);
+    double height = 2 * d * (aspectRatio * tan(scene.fov.h / 2)); // compute the height based on the width
 
     // step 4: 4 corners of the viewing window
     Vector3 ul = add(scene.eye, add(multiply(w, -d), subtract(multiply(u, (width/2)), multiply(v, (height/2)))));
