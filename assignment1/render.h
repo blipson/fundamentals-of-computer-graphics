@@ -69,6 +69,7 @@ Vector3 divide(Vector3 v, double c) {
     };
     return divided;
 }
+
 Ray createRay(Scene scene, int x, int y) {
     // Q: why is it more computationally efficient to start with u and not v?
     // Q: why can't we use triangle rules with cos and sin and tan to define these?
@@ -90,8 +91,8 @@ Ray createRay(Scene scene, int x, int y) {
     double d = 1.0 / tanHFov;
 
     // step 3: width and height of the viewing window
-    double width = 2 * d * tan(0.5 * tanHFov);
-    double height = 2 * d * tan(0.5 * tanVFov);
+    double width = 2 * d * (0.5 * tanHFov);
+    double height = 2 * d * (0.5 * tanVFov);
 
     // step 4: 4 corners of the viewing window
     Vector3 ul = add(scene.eye, add(multiply(w, -d), subtract(multiply(u, (width/2)), multiply(v, (height/2)))));
@@ -113,6 +114,7 @@ Ray createRay(Scene scene, int x, int y) {
 }
 
 bool intersects(Ray ray, Sphere sphere) {
+    // what if it intersects two??
     Vector3 rayDir = normalize(subtract(ray.direction, ray.origin));
     double A = (rayDir.x * rayDir.x) + (rayDir.y * rayDir.y) + (rayDir.z * rayDir.z);
     double B = 2 * ((rayDir.x * (ray.origin.x - sphere.center.x)) + (rayDir.y * (ray.origin.y - sphere.center.y)) + (rayDir.z * (ray.origin.z - sphere.center.z)));
