@@ -86,17 +86,25 @@ Ray createRay(Scene scene, int x, int y) {
     double aspectRatio = (double) scene.imSize.width / scene.imSize.height;
 
     // Q: how does d interact with halfWidth halfHeight width and height? How to properly calculate d?
-    double d = 1.0;
+    double d = -1.0;
 
     // step 3: width and height of the viewing window
     double width = 2 * d * tan(scene.fov.h / 2);
     double height = 2 * d * (aspectRatio * tan(scene.fov.h / 2)); // compute the height based on the width
 
     // step 4: 4 corners of the viewing window
-    Vector3 ul = add(scene.eye, add(multiply(w, -d), subtract(multiply(u, (width/2)), multiply(v, (height/2)))));
-    Vector3 ur = add(scene.eye, add(multiply(w, -d), add(multiply(u, (width/2)), multiply(v, (height/2)))));
-    Vector3 ll = add(scene.eye, add(multiply(w, -d), subtract(multiply(u, -(width/2)), multiply(v, (height/2)))));
-    Vector3 lr = add(scene.eye, add(multiply(w, -d), subtract(multiply(u, (width/2)), multiply(v, (height/2)))));
+    double halfWidth = width/2;
+    double halfHeight = height/2;
+    Vector3 widthTimesHorizontal = multiply(u, halfWidth);
+    Vector3 heightTimesVertical = multiply(v, halfHeight);
+    Vector3 eyePlusViewVector = add(scene.eye, multiply(w, d));
+    Vector3 perspectiveMinusDimensions = subtract(eyePlusViewVector, widthTimesHorizontal);
+    Vector3 perspectivePlusDimensions = add(eyePlusViewVector, widthTimesHorizontal);
+
+    Vector3 ul = add(perspectiveMinusDimensions, heightTimesVertical);
+    Vector3 ur = add(perspectivePlusDimensions, heightTimesVertical);
+    Vector3 ll = subtract(perspectiveMinusDimensions, heightTimesVertical);
+    Vector3 lr = subtract(perspectivePlusDimensions, heightTimesVertical); // never used??
 
     // step 5: change in horizontal and vertical??
     Vector3 dh = divide(subtract(ur, ul), (scene.imSize.width - 1));
