@@ -125,26 +125,33 @@ Ray createRay(Scene scene, int x, int y) {
     return ray;
 }
 
-bool intersects(Ray ray, Sphere sphere) {
-    // what if it intersects two??
-    Vector3 rayDir = normalize(subtract(ray.direction, ray.origin));
-    double A = (rayDir.x * rayDir.x) + (rayDir.y * rayDir.y) + (rayDir.z * rayDir.z);
-    double B = 2 * ((rayDir.x * (ray.origin.x - sphere.center.x)) + (rayDir.y * (ray.origin.y - sphere.center.y)) + (rayDir.z * (ray.origin.z - sphere.center.z)));
-    double C = ((ray.origin.x - sphere.center.x) * (ray.origin.x - sphere.center.x)) + ((ray.origin.y - sphere.center.y) * (ray.origin.y - sphere.center.y)) + ((ray.origin.z - sphere.center.z) * (ray.origin.z - sphere.center.z)) - (sphere.radius * sphere.radius);
+RGBColor getPixelColor(Ray ray, Scene scene) {
+    // TODO: ellipses
+    for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
+        Sphere sphere = scene.spheres[sphereIdx];
+        Vector3 rayDir = normalize(subtract(ray.direction, ray.origin));
+        double A = (rayDir.x * rayDir.x) + (rayDir.y * rayDir.y) + (rayDir.z * rayDir.z);
+        double B = 2 * ((rayDir.x * (ray.origin.x - sphere.center.x)) + (rayDir.y * (ray.origin.y - sphere.center.y)) +
+                        (rayDir.z * (ray.origin.z - sphere.center.z)));
+        double C = ((ray.origin.x - sphere.center.x) * (ray.origin.x - sphere.center.x)) +
+                   ((ray.origin.y - sphere.center.y) * (ray.origin.y - sphere.center.y)) +
+                   ((ray.origin.z - sphere.center.z) * (ray.origin.z - sphere.center.z)) -
+                   (sphere.radius * sphere.radius);
 
-    double discriminant = B * B - 4 * A * C;
+        double discriminant = B * B - 4 * A * C;
 
-    if (discriminant >= 0) {
-        double sqrtDiscriminant = sqrt(discriminant);
-        double t1 = (-B + sqrtDiscriminant) / (2 * A);
-        double t2 = (-B - sqrtDiscriminant) / (2 * A);
+        if (discriminant >= 0) {
+            double sqrtDiscriminant = sqrt(discriminant);
+            double t1 = (-B + sqrtDiscriminant) / (2 * A);
+            double t2 = (-B - sqrtDiscriminant) / (2 * A);
 
-        if (t1 >= 0 || t2 >= 0) {
-            return true;
+            if (t1 >= 0 || t2 >= 0) {
+                return scene.mtlColors[sphere.mtlColorIdx];
+            }
         }
     }
 
-    return false;
+    return scene.bkgColor;
 }
 
 #endif

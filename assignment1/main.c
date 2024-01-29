@@ -6,14 +6,7 @@ void render(FILE* outputFilePtr, int width, int height, Scene scene) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             Ray ray = createRay(scene, x, y);
-            for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
-                if (intersects(ray, scene.spheres[sphereIdx])) {
-                    writePixel(outputFilePtr, scene.mtlColors[scene.spheres[sphereIdx].mtlColorIdx], x, width);
-                } else {
-                    writePixel(outputFilePtr, scene.bkgColor, x, width);
-                }
-            }
-            // TODO: ellipses
+            writePixel(outputFilePtr, getPixelColor(ray, scene), x, width);
         }
     }
 }
