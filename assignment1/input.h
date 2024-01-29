@@ -199,7 +199,7 @@ void readSceneSetup(
             scene->upDir.z = convertStringToDouble(inputFileWordsByLine[*line][3]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "hfov") == 0) {
             // TODO: store aspect ratio in scene, or write a helper function.
-            scene->fov.h = convertStringToDouble(inputFileWordsByLine[*line][1]);
+            scene->fov.h = convertStringToDouble(inputFileWordsByLine[*line][1]) * M_PI / 180.0;
         } else if (strcmp(inputFileWordsByLine[*line][0], "imsize") == 0) {
             scene->imSize.width = convertStringToInt(inputFileWordsByLine[*line][1]);
             scene->imSize.height = convertStringToInt(inputFileWordsByLine[*line][2]);
