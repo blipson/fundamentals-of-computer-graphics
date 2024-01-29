@@ -70,21 +70,9 @@ Vector3 divide(Vector3 v, double c) {
     return divided;
 }
 Ray createRay(Scene scene, int x, int y) {
-//    double aspectRatio = (double) scene.imSize.width / scene.imSize.height;
-//    double tanHFov = tan(scene.fov.h / 2 * M_PI / 180.0);
-//    double tanVFov = tan(scene.fov.h / (2 * aspectRatio) * M_PI / 180.0);
-//    double px = (2.0 * x - scene.imSize.width) / scene.imSize.width;
-//    double py = (2.0 * y - scene.imSize.height) / scene.imSize.height;
-//    Vector3 right = normalize(cross(scene.viewDir, scene.upDir));
-//    Vector3 up = normalize(cross(right, scene.viewDir));
-//    Vector3 rayDirection = subtract(scene.viewDir, multiply(right, px * tanHFov));
-//    rayDirection = subtract(rayDirection, multiply(up, py * tanVFov));
-//    rayDirection = normalize(rayDirection);
-//    return (Ray){ rayDirection, scene.eye,};
-    // define the viewing parameters?
     // Q: why is it more computationally efficient to start with u and not v?
     // Q: why can't we use triangle rules with cos and sin and tan to define these?
-    // Q: can you go over field of view ratio vs aspect ratio again?
+    // Q: can you go over field of view ratio vs aspect ratio again? why is it tan?
     //     why can't we do 0.5 * fov.h when aspect ratio is 2?
     //     why can't we use pythagorean theorem on the fov?
 
@@ -95,23 +83,21 @@ Ray createRay(Scene scene, int x, int y) {
 
     // step 2: calculate the distance away
     double aspectRatio = (double) scene.imSize.width / scene.imSize.height;
-    double tanHFov = tan(scene.fov.h / 2 * M_PI / 180.0);
-    double tanVFov = tan(scene.fov.h / (2 * aspectRatio) * M_PI / 180.0);
+    double tanHFov = tan(scene.fov.h / 2);
+    double tanVFov = tan(scene.fov.h / 2) * aspectRatio;
 
     // Q: how does d interact with halfWidth halfHeight width and height? How to properly calculate d?
-    double halfWidth = tan(0.5 * tanHFov * M_PI / 180.0);
-    double halfHeight = halfWidth / aspectRatio;
-    double d = sqrt(halfWidth * halfWidth + halfHeight * halfHeight);
+    double d = 1.0 / tanHFov;
 
     // step 3: width and height of the viewing window
     double width = 2 * d * tan(0.5 * tanHFov);
     double height = 2 * d * tan(0.5 * tanVFov);
 
     // step 4: 4 corners of the viewing window
-    Vector3 ul = add(scene.eye, add(multiply(w, -d), subtract(multiply(u, halfWidth), multiply(v, halfHeight))));
-    Vector3 ur = add(scene.eye, add(multiply(w, -d), add(multiply(u, halfWidth), multiply(v, halfHeight))));
-    Vector3 ll = add(scene.eye, add(multiply(w, -d), subtract(multiply(u, -halfWidth), multiply(v, halfHeight))));
-    Vector3 lr = add(scene.eye, add(multiply(w, -d), subtract(multiply(u, halfWidth), multiply(v, halfHeight))));
+    Vector3 ul = add(scene.eye, add(multiply(w, -d), subtract(multiply(u, (width/2)), multiply(v, (height/2)))));
+    Vector3 ur = add(scene.eye, add(multiply(w, -d), add(multiply(u, (width/2)), multiply(v, (height/2)))));
+    Vector3 ll = add(scene.eye, add(multiply(w, -d), subtract(multiply(u, -(width/2)), multiply(v, (height/2)))));
+    Vector3 lr = add(scene.eye, add(multiply(w, -d), subtract(multiply(u, (width/2)), multiply(v, (height/2)))));
 
     // step 5: change in horizontal and vertical??
     Vector3 dh = divide(subtract(ur, ul), (scene.imSize.width - 1));
