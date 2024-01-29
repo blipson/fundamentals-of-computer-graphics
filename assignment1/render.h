@@ -1,6 +1,8 @@
 #ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_RENDER_H
 #define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_RENDER_H
 
+#include <float.h>
+
 // Q: why did she use float instead of double?
 double magnitude(Vector3 v) {
     return sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
@@ -127,16 +129,15 @@ Ray createRay(Scene scene, int x, int y) {
 
 RGBColor getPixelColor(Ray ray, Scene scene) {
     // TODO: ellipses
+    double closestIntersection = DBL_MAX; // Initialize with a large value
+    int closestSphereIdx = -1;
+
     for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
         Sphere sphere = scene.spheres[sphereIdx];
         Vector3 rayDir = normalize(subtract(ray.direction, ray.origin));
-        double A = (rayDir.x * rayDir.x) + (rayDir.y * rayDir.y) + (rayDir.z * rayDir.z);
-        double B = 2 * ((rayDir.x * (ray.origin.x - sphere.center.x)) + (rayDir.y * (ray.origin.y - sphere.center.y)) +
-                        (rayDir.z * (ray.origin.z - sphere.center.z)));
-        double C = ((ray.origin.x - sphere.center.x) * (ray.origin.x - sphere.center.x)) +
-                   ((ray.origin.y - sphere.center.y) * (ray.origin.y - sphere.center.y)) +
-                   ((ray.origin.z - sphere.center.z) * (ray.origin.z - sphere.center.z)) -
-                   (sphere.radius * sphere.radius);
+        double A = dot(rayDir, rayDir);
+        double B = 2 * dot(rayDir, subtract(ray.origin, sphere.center));
+        double C = dot(subtract(ray.origin, sphere.center), subtract(ray.origin, sphere.center)) - sphere.radius * sphere.radius;
 
         double discriminant = B * B - 4 * A * C;
 
@@ -145,10 +146,19 @@ RGBColor getPixelColor(Ray ray, Scene scene) {
             double t1 = (-B + sqrtDiscriminant) / (2 * A);
             double t2 = (-B - sqrtDiscriminant) / (2 * A);
 
-            if (t1 >= 0 || t2 >= 0) {
-                return scene.mtlColors[sphere.mtlColorIdx];
+            if (t1 >= 0 && t1 < closestIntersection) {
+                closestIntersection = t1;
+                closestSphereIdx = sphereIdx;
+            }
+            if (t2 >= 0 && t2 < closestIntersection) {
+                closestIntersection = t2;
+                closestSphereIdx = sphereIdx;
             }
         }
+    }
+
+    if (closestSphereIdx != -1) {
+        return scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx];
     }
 
     return scene.bkgColor;
