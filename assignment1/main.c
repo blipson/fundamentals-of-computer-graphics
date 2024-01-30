@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
 
     freeInputFileWordsByLine(inputFileWordsByLine);
 
-//    printInput(scene);
+    printInput(scene);
 
     FILE* outputFilePtr = openOutputFile(argv[1]);
     writeHeader(outputFilePtr, scene.imSize.width, scene.imSize.height);

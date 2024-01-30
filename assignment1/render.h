@@ -95,7 +95,6 @@ Ray createRay(Scene scene, int x, int y) {
     // Q: how does d interact with halfWidth halfHeight width and height? How to properly calculate d?
     double d = 1.0;
 
-
     // step 3: width and height of the viewing window
     double width = 2 * d * tan(scene.fov.h / 2);
     double height = 2 * d * (tan(scene.fov.h / 2) / aspectRatio); // compute the height based on the width
@@ -121,20 +120,41 @@ Ray createRay(Scene scene, int x, int y) {
     // step 6: find the viewing window location
     Vector3 viewingWindowLocation = add(add(ul, multiply(dh, x)), multiply(dv, y));
     Ray ray = {
-            .origin = scene.eye,
+            // how do I test parallel projection with just spheres???
+            .origin = scene.parallel.frustumWidth <= 0 ? scene.eye : normalize(viewingWindowLocation),
             .direction = normalize(subtract(scene.eye, viewingWindowLocation)),
     };
     return ray;
 }
 
+Vector3 inverse(Vector3 r) {
+    Vector3 inversed = {
+            .x = 1.0 / r.x,
+            .y = 1.0 / r.y,
+            .z = 1.0 / r.z
+    };
+    return inversed;
+}
+
+Vector3 square(Vector3 v) {
+    Vector3 squared = {
+            .x = v.x * v.x,
+            .y = v.y * v.y,
+            .z = v.z * v.z
+    };
+    return squared;
+}
+
 RGBColor getPixelColor(Ray ray, Scene scene) {
     // TODO: ellipses
     double closestIntersection = DBL_MAX; // Initialize with a large value
+    bool closestIsSphere = false;
     int closestSphereIdx = -1;
+    int closestEllipseIdx = -1;
 
+    Vector3 rayDir = normalize(subtract(ray.direction, ray.origin));
     for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
         Sphere sphere = scene.spheres[sphereIdx];
-        Vector3 rayDir = normalize(subtract(ray.direction, ray.origin));
         double A = dot(rayDir, rayDir);
         double B = 2 * dot(rayDir, subtract(ray.origin, sphere.center));
         double C = dot(subtract(ray.origin, sphere.center), subtract(ray.origin, sphere.center)) - sphere.radius * sphere.radius;
@@ -149,19 +169,61 @@ RGBColor getPixelColor(Ray ray, Scene scene) {
             if (t1 >= 0 && t1 < closestIntersection) {
                 closestIntersection = t1;
                 closestSphereIdx = sphereIdx;
+                closestIsSphere = true;
             }
             if (t2 >= 0 && t2 < closestIntersection) {
                 closestIntersection = t2;
                 closestSphereIdx = sphereIdx;
+                closestIsSphere = true;
             }
         }
     }
 
-    if (closestSphereIdx != -1) {
-        return scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx];
+    // I have no idea what I'm doing...
+    for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
+        Ellipse ellipse = scene.ellipses[ellipseIdx];
+
+        double A = (ray.direction.x * ray.direction.x) / (ellipse.center.x * ellipse.center.x)
+                   + (ray.direction.y * ray.direction.y) / (ellipse.center.y * ellipse.center.y)
+                   + (ray.direction.z * ray.direction.z) / (ellipse.center.z * ellipse.center.z);
+
+
+        double B = 2 * ((ray.direction.x * (ray.origin.x - ellipse.center.x)) / (ellipse.center.x * ellipse.center.x)
+                        + (ray.direction.y * (ray.origin.y - ellipse.center.y)) / (ellipse.center.y * ellipse.center.y)
+                        + (ray.direction.z * (ray.origin.z - ellipse.center.z)) / (ellipse.center.z * ellipse.center.z));
+
+        double C = ((ray.origin.x - ellipse.center.x) * (ray.origin.x - ellipse.center.x)) / (ellipse.center.x * ellipse.center.x)
+                   + ((ray.origin.y - ellipse.center.y) * (ray.origin.y - ellipse.center.y)) / (ellipse.center.y * ellipse.center.y)
+                   + ((ray.origin.z - ellipse.center.z) * (ray.origin.z - ellipse.center.z)) / (ellipse.center.z * ellipse.center.z) - 1;
+
+
+        double discriminant = B * B - 4 * A * C;
+
+        if (discriminant >= 0) {
+            double sqrtDiscriminant = sqrt(discriminant);
+            double t1 = (-B + sqrtDiscriminant) / (2 * A);
+            double t2 = (-B - sqrtDiscriminant) / (2 * A);
+
+            if (t1 >= 0 && t1 < closestIntersection) {
+                closestIntersection = t1;
+                closestEllipseIdx = ellipseIdx;
+                closestIsSphere = false;
+            }
+            if (t2 >= 0 && t2 < closestIntersection) {
+                closestIntersection = t2;
+                closestEllipseIdx = ellipseIdx;
+                closestIsSphere = false;
+            }
+        }
     }
 
-    return scene.bkgColor;
+    if (closestSphereIdx != -1 && closestIsSphere) {
+        return scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx];
+    } else if (closestEllipseIdx != -1 && !closestIsSphere) {
+        return scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx];
+    } else {
+        return scene.bkgColor;
+    }
 }
 
 #endif

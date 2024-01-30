@@ -12,7 +12,7 @@
 
 #define MAX_LINE_COUNT 500
 #define MAX_WORDS_PER_LINE 8 // This will wrap if they have more than this many words in a line and cause weird behavior
-#define MAX_LINE_LENGTH 33
+#define MAX_LINE_LENGTH 50
 #define KEYWORD_COUNT 10
 
 void checkArgs(int argc, char* argv[]) {
