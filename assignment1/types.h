@@ -2,12 +2,10 @@
 #define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_TYPES_H
 
 typedef struct {
-    double x;
-    double y;
-    double z;
+    float x;
+    float y;
+    float z;
 } Vector3;
-
-// should I have a Point3???
 
 typedef struct {
     Vector3 direction;
@@ -15,8 +13,8 @@ typedef struct {
 } Ray;
 
 typedef struct {
-    double h;
-    double v;
+    float h;
+    float v;
 } FieldOfView;
 
 typedef struct {
@@ -31,12 +29,12 @@ typedef struct {
 } RGBColor;
 
 typedef struct {
-    double frustumWidth;
+    float frustumWidth;
 } Parallel;
 
 typedef struct {
     Vector3 center;
-    double radius;
+    float radius;
     int mtlColorIdx;
 } Sphere;
 
@@ -61,5 +59,25 @@ typedef struct {
     Ellipse* ellipses;
     int ellipseCount;
 } Scene;
+
+typedef struct {
+    float width;
+    float height;
+    Vector3 ul;
+    Vector3 ur;
+    Vector3 ll;
+    Vector3 lr;
+} ViewingWindow;
+
+typedef struct {
+    Vector3 w;
+    Vector3 u;
+    Vector3 v;
+    float aspectRatio;
+    float d;
+    ViewingWindow viewingWindow;
+    Vector3 dh;
+    Vector3 dv;
+} ViewParameters;
 
 #endif

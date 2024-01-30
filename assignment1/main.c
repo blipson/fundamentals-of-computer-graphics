@@ -2,11 +2,11 @@
 #include "output.h"
 #include "render.h"
 
-void render(FILE* outputFilePtr, int width, int height, Scene scene) {
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            Ray ray = createRay(scene, x, y);
-            writePixel(outputFilePtr, getPixelColor(ray, scene), x, width);
+void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters) {
+    for (int y = 0; y < scene.imSize.height; y++) {
+        for (int x = 0; x < scene.imSize.width; x++) {
+            Ray ray = createRay(scene, viewParameters, x, y);
+            writePixel(outputFilePtr, getPixelColor(ray, scene), x, scene.imSize.width);
         }
     }
 }
@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 
     char*** inputFileWordsByLine = readInputFile(argv[1]);
 
-    // Default because the arrays must be instantiated with null to avoid seg faults
+    // Default because the arrays must be instantiated with NULL to avoid seg faults
     Scene scene = {
             .eye = { .x = 0, .y = 0, .z = 0 },
             .viewDir = { .x = 0, .y = 0, .z = 0 },
@@ -41,9 +41,24 @@ int main(int argc, char* argv[]) {
 
     printInput(scene);
 
+    ViewParameters viewParameters = {
+            .w = normalize(multiply(scene.viewDir, -1)),
+            .u = normalize(cross(viewParameters.w, scene.upDir)),
+            .v = cross(viewParameters.u, viewParameters.w),
+            .aspectRatio = (float) scene.imSize.width / (float) scene.imSize.height,
+            .d = 1.0f,
+            .viewingWindow = {
+                    .width = 2 * viewParameters.d * tanf(scene.fov.h / 2),
+                    .height = 2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio),
+            }
+    };
+    setViewingWindow(scene, &viewParameters);
+
+    printViewParameters(viewParameters);
+
     FILE* outputFilePtr = openOutputFile(argv[1]);
     writeHeader(outputFilePtr, scene.imSize.width, scene.imSize.height);
-    render(outputFilePtr, scene.imSize.width, scene.imSize.height, scene);
+    render(outputFilePtr, scene, viewParameters);
 
     freeInput(scene);
     exit(0);
