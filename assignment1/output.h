@@ -2,6 +2,7 @@
 #define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_OUTPUT_H
 
 #include "render.h"
+#include "stringhelper.h"
 
 #define MAX_INPUT_FILE_NAME_LENGTH 100
 #define OUTPUT_FILE_SUFFIX ".ppm"
@@ -10,8 +11,12 @@
 #define MAX_PIXELS_ON_LINE 5
 
 FILE* openOutputFile(char* inputFileName) {
+    if (!endsWith(inputFileName, ".txt")) {
+        fprintf(stderr, "Incorrect input file format. Input file must be a '.txt' file.");
+        exit(-1);
+    }
     char outputFileName[MAX_INPUT_FILE_NAME_LENGTH + 3];
-    snprintf(outputFileName, sizeof(outputFileName), "%s%s", inputFileName, OUTPUT_FILE_SUFFIX);
+    snprintf(outputFileName, sizeof(outputFileName), "%s%s", substr(inputFileName, 0, strlen(inputFileName) - 4), OUTPUT_FILE_SUFFIX);
 
     FILE* outputFilePtr;
     outputFilePtr = fopen(outputFileName, "w");

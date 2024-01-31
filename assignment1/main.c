@@ -6,7 +6,7 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters) {
     for (int y = 0; y < scene.imSize.height; y++) {
         for (int x = 0; x < scene.imSize.width; x++) {
             Ray ray = createRay(scene, viewParameters, x, y);
-            writePixel(outputFilePtr, getPixelColor(ray, scene), x, scene.imSize.width);
+            writePixel(outputFilePtr, getPixelColor(ray, scene, x, y), x, scene.imSize.width);
         }
     }
 }
@@ -39,8 +39,6 @@ int main(int argc, char* argv[]) {
 
     freeInputFileWordsByLine(inputFileWordsByLine);
 
-    printInput(scene);
-
     ViewParameters viewParameters = {
             .w = normalize(multiply(scene.viewDir, -1)),
             .u = normalize(cross(viewParameters.w, scene.upDir)),
@@ -53,8 +51,6 @@ int main(int argc, char* argv[]) {
             }
     };
     setViewingWindow(scene, &viewParameters);
-
-    printViewParameters(viewParameters);
 
     FILE* outputFilePtr = openOutputFile(argv[1]);
     writeHeader(outputFilePtr, scene.imSize.width, scene.imSize.height);

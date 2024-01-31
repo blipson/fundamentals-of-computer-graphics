@@ -151,8 +151,54 @@ Vector3 square(Vector3 v) {
     };
 }
 
-RGBColor getPixelColor(Ray ray, Scene scene) {
-    // TODO: ellipses
+
+RGBColor mandelbrot(int x, int y, int width, int height, int maxIter) {
+    double real = (x - width / 2.0) * 4.0 / width;
+    double imaginary = (y - height / 2.0) * 4.0 / height;
+
+    double realTemp, imagTemp;
+    double realSquared, imagSquared;
+
+    int i = 0;
+
+    realTemp = real;
+    imagTemp = imaginary;
+
+    while (i < maxIter) {
+        realSquared = real * real - imaginary * imaginary;
+        imagSquared = 2.0 * real * imaginary;
+
+        real = realSquared + realTemp;
+        imaginary = imagSquared + imagTemp;
+
+        if (real * real + imaginary * imaginary > 16.0) {
+            break;
+        }
+
+        i++;
+    }
+
+    double squaredMagnitudeLog = log(real * real + imaginary * imaginary) / 2.0;
+    double smoothIterationCount = log(squaredMagnitudeLog / log(2.0)) / log(2.0);
+    i = (int)(i + 1 - smoothIterationCount);
+
+    RGBColor color;
+    color.red = (i * 5) % 255;
+    color.green = (i * 10) % 255;
+    color.blue = (i * 20) % 255;
+
+    if (i >= maxIter) {
+        RGBColor black;
+        black.red = 0;
+        black.green = 0;
+        black.blue = 0;
+        return black;
+    }
+
+    return color;
+}
+
+RGBColor getPixelColor(Ray ray, Scene scene, int x, int y) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     bool closestIsSphere = false;
     int closestSphereIdx = -1;
@@ -185,6 +231,7 @@ RGBColor getPixelColor(Ray ray, Scene scene) {
         }
     }
 
+    // isn't this for an ellipsoid not an ellipse??
     for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
         Ellipse ellipse = scene.ellipses[ellipseIdx];
 
@@ -204,6 +251,7 @@ RGBColor getPixelColor(Ray ray, Scene scene) {
 
         float discriminant = B * B - 4 * A * C;
 
+        //   for outline  && discriminant <= 0.1
         if (discriminant >= 0) {
             float sqrtDiscriminant = sqrtf(discriminant);
             float t1 = (-B + sqrtDiscriminant) / (2 * A);
@@ -228,6 +276,7 @@ RGBColor getPixelColor(Ray ray, Scene scene) {
         return scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx];
     } else {
         return scene.bkgColor;
+        // return mandelbrot(x, y, scene.imSize.width, scene.imSize.height, 1000);
     }
 }
 
