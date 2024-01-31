@@ -185,22 +185,21 @@ RGBColor getPixelColor(Ray ray, Scene scene) {
         }
     }
 
-    // I have no idea what I'm doing...
     for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
         Ellipse ellipse = scene.ellipses[ellipseIdx];
 
-        float A = (ray.direction.x * ray.direction.x) / (ellipse.center.x * ellipse.center.x)
-                   + (ray.direction.y * ray.direction.y) / (ellipse.center.y * ellipse.center.y)
-                   + (ray.direction.z * ray.direction.z) / (ellipse.center.z * ellipse.center.z);
+        float A = (ray.direction.x * ray.direction.x) / (ellipse.radius.x * ellipse.radius.x)
+                   + (ray.direction.y * ray.direction.y) / (ellipse.radius.y * ellipse.radius.y)
+                   + (ray.direction.z * ray.direction.z) / (ellipse.radius.z * ellipse.radius.z);
 
 
-        float B = 2 * ((ray.direction.x * (ray.origin.x - ellipse.center.x)) / (ellipse.center.x * ellipse.center.x)
-                        + (ray.direction.y * (ray.origin.y - ellipse.center.y)) / (ellipse.center.y * ellipse.center.y)
-                        + (ray.direction.z * (ray.origin.z - ellipse.center.z)) / (ellipse.center.z * ellipse.center.z));
+        float B = 2 * ((ray.direction.x * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
+                        + (ray.direction.y * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
+                        + (ray.direction.z * (ray.origin.z - ellipse.center.z)) / (ellipse.radius.z * ellipse.radius.z));
 
-        float C = ((ray.origin.x - ellipse.center.x) * (ray.origin.x - ellipse.center.x)) / (ellipse.center.x * ellipse.center.x)
-                   + ((ray.origin.y - ellipse.center.y) * (ray.origin.y - ellipse.center.y)) / (ellipse.center.y * ellipse.center.y)
-                   + ((ray.origin.z - ellipse.center.z) * (ray.origin.z - ellipse.center.z)) / (ellipse.center.z * ellipse.center.z) - 1;
+        float C = ((ray.origin.x - ellipse.center.x) * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
+                   + ((ray.origin.y - ellipse.center.y) * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
+                   + ((ray.origin.z - ellipse.center.z) * (ray.origin.z - ellipse.center.z)) / (ellipse.radius.z * ellipse.radius.z) - 1;
 
 
         float discriminant = B * B - 4 * A * C;

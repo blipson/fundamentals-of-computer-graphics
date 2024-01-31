@@ -5,4 +5,4 @@ hfov 45
 updir 0 1 0
 bkgcolor 0.2 0.2 0.2
 mtlcolor 1 0 0
-ellipse 0.1 0.1 -8 0.2 0.1 0.5
+ellipse 0 0 -8 2 1 1
