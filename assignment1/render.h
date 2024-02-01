@@ -111,12 +111,6 @@ void setViewingWindow(Scene scene, ViewParameters* viewParameters) {
 }
 
 Ray createRay(Scene scene, ViewParameters viewParameters, int x, int y) {
-    // Q: why is it more computationally efficient to start with u and not v?
-    // Q: why can't we use triangle rules with cos and sin and tan to define these?
-    // Q: can you go over field of view ratio vs aspect ratio again? why is it tan?
-    //     why can't we do 0.5 * fov.h when aspect ratio is 2?
-    //     why can't we use pythagorean theorem on the fov?
-
     Vector3 viewingWindowLocation = add(
             add(
                     viewParameters.viewingWindow.ul,
@@ -127,11 +121,16 @@ Ray createRay(Scene scene, ViewParameters viewParameters, int x, int y) {
                 ),
                 multiply(viewParameters.dv, (float) y)
     );
+
+    Vector3 parallelRayDirection = normalize(multiply(viewParameters.w, -1));
+    Vector3 parallelRayOrigin = viewingWindowLocation;
+    parallelRayOrigin.z = viewingWindowLocation.z - viewParameters.d;
+
     Ray ray = {
-            // how do I test parallel projection with just spheres???
-            .origin = scene.parallel.frustumWidth <= 0 ? scene.eye : normalize(viewingWindowLocation),
-            .direction = normalize(subtract(scene.eye, viewingWindowLocation)),
+            .origin = scene.parallel.frustumWidth <= 0 ? scene.eye : parallelRayOrigin,
+            .direction = scene.parallel.frustumWidth <= 0 ? normalize(subtract(viewingWindowLocation, scene.eye)) : parallelRayDirection,
     };
+
     return ray;
 }
 
@@ -231,7 +230,6 @@ RGBColor getPixelColor(Ray ray, Scene scene, int x, int y) {
         }
     }
 
-    // isn't this for an ellipsoid not an ellipse??
     for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
         Ellipse ellipse = scene.ellipses[ellipseIdx];
 
@@ -251,8 +249,8 @@ RGBColor getPixelColor(Ray ray, Scene scene, int x, int y) {
 
         float discriminant = B * B - 4 * A * C;
 
-        //   for outline  && discriminant <= 0.1
-        if (discriminant >= 0) {
+        //   for outline
+        if (discriminant >= 0 && discriminant <= 25) {
             float sqrtDiscriminant = sqrtf(discriminant);
             float t1 = (-B + sqrtDiscriminant) / (2 * A);
             float t2 = (-B - sqrtDiscriminant) / (2 * A);
@@ -271,9 +269,39 @@ RGBColor getPixelColor(Ray ray, Scene scene, int x, int y) {
     }
 
     if (closestSphereIdx != -1 && closestIsSphere) {
-        return scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx];
+        Sphere sphere = scene.spheres[closestSphereIdx];
+        if (sphere.center.z == -10) { // saturn
+            return (RGBColor) {
+                    .red = (y+15) % 310,
+                    .green = (y-8) % 310,
+                    .blue = y % 310,
+            };
+        } else if (sphere.center.z == -300) { // sun
+            return (RGBColor) {
+                    .red = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].red,
+                    .green = rand() % 255,
+                    .blue = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].blue,
+            };
+        } else if (sphere.center.z == -500) { // neptune
+            return (RGBColor) {
+                    .red = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].red,
+                    .green = (y + scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].green) % 215,
+                    .blue = (y + scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].blue) % 215
+            };
+        } {
+            return scene.mtlColors[sphere.mtlColorIdx];
+        }
     } else if (closestEllipseIdx != -1 && !closestIsSphere) {
-        return scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx];
+        Ellipse ellipse = scene.ellipses[closestEllipseIdx];
+        if (ellipse.center.z == -10) {
+            return (RGBColor) {
+                    .red = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].red) % 318,
+                    .green = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].green) % 318,
+                    .blue = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].blue) % 318,
+            };
+        } else {
+            return scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx];
+        }
     } else {
         return scene.bkgColor;
         // return mandelbrot(x, y, scene.imSize.width, scene.imSize.height, 1000);

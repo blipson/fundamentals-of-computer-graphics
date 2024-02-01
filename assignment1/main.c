@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     freeInputFileWordsByLine(inputFileWordsByLine);
 
     ViewParameters viewParameters = {
-            .w = normalize(multiply(scene.viewDir, -1)),
+            .w = normalize(scene.viewDir),
             .u = normalize(cross(viewParameters.w, scene.upDir)),
             .v = cross(viewParameters.u, viewParameters.w),
             .aspectRatio = (float) scene.imSize.width / (float) scene.imSize.height,
