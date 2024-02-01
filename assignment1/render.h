@@ -122,16 +122,21 @@ Ray createRay(Scene scene, ViewParameters viewParameters, int x, int y) {
                 multiply(viewParameters.dv, (float) y)
     );
 
-    Vector3 parallelRayDirection = normalize(multiply(viewParameters.w, -1));
-    Vector3 parallelRayOrigin = viewingWindowLocation;
-    parallelRayOrigin.z = viewingWindowLocation.z - viewParameters.d;
-
-    Ray ray = {
-            .origin = scene.parallel.frustumWidth <= 0 ? scene.eye : parallelRayOrigin,
-            .direction = scene.parallel.frustumWidth <= 0 ? normalize(subtract(viewingWindowLocation, scene.eye)) : parallelRayDirection,
-    };
-
-    return ray;
+    if (scene.parallel.frustumWidth > 0) {
+        Vector3 parallelRayDirection = viewingWindowLocation;
+        parallelRayDirection.z -= scene.parallel.frustumWidth;
+        parallelRayDirection = normalize(parallelRayDirection);
+        Vector3 parallelRayOrigin = scene.eye;
+        return (Ray) {
+            .origin = parallelRayOrigin,
+            .direction = parallelRayDirection
+        };
+    } else {
+        return (Ray) {
+                .origin = scene.eye,
+                .direction = normalize(subtract(viewingWindowLocation, scene.eye))
+        };
+    }
 }
 
 Vector3 inverse(Vector3 r) {

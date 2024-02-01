@@ -4,7 +4,16 @@ viewdir 0 0 -1
 hfov 45
 updir 0 1 0
 bkgcolor 0.2 0.2 0.2
-parallel 10
+parallel 0.025
 
 mtlcolor 1 0 0
-sphere 0 0 -8 2
+sphere 17 17 -50 1
+sphere -17 17 -50 1
+sphere 17 -17 -50 1
+sphere -17 -17 -50 1
+
+sphere 8 8 -50 1
+sphere -8 8 -50 1
+sphere 8 -8 -50 1
+sphere -8 -8 -50 1
+
