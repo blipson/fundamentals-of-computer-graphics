@@ -40,11 +40,12 @@ int main(int argc, char* argv[]) {
     freeInputFileWordsByLine(inputFileWordsByLine);
 
     ViewParameters viewParameters = {
-            .w = normalize(scene.viewDir),
-            .u = normalize(cross(viewParameters.w, scene.upDir)),
-            .v = cross(viewParameters.u, viewParameters.w),
-            .aspectRatio = (float) scene.imSize.width / (float) scene.imSize.height,
+            .w = normalize(multiply(scene.viewDir, -1)),
+            .u = normalize(cross(scene.viewDir, scene.upDir)),
+            .v = cross(viewParameters.u, normalize(scene.viewDir)),
+            .n = normalize(scene.viewDir),
             .d = 1.0f,
+            .aspectRatio = (float) scene.imSize.width / (float) scene.imSize.height,
             .viewingWindow = {
                     .width = 2 * viewParameters.d * tanf(scene.fov.h / 2),
                     .height = 2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio),

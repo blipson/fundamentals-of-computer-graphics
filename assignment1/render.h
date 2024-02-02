@@ -97,7 +97,7 @@ void setViewingWindow(Scene scene, ViewParameters* viewParameters) {
     float halfHeight = viewParameters->viewingWindow.height/2;
     Vector3 widthTimesHorizontal = multiply(viewParameters->u, halfWidth);
     Vector3 heightTimesVertical = multiply(viewParameters->v, halfHeight);
-    Vector3 eyePlusViewVector = add(scene.eye, multiply(viewParameters->w, viewParameters->d));
+    Vector3 eyePlusViewVector = add(scene.eye, multiply(viewParameters->n, viewParameters->d));
     Vector3 perspectiveMinusDimensions = subtract(eyePlusViewVector, widthTimesHorizontal);
     Vector3 perspectivePlusDimensions = add(eyePlusViewVector, widthTimesHorizontal);
 

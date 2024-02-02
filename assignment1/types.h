@@ -71,6 +71,7 @@ typedef struct {
 
 typedef struct {
     Vector3 w;
+    Vector3 n;
     Vector3 u;
     Vector3 v;
     float aspectRatio;
