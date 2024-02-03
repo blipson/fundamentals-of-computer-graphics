@@ -51,94 +51,103 @@ ellipse x y z rx ry rz
 # Docs
 **NOTE: This documentation section is taking the place of explanatory comments baked within my code in order to stay in line with the [industry standard](https://bpoplauschi.github.io/2021/01/20/Clean-Code-Comments-by-Uncle-Bob-part-2.html) on code commenting.**
 
-### Main.c
+### types.h
 ```c
-void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, char* argv) {
-    // Loop through every pixel in the image
-    for (int y = 0; y < scene.imSize.height; y++) {
-        for (int x = 0; x < scene.imSize.width; x++) {
-            // Create a ray going from the correct origin in the correct direction
-            Ray ray = createRay(scene, viewParameters, x, y);
-            // Write the pixel after getting the correct pixel color
-            writePixel(outputFilePtr, getPixelColor(ray, scene, y, argv), x, scene.imSize.width);
-        }
-    }
-}
+#ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_TYPES_H
+#define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_TYPES_H
 
-int main(int argc, char* argv[]) {
-    // Check the program arguments
-    checkArgs(argc, argv);
+// Vector3 definition, also used for 3D points
+typedef struct {
+    float x;
+    float y;
+    float z;
+} Vector3;
 
-    // Read the input file and return a list of sentences containing characters
-    char*** inputFileWordsByLine = readInputFile(argv[1]);
+// Ray definition
+typedef struct {
+    Vector3 direction;
+    Vector3 origin;
+} Ray;
 
-    // Default the scene because the arrays must be instantiated 
-    // with NULL to avoid seg faults
-    Scene scene = {
-            .eye = { .x = 0, .y = 0, .z = 0 },
-            .viewDir = { .x = 0, .y = 0, .z = 0 },
-            .upDir = { .x = 0, .y = 0, .z = 0 },
-            .fov = { .h = 0 },
-            .imSize = { .width = 0, .height = 0 },
-            .bkgColor = { .red = 0, .green = 0, .blue = 0 },
-            .parallel = { .frustumWidth = 0 },
-            .mtlColors = NULL,
-            .mtlColorCount = 0,
-            .spheres = NULL,
-            .sphereCount = 0,
-            .ellipses = NULL,
-            .ellipseCount = 0
-    };
+// Field of view definition
+typedef struct {
+    float h;
+    float v;
+} FieldOfView;
 
-    // The line variable is shared between reading the scene set up
-    // and the scene objects.
-    int line = 0;
-    // Read the header from the file and store in the scene instance
-    readSceneSetup(inputFileWordsByLine, &line, &scene);
-    // Read the objects from the file and store in the scene instance
-    readSceneObjects(inputFileWordsByLine, &line, &scene);
+// Image size definition
+typedef struct {
+    int width;
+    int height;
+} ImSize;
 
-    // De-allocate the stringly typed input that we read earlier 
-    // because we now have access to it in the scene instance
-    freeInputFileWordsByLine(inputFileWordsByLine);
+// RGBColor definition
+typedef struct {
+    unsigned char red;
+    unsigned char green;
+    unsigned char blue;
+} RGBColor;
 
-    // Initialize what we can for the view parameters
-    ViewParameters viewParameters = {
-            // Standard convention is for w=-viewdir
-            .w = normalize(multiply(scene.viewDir, -1)),
-            // Get the first vector in our viewing window by doing viewdir x updir
-            .u = normalize(cross(scene.viewDir, scene.upDir)),
-            // Get the second vector in our viewing window by doing u x viewdir
-            .v = cross(viewParameters.u, normalize(scene.viewDir)),
-            // We need the non-negative viewDir to calculate the viewing window corners later
-            .n = normalize(scene.viewDir),
-            // Arbitrary value for distance
-            .d = 1.0f,
-            // We need the aspect ratio to get the width and height of the viewing window
-            .aspectRatio = (float) scene.imSize.width / (float) scene.imSize.height,
-            // Define the viewing window instance
-            .viewingWindow = {
-                    // Get the width by doing 2dtan(θh/2)
-                    .width = 2 * viewParameters.d * tanf(scene.fov.h / 2),
-                    // Get the height by taking the width and dividing by the aspect ratio
-                    .height = 2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio),
-            }
-    };
-    // Set the rest of the viewing parameters
-    setViewingWindow(scene, &viewParameters);
+// Parallel definition
+typedef struct {
+    float frustumWidth;
+} Parallel;
 
-    // Open the output file
-    FILE* outputFilePtr = openOutputFile(argv[1]);
-    // Write the PPM format header
-    writeHeader(outputFilePtr, scene.imSize.width, scene.imSize.height);
-    // Render the scene
-    render(outputFilePtr, scene, viewParameters, argv[1]);
+// Sphere definition
+typedef struct {
+    Vector3 center;
+    float radius;
+    int mtlColorIdx;
+} Sphere;
 
-    // De allocate the memory used in the scene
-    freeInput(scene);
-    // Exit the program
-    exit(0);
-}
+// Ellipse definition
+typedef struct {
+    Vector3 center;
+    Vector3 radius;
+    int mtlColorIdx;
+} Ellipse;
+
+// Scene definition
+typedef struct {
+    Vector3 eye;
+    Vector3 viewDir;
+    Vector3 upDir;
+    FieldOfView fov;
+    ImSize imSize;
+    RGBColor bkgColor;
+    Parallel parallel;
+    RGBColor* mtlColors;
+    int mtlColorCount;
+    Sphere* spheres;
+    int sphereCount;
+    Ellipse* ellipses;
+    int ellipseCount;
+} Scene;
+
+// Viewing window definition
+typedef struct {
+    float width;
+    float height;
+    Vector3 ul;
+    Vector3 ur;
+    Vector3 ll;
+    Vector3 lr;
+} ViewingWindow;
+
+// View parameters definition
+typedef struct {
+    Vector3 w;
+    Vector3 n;
+    Vector3 u;
+    Vector3 v;
+    float aspectRatio;
+    float d;
+    ViewingWindow viewingWindow;
+    Vector3 dh;
+    Vector3 dv;
+} ViewParameters;
+
+#endif
 ```
 
 ### input.h
@@ -527,4 +536,456 @@ void freeInput(Scene scene) {
 }
 
 #endif
+```
+
+
+### output.h
+```c
+#ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_OUTPUT_H
+#define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_OUTPUT_H
+
+#include "render.h"
+#include "stringhelper.h"
+
+#define MAX_INPUT_FILE_NAME_LENGTH 100 // Max length of the name of the input file
+#define OUTPUT_FILE_SUFFIX ".ppm" // Output file type
+#define MAGIC_NUMBER "P3" // Magic number for the PPM header
+#define MAX_COLOR_COMPONENT_VALUE "255" // 255 because we're using RGB color space
+#define MAX_PIXELS_ON_LINE 5 // Keep the lines of our PPM file short
+
+// Function to open the output file
+FILE* openOutputFile(char* inputFileName) {
+    // Only accept .txt files
+    if (!endsWith(inputFileName, ".txt")) {
+        fprintf(stderr, "Incorrect input file format. Input file must be a '.txt' file.");
+        exit(-1);
+    }
+    // Define the output file name to be the same as the input file name without the .txt ending
+    char outputFileName[MAX_INPUT_FILE_NAME_LENGTH + 3];
+    snprintf(outputFileName, sizeof(outputFileName), "%s%s", substr(inputFileName, 0, strlen(inputFileName) - 4), OUTPUT_FILE_SUFFIX);
+
+    // Open the output file and return the pointer to it
+    FILE* outputFilePtr;
+    outputFilePtr = fopen(outputFileName, "w");
+    return outputFilePtr;
+}
+
+// Function to write the PPM Header to the output file
+void writeHeader(FILE* outputFilePtr, int width, int height) {
+    // P3 x y 255
+    fprintf(outputFilePtr, "%s\n%d %d\n%s\n", MAGIC_NUMBER, width, height, MAX_COLOR_COMPONENT_VALUE);
+}
+
+// Function to make sure the lines of the PPM file are short
+void enforceMaxPixelsOnLine(FILE* outputFilePtr, int x, int width) {
+    // If we've reached the max pixels on the line
+    if ((x % (MAX_PIXELS_ON_LINE) == (MAX_PIXELS_ON_LINE - 1)) || x == width - 1) {
+        // Then start a new line
+        fprintf(outputFilePtr, "\n");
+    } else {
+        // Otherwise use a tab between pixels for readability
+        fprintf(outputFilePtr, "\t");
+    }
+}
+
+// Function to write a pixel to the file
+void writePixel(FILE* outputFilePtr, RGBColor pixelColor, int x, int width) {
+    // Write the pixel and enforce the max pixels on line rule
+    fprintf(outputFilePtr, "%d %d %d", pixelColor.red, pixelColor.green, pixelColor.blue);
+    enforceMaxPixelsOnLine(outputFilePtr, x, width);
+}
+
+#endif
+```
+
+### render.h
+```c
+#ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_RENDER_H
+#define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_RENDER_H
+
+#include <float.h>
+
+float magnitude(Vector3 v) {
+    return sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
+}
+
+Vector3 normalize(Vector3 v) {
+    float m = magnitude(v);
+    if (m != 0.0) {
+        return (Vector3) {
+                .x = v.x / m,
+                .y = v.y / m,
+                .z = v.z / m
+        };
+    } else {
+        // What to do if the vector has 0 magnitude??
+        return v;
+    }
+}
+
+Vector3 multiply(Vector3 v, float s) {
+    return (Vector3) {
+            .x = v.x * s,
+            .y = v.y * s,
+            .z = v.z * s
+    };
+}
+
+Vector3 cross(Vector3 a, Vector3 b) {
+    return (Vector3) {
+            .x = (a.y * b.z) - (b.y * a.z),
+            .y = (a.z * b.x) - (b.z* a.x),
+            .z = (a.x * b.y) - (b.x * a.y)
+    };
+}
+
+float dot(Vector3 a, Vector3 b) {
+    return ((a.x * b.x) + (a.y * b.y) + (a.z * b.z));
+}
+
+Vector3 add(Vector3 a, Vector3 b) {
+    return (Vector3) {
+            .x = a.x + b.x,
+            .y = a.y + b.y,
+            .z = a.z + b.z
+    };
+}
+
+Vector3 subtract(Vector3 a, Vector3 b) {
+    return (Vector3) {
+            .x = a.x - b.x,
+            .y = a.y - b.y,
+            .z = a.z - b.z
+    };
+}
+
+Vector3 divide(Vector3 v, float c) {
+    return (Vector3) {
+            .x = v.x / c,
+            .y = v.y /c,
+            .z = v.z / c
+    };
+}
+
+void printVector(Vector3 v) {
+    printf("{x: %lf, y: %lf, z: %lf}\n", v.x, v.y, v.z);
+}
+
+void printViewParameters(ViewParameters viewParameters) {
+    printf("---------------VIEW PARAMETERS---------------\n");
+    printf("w: ");
+    printVector(viewParameters.w);
+    printf("u: ");
+    printVector(viewParameters.u);
+    printf("v: ");
+    printVector(viewParameters.v);
+    printf("Aspect ratio: %lf\n", viewParameters.aspectRatio);
+    printf("d: %lf\n", viewParameters.d);
+    printf("width: %lf\n", viewParameters.viewingWindow.width);
+    printf("height: %lf\n", viewParameters.viewingWindow.height);
+    printf("ul: ");
+    printVector(viewParameters.viewingWindow.ul);
+    printf("ur: ");
+    printVector(viewParameters.viewingWindow.ur);
+    printf("ll: ");
+    printVector(viewParameters.viewingWindow.ll);
+    printf("lr: ");
+    printVector(viewParameters.viewingWindow.lr);
+    printf("---------------------------------------------\n");
+}
+
+void setViewingWindow(Scene scene, ViewParameters* viewParameters) {
+    float halfWidth = viewParameters->viewingWindow.width/2;
+    float halfHeight = viewParameters->viewingWindow.height/2;
+    Vector3 widthTimesHorizontal = multiply(viewParameters->u, halfWidth);
+    Vector3 heightTimesVertical = multiply(viewParameters->v, halfHeight);
+    Vector3 eyePlusViewVector = add(scene.eye, multiply(viewParameters->n, viewParameters->d));
+    Vector3 perspectiveMinusDimensions = subtract(eyePlusViewVector, widthTimesHorizontal);
+    Vector3 perspectivePlusDimensions = add(eyePlusViewVector, widthTimesHorizontal);
+
+    viewParameters->viewingWindow.ul = add(perspectiveMinusDimensions, heightTimesVertical);
+    viewParameters->viewingWindow.ur = add(perspectivePlusDimensions, heightTimesVertical);
+    viewParameters->viewingWindow.ll = subtract(perspectiveMinusDimensions, heightTimesVertical);
+    viewParameters->viewingWindow.lr = subtract(perspectivePlusDimensions, heightTimesVertical);
+
+    viewParameters->dh = divide(subtract(viewParameters->viewingWindow.ur, viewParameters->viewingWindow.ul), ((float) scene.imSize.width - 1));
+    viewParameters->dv = divide(subtract(viewParameters->viewingWindow.ll, viewParameters->viewingWindow.ul), ((float) scene.imSize.height - 1));
+}
+
+Ray createRay(Scene scene, ViewParameters viewParameters, int x, int y) {
+    Vector3 viewingWindowLocation = add(
+            add(
+                    viewParameters.viewingWindow.ul,
+                    multiply(
+                            viewParameters.dh,
+                            (float) x
+                        )
+                ),
+                multiply(viewParameters.dv, (float) y)
+    );
+
+    if (scene.parallel.frustumWidth > 0) {
+        return (Ray) {
+            .origin = multiply(viewingWindowLocation, -1),
+            .direction = normalize(scene.viewDir)
+        };
+    } else {
+        return (Ray) {
+                .origin = scene.eye,
+                .direction = normalize(subtract(viewingWindowLocation, scene.eye))
+        };
+    }
+}
+
+// Function to determine the pixel color based on collision detection with the ray and objects
+RGBColor getPixelColor(Ray ray, Scene scene, int y, char* argv) {
+    // Initialize with a large value
+    float closestIntersection = FLT_MAX;
+    // Variables to track which object is the closest
+    bool closestIsSphere = false;
+    int closestSphereIdx = -1;
+    int closestEllipseIdx = -1;
+
+    // Normalize the ray dir and subtract the ray origin
+    Vector3 rayDir = normalize(subtract(ray.direction, ray.origin));
+    // Loop through each sphere
+    for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
+        Sphere sphere = scene.spheres[sphereIdx];
+        // Define the quadratic equation for a sphere
+        float A = dot(rayDir, rayDir);
+        float B = 2 * dot(rayDir, subtract(ray.origin, sphere.center));
+        float C = dot(subtract(ray.origin, sphere.center), subtract(ray.origin, sphere.center)) - sphere.radius * sphere.radius;
+
+        // Isolate the discriminant
+        float discriminant = B * B - 4 * A * C;
+
+        // Check for solutions to the quadratic
+        if (discriminant >= 0) {
+            // If there's solutions, get them both
+            // t1 or t2 will be 0 if there's only one solution
+            float sqrtDiscriminant = sqrtf(discriminant);
+            float t1 = (-B + sqrtDiscriminant) / (2 * A);
+            float t2 = (-B - sqrtDiscriminant) / (2 * A);
+
+            // Determine which of the two collision points is closest and set the corresponding values
+            if (t1 >= 0 && t1 < closestIntersection) {
+                closestIntersection = t1;
+                closestSphereIdx = sphereIdx;
+                closestIsSphere = true;
+            }
+            if (t2 >= 0 && t2 < closestIntersection) {
+                closestIntersection = t2;
+                closestSphereIdx = sphereIdx;
+                closestIsSphere = true;
+            }
+        }
+    }
+
+    // Loop through each ellipse
+    for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
+        Ellipse ellipse = scene.ellipses[ellipseIdx];
+
+        // Define the quadratic equation for an ellipse
+        float A = (rayDir.x * rayDir.x) / (ellipse.radius.x * ellipse.radius.x)
+                   + (rayDir.y * rayDir.y) / (ellipse.radius.y * ellipse.radius.y)
+                   + (rayDir.z * rayDir.z) / (ellipse.radius.z * ellipse.radius.z);
+
+
+        float B = 2 * ((rayDir.x * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
+                        + (rayDir.y * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
+                        + (rayDir.z * (ray.origin.z - ellipse.center.z)) / (ellipse.radius.z * ellipse.radius.z));
+
+        float C = ((ray.origin.x - ellipse.center.x) * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
+                   + ((ray.origin.y - ellipse.center.y) * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
+                   + ((ray.origin.z - ellipse.center.z) * (ray.origin.z - ellipse.center.z)) / (ellipse.radius.z * ellipse.radius.z) - 1;
+
+
+        // Isolate the discriminant
+        float discriminant = B * B - 4 * A * C;
+
+        // Check for solutions to the quadratic
+        // Only get the outer ring of the ellipse for the showcase to simulate Saturn's rings
+        if ((strcmp(argv, "./showcase.txt") == 0 && discriminant >= 0 && discriminant <= 25) || discriminant >= 0) {
+          // If there's solutions, get them both
+            // t1 or t2 will be 0 if there's only one solution
+            float sqrtDiscriminant = sqrtf(discriminant);
+            float t1 = (-B + sqrtDiscriminant) / (2 * A);
+            float t2 = (-B - sqrtDiscriminant) / (2 * A);
+
+            // Determine which of the two collision points is closest and set the corresponding values
+            if (t1 >= 0 && t1 < closestIntersection) {
+                closestIntersection = t1;
+                closestEllipseIdx = ellipseIdx;
+                closestIsSphere = false;
+            }
+            if (t2 >= 0 && t2 < closestIntersection) {
+                closestIntersection = t2;
+                closestEllipseIdx = ellipseIdx;
+                closestIsSphere = false;
+            }
+        }
+    }
+
+    // If there's a sphere that's the closest
+    if (closestSphereIdx != -1 && closestIsSphere) {
+        Sphere sphere = scene.spheres[closestSphereIdx];
+        // Handle the special coloration for the showcase
+        if (strcmp(argv, "./showcase.txt") == 0) {
+            if (sphere.center.z == -10) { // saturn
+                return (RGBColor) {
+                        .red = (y + 15) % 310,
+                        .green = (y - 8) % 310,
+                        .blue = y % 310,
+                };
+            } else if (sphere.center.z == -300) { // sun
+                return (RGBColor) {
+                        .red = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].red,
+                        .green = rand() % 255,
+                        .blue = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].blue,
+                };
+            } else if (sphere.center.z == -500) { // neptune
+                return (RGBColor) {
+                        .red = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].red,
+                        .green = (y + scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].green) % 175,
+                        .blue = (y + scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].blue) % 215
+                };
+            } else if (sphere.center.z == -150) { // mars
+                return (RGBColor) {
+                        .red = ((y + scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].red) / 2) % 225,
+                        .green = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].green,
+                        .blue = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].blue
+                };
+            } else {
+                // Return the color of the sphere
+                return scene.mtlColors[sphere.mtlColorIdx];
+            }
+        } else {
+            // Return the color of the sphere
+            return scene.mtlColors[sphere.mtlColorIdx];
+        }
+    } else if (closestEllipseIdx != -1 && !closestIsSphere) {
+        // If there's an ellipse that's the closest
+        Ellipse ellipse = scene.ellipses[closestEllipseIdx];
+        // Handle the special coloration for the showcase
+        if (strcmp(argv, "./showcase.txt") == 0) {
+            if (ellipse.center.z == -10) {
+                return (RGBColor) {
+                        .red = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].red) % 318,
+                        .green = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].green) % 318,
+                        .blue = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].blue) % 318,
+                };
+            } else {
+                // Return the color of the ellipse
+                return scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx];
+            }
+        } else {
+            // Return the color of the ellipse
+            return scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx];
+        }
+    } else {
+        // Return stars in the background for the showcase
+        if (strcmp(argv, "./showcase.txt") == 0) {
+            return rand() % 10000 > 1 ? scene.bkgColor : (RGBColor) {
+                    .red = 255,
+                    .green = 255,
+                    .blue = 255
+            };
+        } else {
+            // Return the background color
+            return scene.bkgColor;
+        }
+    }
+}
+
+#endif
+```
+
+### Main.c
+```c
+void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, char* argv) {
+    // Loop through every pixel in the image
+    for (int y = 0; y < scene.imSize.height; y++) {
+        for (int x = 0; x < scene.imSize.width; x++) {
+            // Create a ray going from the correct origin in the correct direction
+            Ray ray = createRay(scene, viewParameters, x, y);
+            // Write the pixel after getting the correct pixel color
+            writePixel(outputFilePtr, getPixelColor(ray, scene, y, argv), x, scene.imSize.width);
+        }
+    }
+}
+
+int main(int argc, char* argv[]) {
+    // Check the program arguments
+    checkArgs(argc, argv);
+
+    // Read the input file and return a list of sentences containing characters
+    char*** inputFileWordsByLine = readInputFile(argv[1]);
+
+    // Default the scene because the arrays must be instantiated 
+    // with NULL to avoid seg faults
+    Scene scene = {
+            .eye = { .x = 0, .y = 0, .z = 0 },
+            .viewDir = { .x = 0, .y = 0, .z = 0 },
+            .upDir = { .x = 0, .y = 0, .z = 0 },
+            .fov = { .h = 0 },
+            .imSize = { .width = 0, .height = 0 },
+            .bkgColor = { .red = 0, .green = 0, .blue = 0 },
+            .parallel = { .frustumWidth = 0 },
+            .mtlColors = NULL,
+            .mtlColorCount = 0,
+            .spheres = NULL,
+            .sphereCount = 0,
+            .ellipses = NULL,
+            .ellipseCount = 0
+    };
+
+    // The line variable is shared between reading the scene set up
+    // and the scene objects.
+    int line = 0;
+    // Read the header from the file and store in the scene instance
+    readSceneSetup(inputFileWordsByLine, &line, &scene);
+    // Read the objects from the file and store in the scene instance
+    readSceneObjects(inputFileWordsByLine, &line, &scene);
+
+    // De-allocate the stringly typed input that we read earlier 
+    // because we now have access to it in the scene instance
+    freeInputFileWordsByLine(inputFileWordsByLine);
+
+    // Initialize what we can for the view parameters
+    ViewParameters viewParameters = {
+            // Standard convention is for w=-viewdir
+            .w = normalize(multiply(scene.viewDir, -1)),
+            // Get the first vector in our viewing window by doing viewdir x updir
+            .u = normalize(cross(scene.viewDir, scene.upDir)),
+            // Get the second vector in our viewing window by doing u x viewdir
+            .v = cross(viewParameters.u, normalize(scene.viewDir)),
+            // We need the non-negative viewDir to calculate the viewing window corners later
+            .n = normalize(scene.viewDir),
+            // Arbitrary value for distance
+            .d = 1.0f,
+            // We need the aspect ratio to get the width and height of the viewing window
+            .aspectRatio = (float) scene.imSize.width / (float) scene.imSize.height,
+            // Define the viewing window instance
+            .viewingWindow = {
+                    // Get the width by doing 2dtan(θh/2)
+                    .width = 2 * viewParameters.d * tanf(scene.fov.h / 2),
+                    // Get the height by taking the width and dividing by the aspect ratio
+                    .height = 2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio),
+            }
+    };
+    // Set the rest of the viewing parameters
+    setViewingWindow(scene, &viewParameters);
+
+    // Open the output file
+    FILE* outputFilePtr = openOutputFile(argv[1]);
+    // Write the PPM format header
+    writeHeader(outputFilePtr, scene.imSize.width, scene.imSize.height);
+    // Render the scene
+    render(outputFilePtr, scene, viewParameters, argv[1]);
+
+    // De allocate the memory used in the scene
+    freeInput(scene);
+    // Exit the program
+    exit(0);
+}
 ```

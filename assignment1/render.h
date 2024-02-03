@@ -187,7 +187,7 @@ RGBColor getPixelColor(Ray ray, Scene scene, int y, char* argv) {
 
         float discriminant = B * B - 4 * A * C;
 
-        if (discriminant >= 0 && discriminant <= 25) {
+        if ((strcmp(argv, "./showcase.txt") == 0 && discriminant >= 0 && discriminant <= 25) || discriminant >= 0) {
             float sqrtDiscriminant = sqrtf(discriminant);
             float t1 = (-B + sqrtDiscriminant) / (2 * A);
             float t2 = (-B - sqrtDiscriminant) / (2 * A);
