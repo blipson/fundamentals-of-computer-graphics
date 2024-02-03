@@ -2,11 +2,11 @@
 #include "output.h"
 #include "render.h"
 
-void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters) {
+void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, char* argv) {
     for (int y = 0; y < scene.imSize.height; y++) {
         for (int x = 0; x < scene.imSize.width; x++) {
             Ray ray = createRay(scene, viewParameters, x, y);
-            writePixel(outputFilePtr, getPixelColor(ray, scene, x, y), x, scene.imSize.width);
+            writePixel(outputFilePtr, getPixelColor(ray, scene, y, argv), x, scene.imSize.width);
         }
     }
 }
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 
     FILE* outputFilePtr = openOutputFile(argv[1]);
     writeHeader(outputFilePtr, scene.imSize.width, scene.imSize.height);
-    render(outputFilePtr, scene, viewParameters);
+    render(outputFilePtr, scene, viewParameters, argv[1]);
 
     freeInput(scene);
     exit(0);

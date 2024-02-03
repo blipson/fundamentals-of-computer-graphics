@@ -17,7 +17,6 @@ sphere 0 0.5 -300 45
 mtlcolor 0 0 1
 sphere 65 50 -500 15
 
-mtlcolor 1 1 1
-sphere 300 50 -1000 0.75
-sphere 320 100 -1000 0.75
-sphere 110 200 -1000 0.75
+mtlcolor 0.75 0 0
+sphere 23 -5 -150 10
+

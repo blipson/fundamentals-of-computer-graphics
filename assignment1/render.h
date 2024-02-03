@@ -123,13 +123,9 @@ Ray createRay(Scene scene, ViewParameters viewParameters, int x, int y) {
     );
 
     if (scene.parallel.frustumWidth > 0) {
-        Vector3 parallelRayDirection = viewingWindowLocation;
-        parallelRayDirection.z -= scene.parallel.frustumWidth;
-        parallelRayDirection = normalize(parallelRayDirection);
-        Vector3 parallelRayOrigin = scene.eye;
         return (Ray) {
-            .origin = parallelRayOrigin,
-            .direction = parallelRayDirection
+            .origin = multiply(viewingWindowLocation, -1),
+            .direction = normalize(scene.viewDir)
         };
     } else {
         return (Ray) {
@@ -139,70 +135,7 @@ Ray createRay(Scene scene, ViewParameters viewParameters, int x, int y) {
     }
 }
 
-Vector3 inverse(Vector3 r) {
-    return (Vector3) {
-            .x = 1.0f / r.x,
-            .y = 1.0f / r.y,
-            .z = 1.0f / r.z
-    };
-}
-
-Vector3 square(Vector3 v) {
-    return (Vector3) {
-            .x = v.x * v.x,
-            .y = v.y * v.y,
-            .z = v.z * v.z
-    };
-}
-
-
-RGBColor mandelbrot(int x, int y, int width, int height, int maxIter) {
-    double real = (x - width / 2.0) * 4.0 / width;
-    double imaginary = (y - height / 2.0) * 4.0 / height;
-
-    double realTemp, imagTemp;
-    double realSquared, imagSquared;
-
-    int i = 0;
-
-    realTemp = real;
-    imagTemp = imaginary;
-
-    while (i < maxIter) {
-        realSquared = real * real - imaginary * imaginary;
-        imagSquared = 2.0 * real * imaginary;
-
-        real = realSquared + realTemp;
-        imaginary = imagSquared + imagTemp;
-
-        if (real * real + imaginary * imaginary > 16.0) {
-            break;
-        }
-
-        i++;
-    }
-
-    double squaredMagnitudeLog = log(real * real + imaginary * imaginary) / 2.0;
-    double smoothIterationCount = log(squaredMagnitudeLog / log(2.0)) / log(2.0);
-    i = (int)(i + 1 - smoothIterationCount);
-
-    RGBColor color;
-    color.red = (i * 5) % 255;
-    color.green = (i * 10) % 255;
-    color.blue = (i * 20) % 255;
-
-    if (i >= maxIter) {
-        RGBColor black;
-        black.red = 0;
-        black.green = 0;
-        black.blue = 0;
-        return black;
-    }
-
-    return color;
-}
-
-RGBColor getPixelColor(Ray ray, Scene scene, int x, int y) {
+RGBColor getPixelColor(Ray ray, Scene scene, int y, char* argv) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     bool closestIsSphere = false;
     int closestSphereIdx = -1;
@@ -238,14 +171,14 @@ RGBColor getPixelColor(Ray ray, Scene scene, int x, int y) {
     for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
         Ellipse ellipse = scene.ellipses[ellipseIdx];
 
-        float A = (ray.direction.x * ray.direction.x) / (ellipse.radius.x * ellipse.radius.x)
-                   + (ray.direction.y * ray.direction.y) / (ellipse.radius.y * ellipse.radius.y)
-                   + (ray.direction.z * ray.direction.z) / (ellipse.radius.z * ellipse.radius.z);
+        float A = (rayDir.x * rayDir.x) / (ellipse.radius.x * ellipse.radius.x)
+                   + (rayDir.y * rayDir.y) / (ellipse.radius.y * ellipse.radius.y)
+                   + (rayDir.z * rayDir.z) / (ellipse.radius.z * ellipse.radius.z);
 
 
-        float B = 2 * ((ray.direction.x * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
-                        + (ray.direction.y * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
-                        + (ray.direction.z * (ray.origin.z - ellipse.center.z)) / (ellipse.radius.z * ellipse.radius.z));
+        float B = 2 * ((rayDir.x * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
+                        + (rayDir.y * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
+                        + (rayDir.z * (ray.origin.z - ellipse.center.z)) / (ellipse.radius.z * ellipse.radius.z));
 
         float C = ((ray.origin.x - ellipse.center.x) * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
                    + ((ray.origin.y - ellipse.center.y) * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
@@ -254,7 +187,6 @@ RGBColor getPixelColor(Ray ray, Scene scene, int x, int y) {
 
         float discriminant = B * B - 4 * A * C;
 
-        //   for outline
         if (discriminant >= 0 && discriminant <= 25) {
             float sqrtDiscriminant = sqrtf(discriminant);
             float t1 = (-B + sqrtDiscriminant) / (2 * A);
@@ -275,41 +207,62 @@ RGBColor getPixelColor(Ray ray, Scene scene, int x, int y) {
 
     if (closestSphereIdx != -1 && closestIsSphere) {
         Sphere sphere = scene.spheres[closestSphereIdx];
-        if (sphere.center.z == -10) { // saturn
-            return (RGBColor) {
-                    .red = (y+15) % 310,
-                    .green = (y-8) % 310,
-                    .blue = y % 310,
-            };
-        } else if (sphere.center.z == -300) { // sun
-            return (RGBColor) {
-                    .red = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].red,
-                    .green = rand() % 255,
-                    .blue = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].blue,
-            };
-        } else if (sphere.center.z == -500) { // neptune
-            return (RGBColor) {
-                    .red = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].red,
-                    .green = (y + scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].green) % 215,
-                    .blue = (y + scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].blue) % 215
-            };
-        } {
+        if (strcmp(argv, "./showcase.txt") == 0) {
+            if (sphere.center.z == -10) { // saturn
+                return (RGBColor) {
+                        .red = (y + 15) % 310,
+                        .green = (y - 8) % 310,
+                        .blue = y % 310,
+                };
+            } else if (sphere.center.z == -300) { // sun
+                return (RGBColor) {
+                        .red = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].red,
+                        .green = rand() % 255,
+                        .blue = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].blue,
+                };
+            } else if (sphere.center.z == -500) { // neptune
+                return (RGBColor) {
+                        .red = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].red,
+                        .green = (y + scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].green) % 175,
+                        .blue = (y + scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].blue) % 215
+                };
+            } else if (sphere.center.z == -150) { // mars
+                return (RGBColor) {
+                        .red = ((y + scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].red) / 2) % 225,
+                        .green = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].green,
+                        .blue = scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].blue
+                };
+            } else {
+                return scene.mtlColors[sphere.mtlColorIdx];
+            }
+        } else {
             return scene.mtlColors[sphere.mtlColorIdx];
         }
     } else if (closestEllipseIdx != -1 && !closestIsSphere) {
         Ellipse ellipse = scene.ellipses[closestEllipseIdx];
-        if (ellipse.center.z == -10) {
-            return (RGBColor) {
-                    .red = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].red) % 318,
-                    .green = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].green) % 318,
-                    .blue = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].blue) % 318,
-            };
+        if (strcmp(argv, "./showcase.txt") == 0) {
+            if (ellipse.center.z == -10) {
+                return (RGBColor) {
+                        .red = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].red) % 318,
+                        .green = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].green) % 318,
+                        .blue = (y + scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].blue) % 318,
+                };
+            } else {
+                return scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx];
+            }
         } else {
             return scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx];
         }
     } else {
-        return scene.bkgColor;
-        // return mandelbrot(x, y, scene.imSize.width, scene.imSize.height, 1000);
+        if (strcmp(argv, "./showcase.txt") == 0) {
+            return rand() % 10000 > 1 ? scene.bkgColor : (RGBColor) {
+                    .red = 255,
+                    .green = 255,
+                    .blue = 255
+            };
+        } else {
+            return scene.bkgColor;
+        }
     }
 }
 
