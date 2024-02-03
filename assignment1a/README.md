@@ -26,6 +26,7 @@ Sample input files are provided in this repo.
 ### General Notes
 - The RGB scale is from 0-1.
 - Horizontal field of view accepts the value v in degrees, not radians.
+- Parallel is an optional parameter.
 
 ### Header
 This section defines the scene's general viewing parameters. The individual values can appear in any order, but this section must be at the top.
@@ -36,6 +37,7 @@ viewdir x y z
 hfov v
 updir x y z
 bkgcolor R G B
+parallel v
 ```
 ### Body
 This section defines the objects within the scene and their colors. `mtlcolor` must come first followed by the objects that are that color in any order. This section must come last.
@@ -538,6 +540,47 @@ void freeInput(Scene scene) {
 #endif
 ```
 
+### stringhelper.h
+```c
+#ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_STRINGHELPER_H
+#define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_STRINGHELPER_H
+
+// Function to get a substring
+char* substr(char* s, int x, int y) {
+    // Allocate the substring
+    char* ret = malloc(strlen(s) + 1);
+    char* p = ret;
+    char* q = &s[x];
+
+    // Check for cop errors
+    if (ret == NULL) {
+        fprintf(stderr, "Can not copy string.");
+        exit(-1);
+    } else {
+        // Loop through the characters and copy them
+        while (x < y) {
+            *p++ = *q++;
+            x++;
+        }
+        *p = '\0';
+    }
+    return ret;
+}
+
+// Function to check if a string ends with a given ending
+bool endsWith(char* string, char* ending)
+{
+    string = strrchr(string, '.');
+
+    if (string != NULL && strcmp(string, ending) == 0) {
+        return true;
+    }
+
+    return false;
+}
+
+#endif
+```
 
 ### output.h
 ```c
@@ -562,7 +605,10 @@ FILE* openOutputFile(char* inputFileName) {
     }
     // Define the output file name to be the same as the input file name without the .txt ending
     char outputFileName[MAX_INPUT_FILE_NAME_LENGTH + 3];
-    snprintf(outputFileName, sizeof(outputFileName), "%s%s", substr(inputFileName, 0, strlen(inputFileName) - 4), OUTPUT_FILE_SUFFIX);
+    char* inputFileNameWithoutExtension = substr(inputFileName, 0, (int)strlen(inputFileName) - 4);
+    snprintf(outputFileName, sizeof(outputFileName), "%s%s", inputFileNameWithoutExtension, OUTPUT_FILE_SUFFIX);
+    // De allocate the memory used for the substring
+    free(inputFileNameWithoutExtension);
 
     // Open the output file and return the pointer to it
     FILE* outputFilePtr;
