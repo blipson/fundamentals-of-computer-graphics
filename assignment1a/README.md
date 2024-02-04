@@ -1014,10 +1014,10 @@ int main(int argc, char* argv[]) {
             .aspectRatio = (float) scene.imSize.width / (float) scene.imSize.height,
             // Define the viewing window instance
             .viewingWindow = {
-                    // Get the width by doing 2dtan(θh/2)
-                    .width = 2 * viewParameters.d * tanf(scene.fov.h / 2),
-                    // Get the height by taking the width and dividing by the aspect ratio
-                    .height = 2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio),
+                    // Get the width by doing 2dtan(θh/2) for perspective, or use the frustum width for parallel
+                    .width = scene.parallel.frustumWidth <= 0 ? 2 * viewParameters.d * tanf(scene.fov.h / 2) : scene.parallel.frustumWidth,
+                    // Get the height by taking the width and dividing by the aspect ratio for perspective, or use the frustum width with the correct aspect ratio for parallel
+                    .height = scene.parallel.frustumWidth <= 0 ? 2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio) : (scene.parallel.frustumWidth / viewParameters.aspectRatio),
             }
     };
     // Set the rest of the viewing parameters
