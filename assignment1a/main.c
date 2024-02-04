@@ -47,8 +47,8 @@ int main(int argc, char* argv[]) {
             .d = 1.0f,
             .aspectRatio = (float) scene.imSize.width / (float) scene.imSize.height,
             .viewingWindow = {
-                    .width = 2 * viewParameters.d * tanf(scene.fov.h / 2),
-                    .height = 2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio),
+                    .width = scene.parallel.frustumWidth <= 0 ? 2 * viewParameters.d * tanf(scene.fov.h / 2) : scene.parallel.frustumWidth,
+                    .height = scene.parallel.frustumWidth <= 0 ? 2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio) : (scene.parallel.frustumWidth / viewParameters.aspectRatio),
             }
     };
     setViewingWindow(scene, &viewParameters);

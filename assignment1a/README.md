@@ -21,12 +21,13 @@ Sample input files are provided in this repo.
 - example4.txt
 - example5.txt
 - ellipse.txt
+- parallel.txt
 - showcase.txt
 
 ### General Notes
 - The RGB scale is from 0-1.
 - Horizontal field of view accepts the value v in degrees, not radians.
-- Parallel is an optional parameter.
+- Parallel is an optional parameter that accepts frustum width as its value v.
 
 ### Header
 This section defines the scene's general viewing parameters. The individual values can appear in any order, but this section must be at the top.

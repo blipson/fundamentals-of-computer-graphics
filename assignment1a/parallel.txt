@@ -1,15 +1,15 @@
-imsize 4096 4096
+imsize 512 512
 eye 0 0 0
 viewdir 0 0 -1
 hfov 45
 updir 0 1 0
 bkgcolor 0.2 0.2 0.2
-parallel 1
+parallel .512
 
 mtlcolor 1 0 0
-sphere 1.2 1.2 -8 0.2
-sphere -1.2 1.2 -8 0.2
-sphere 1.2 -1.2 -8 0.2
-sphere -1.2 -1.2 -8 0.2
+sphere .5 .5 -8 0.3
+sphere .5 -.5 -8 0.3
+sphere -.5 .5 -8 0.3
+sphere -.5 -.5 -8 0.3
 
 
