@@ -1,4 +1,4 @@
-# Assignment 0
+# Assignment 1a
 This is a program to render a scene containing ellipses and spheres in 3D space.
 
 # Building
