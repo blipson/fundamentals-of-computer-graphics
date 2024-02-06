@@ -490,7 +490,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
 
 // Helper function to print the scene
 // Used to validate the file has been read in correctly
-void printInput(Scene scene) {
+void printScene(Scene scene) {
     printf("--------------------SCENE--------------------\n");
     printf("eye: %lf %lf %lf\n", scene.eye.x, scene.eye.y, scene.eye.z);
     printf("viewdir: %lf %lf %lf\n", scene.viewDir.x, scene.viewDir.y, scene.viewDir.z);
