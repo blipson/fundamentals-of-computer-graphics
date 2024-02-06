@@ -11,7 +11,7 @@
 #include <math.h>
 
 #define MAX_LINE_COUNT 500
-#define MAX_WORDS_PER_LINE 11 // This will wrap if they have more than this many words in a line and cause weird behavior
+#define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
 #define MAX_LINE_LENGTH 50
 #define KEYWORD_COUNT 10
 
@@ -20,10 +20,10 @@ void checkArgs(int argc, char* argv[]) {
         fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1a <path/to/input_file>`");
         exit(-1);
     }
-//    if (strcmp(argv[0], "./raytracer1a") != 0) {
-//        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1a <path/to/input_file>`");
-//        exit(-1);
-//    }
+    if (strcmp(argv[0], "./raytracer1a") != 0) {
+        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1a <path/to/input_file>`");
+        exit(-1);
+    }
 }
 
 char** readLine(char* line, char** wordsInLine) {
@@ -160,35 +160,54 @@ unsigned char convertFloatToUnsignedChar(float normalizedValue) {
     return result;
 }
 
+void checkValues(char** line, int expectedNumber, char* type) {
+    if (line[expectedNumber + 1] != NULL) {
+        fprintf(stderr, "Too many values given for '%s', it expects %d.", type, expectedNumber);
+        exit(-1);
+    }
+    for (int i = 1; i <= expectedNumber; i++) {
+        if (line[i] == NULL) {
+            fprintf(stderr, "Too few values given for '%s', it expects %d.", type, expectedNumber);
+            exit(-1);
+        }
+    }
+}
+
 void readSceneSetup(
         char*** inputFileWordsByLine,
         int* line,
         Scene* scene
 ) {
     while (inputFileWordsByLine[*line][0] != NULL && strcmp(inputFileWordsByLine[*line][0], "mtlcolor") != 0) {
-        // todo: handle if there's too many or two few values in any
         if (strcmp(inputFileWordsByLine[*line][0], "eye") == 0) {
+            checkValues(inputFileWordsByLine[*line], 3, "eye");
             scene->eye.x = convertStringToFloat(inputFileWordsByLine[*line][1]);
             scene->eye.y = convertStringToFloat(inputFileWordsByLine[*line][2]);
             scene->eye.z = convertStringToFloat(inputFileWordsByLine[*line][3]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "viewdir") == 0) {
+            checkValues(inputFileWordsByLine[*line], 3, "viewdir");
             scene->viewDir.x = convertStringToFloat(inputFileWordsByLine[*line][1]);
             scene->viewDir.y = convertStringToFloat(inputFileWordsByLine[*line][2]);
             scene->viewDir.z = convertStringToFloat(inputFileWordsByLine[*line][3]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "updir") == 0) {
+            checkValues(inputFileWordsByLine[*line], 3, "updir");
             scene->upDir.x = convertStringToFloat(inputFileWordsByLine[*line][1]);
             scene->upDir.y = convertStringToFloat(inputFileWordsByLine[*line][2]);
             scene->upDir.z = convertStringToFloat(inputFileWordsByLine[*line][3]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "hfov") == 0) {
+            checkValues(inputFileWordsByLine[*line], 1, "hfov");
             scene->fov.h = convertStringToFloat(inputFileWordsByLine[*line][1]) * (float) M_PI / 180.0f; // convert to radians
         } else if (strcmp(inputFileWordsByLine[*line][0], "imsize") == 0) {
+            checkValues(inputFileWordsByLine[*line], 2, "imsize");
             scene->imSize.width = convertStringToInt(inputFileWordsByLine[*line][1]);
             scene->imSize.height = convertStringToInt(inputFileWordsByLine[*line][2]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "bkgcolor") == 0) {
+            checkValues(inputFileWordsByLine[*line], 3, "bkgcolor");
             scene->bkgColor.red = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][1]));
             scene->bkgColor.green = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][2]));
             scene->bkgColor.blue = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][3]));
         } else if (strcmp(inputFileWordsByLine[*line][0], "parallel") == 0) {
+            checkValues(inputFileWordsByLine[*line], 1, "parallel");
             scene->parallel.frustumWidth = convertStringToFloat(inputFileWordsByLine[*line][1]);
         }
         (*line)++;
@@ -205,7 +224,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                 exit(-1);
             }
             (*scene).mtlColors = newMtlColors;
-            // todo: handle if there's too many or two few values in any
+            checkValues(inputFileWordsByLine[*line], 10, "mtlcolor");
             (*scene).mtlColors[(*scene).mtlColorCount].diffuseColor = (RGBColor) {
                     .red = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][1])),
                     .green = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][2])),
@@ -231,7 +250,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                         exit(-1);
                     }
                     (*scene).spheres = newSpheres;
-                    // todo: handle if there's too many or two few values in any
+                    checkValues(inputFileWordsByLine[objectLine], 4, "sphere");
                     Vector3 spherePosition = {
                             .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
                             .y = convertStringToFloat(inputFileWordsByLine[objectLine][2]),
@@ -248,6 +267,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                         exit(-1);
                     }
                     (*scene).ellipses = newEllipses;
+                    checkValues(inputFileWordsByLine[objectLine], 6, "ellipse");
                     Vector3 ellipseCenter = {
                             .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
                             .y = convertStringToFloat(inputFileWordsByLine[objectLine][2]),
@@ -258,7 +278,6 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                             .y = convertStringToFloat(inputFileWordsByLine[objectLine][5]),
                             .z = convertStringToFloat(inputFileWordsByLine[objectLine][6])
                     };
-                    // todo: handle if there's too many or two few values in any
                     (*scene).ellipses[(*scene).ellipseCount].center = ellipseCenter;
                     (*scene).ellipses[(*scene).ellipseCount].radius = ellipseRadius;
                     (*scene).ellipses[(*scene).ellipseCount].mtlColorIdx = (*scene).mtlColorCount;
