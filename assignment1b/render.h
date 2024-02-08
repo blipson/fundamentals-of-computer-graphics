@@ -92,15 +92,12 @@ void printViewParameters(ViewParameters viewParameters) {
     printf("---------------------------------------------\n");
 }
 
-void setViewingWindow(Scene scene, ViewParameters* viewParameters) {
+void setViewingWindowValues(Scene scene, ViewParameters* viewParameters, Vector3 viewDirTimesDistance) {
     float halfWidth = viewParameters->viewingWindow.width/2;
     float halfHeight = viewParameters->viewingWindow.height/2;
     Vector3 widthTimesHorizontal = multiply(viewParameters->u, halfWidth);
     Vector3 heightTimesVertical = multiply(viewParameters->v, halfHeight);
-
-    // for parallel, don't multiply by d
-    Vector3 eyePlusViewVector = add(scene.eye, multiply(viewParameters->n, viewParameters->d));
-
+    Vector3 eyePlusViewVector = add(scene.eye, viewDirTimesDistance);
     Vector3 perspectiveMinusDimensions = subtract(eyePlusViewVector, widthTimesHorizontal);
     Vector3 perspectivePlusDimensions = add(eyePlusViewVector, widthTimesHorizontal);
 
@@ -109,49 +106,63 @@ void setViewingWindow(Scene scene, ViewParameters* viewParameters) {
     viewParameters->viewingWindow.ll = subtract(perspectiveMinusDimensions, heightTimesVertical);
     viewParameters->viewingWindow.lr = subtract(perspectivePlusDimensions, heightTimesVertical);
 
-    printf("UL: ");
-    printVector(viewParameters->viewingWindow.ul);
-    printf("UR: ");
-    printVector(viewParameters->viewingWindow.ur);
-    printf("LL: ");
-    printVector(viewParameters->viewingWindow.ll);
-    printf("LR: ");
-    printVector(viewParameters->viewingWindow.lr);
-
     viewParameters->dh = divide(subtract(viewParameters->viewingWindow.ur, viewParameters->viewingWindow.ul), ((float) scene.imSize.width - 1));
     viewParameters->dv = divide(subtract(viewParameters->viewingWindow.ll, viewParameters->viewingWindow.ul), ((float) scene.imSize.height - 1));
 }
 
-Ray createRay(Scene scene, ViewParameters viewParameters, int x, int y) {
-    Vector3 viewingWindowLocation = add(
+void setParallelViewingWindow(Scene scene, ViewParameters* viewParameters) {
+    // for parallel, don't multiply by d
+    setViewingWindowValues(scene, viewParameters, viewParameters->n);
+}
+
+void setPerspectiveViewingWindow(Scene scene, ViewParameters* viewParameters) {
+    setViewingWindowValues(scene, viewParameters, multiply(viewParameters->n, viewParameters->d));
+}
+
+void setViewingWindow(Scene scene, ViewParameters* viewParameters) {
+    if (scene.parallel.frustumWidth > 0) {
+        setParallelViewingWindow(scene, viewParameters);
+    } else {
+        setPerspectiveViewingWindow(scene, viewParameters);
+    }
+}
+
+Vector3 getViewingWindowLocation(ViewParameters viewParameters, int x, int y) {
+    return add(
             add(
                     viewParameters.viewingWindow.ul,
                     multiply(
                             viewParameters.dh,
                             (float) x
-                        )
-                ),
-                multiply(viewParameters.dv, (float) y)
+                    )
+            ),
+            multiply(viewParameters.dv, (float) y)
     );
+}
 
-    if (scene.parallel.frustumWidth > 0) {
-        return (Ray) {
+Ray castParallelRay(Vector3 viewDir, Vector3 viewingWindowLocation) {
+    return (Ray) {
             .origin = viewingWindowLocation,
-            .direction = normalize(scene.viewDir)
-        };
+            .direction = normalize(viewDir)
+    };
+}
+
+Ray castPerspectiveRay(Vector3 eye, Vector3 viewingWindowLocation) {
+    return (Ray) {
+            .origin = eye,
+            .direction = normalize(subtract(viewingWindowLocation, eye))
+    };
+}
+
+Ray castRay(Scene scene, Vector3 viewingWindowLocation) {
+    if (scene.parallel.frustumWidth > 0) {
+        return castParallelRay(scene.viewDir, viewingWindowLocation);
     } else {
-        printf("VIEWING WINDOW LOCATION: ");
-        printVector(viewingWindowLocation);
-        printf("RAY DIRECTION: ");
-        printVector(normalize(subtract(viewingWindowLocation, scene.eye)));
-        return (Ray) {
-                .origin = scene.eye,
-                .direction = normalize(subtract(viewingWindowLocation, scene.eye))
-        };
+        return castPerspectiveRay(scene.eye, viewingWindowLocation);
     }
 }
 
-RGBColor getPixelColor(Ray ray, Scene scene, int y, char* argv) {
+RGBColor traceRay(Ray ray, Scene scene, char *argv) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     bool closestIsSphere = false;
     int closestSphereIdx = -1;
