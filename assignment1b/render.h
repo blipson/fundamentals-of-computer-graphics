@@ -3,6 +3,10 @@
 
 #include <float.h>
 
+float max(float a, float b) {
+    return (a > b) ? a : b;
+}
+
 float magnitude(Vector3 v) {
     return sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
 }
@@ -26,6 +30,14 @@ Vector3 multiply(Vector3 v, float s) {
             .x = v.x * s,
             .y = v.y * s,
             .z = v.z * s
+    };
+}
+
+RGBColor multiplyRGB(RGBColor c, float s) {
+    return (RGBColor) {
+        .red = c.red * s,
+        .green = c.green * s,
+        .blue = c.blue * s
     };
 }
 
@@ -111,7 +123,6 @@ void setViewingWindowValues(Scene scene, ViewParameters* viewParameters, Vector3
 }
 
 void setParallelViewingWindow(Scene scene, ViewParameters* viewParameters) {
-    // for parallel, don't multiply by d
     setViewingWindowValues(scene, viewParameters, viewParameters->n);
 }
 
@@ -162,7 +173,7 @@ Ray castRay(Scene scene, Vector3 viewingWindowLocation) {
     }
 }
 
-RGBColor traceRay(Ray ray, Scene scene, char *argv) {
+RGBColor traceRay(Ray ray, Scene scene) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     bool closestIsSphere = false;
     int closestSphereIdx = -1;
@@ -213,7 +224,7 @@ RGBColor traceRay(Ray ray, Scene scene, char *argv) {
 
         float discriminant = B * B - 4 * A * C;
 
-        if ((strcmp(argv, "./showcase.txt") == 0 && discriminant >= 0 && discriminant <= 25) || discriminant >= 0) {
+        if (discriminant >= 0) {
             float sqrtDiscriminant = sqrtf(discriminant);
             float t1 = (-B + sqrtDiscriminant) / (2 * A);
             float t2 = (-B - sqrtDiscriminant) / (2 * A);

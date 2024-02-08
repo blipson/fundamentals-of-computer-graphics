@@ -13,7 +13,7 @@
 #define MAX_LINE_COUNT 500
 #define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
 #define MAX_LINE_LENGTH 50
-#define KEYWORD_COUNT 10
+#define KEYWORD_COUNT 11
 
 void checkArgs(int argc, char* argv[]) {
     if (argc != 2) {
@@ -63,7 +63,7 @@ char** readLine(char* line, char** wordsInLine) {
 }
 
 bool isKeyword(const char* target) {
-    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse"};
+    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light"};
     for (size_t i = 0; i < KEYWORD_COUNT; i++) {
         if (strcmp(target, keywords[i]) == 0) {
             return true;
@@ -209,13 +209,28 @@ void readSceneSetup(
         } else if (strcmp(inputFileWordsByLine[*line][0], "parallel") == 0) {
             checkValues(inputFileWordsByLine[*line], 1, "parallel");
             scene->parallel.frustumWidth = convertStringToFloat(inputFileWordsByLine[*line][1]);
+        } else if (strcmp(inputFileWordsByLine[*line][0], "light") == 0) {
+            Light* newLights = (Light*) realloc((*scene).lights, ((*scene).lightCount + 1) * sizeof(Light));
+            if (newLights == NULL) {
+                fprintf(stderr, "Memory allocation failed for light.");
+                exit(-1);
+            }
+            // TODO: can I use -> ???
+            (*scene).lights = newLights;
+            checkValues(inputFileWordsByLine[*line], 5, "light");
+            (*scene).lights[(*scene).lightCount].position = (Vector3) {
+                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
+                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
+                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
+            };
+            (*scene).lights[(*scene).lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
+            (*scene).lights[(*scene).lightCount].i = convertStringToFloat(inputFileWordsByLine[*line][5]);
         }
         (*line)++;
     }
 }
 
 void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
-    // TODO: lights. Do they come before or after objects??
     while (inputFileWordsByLine[*line][0] != NULL) {
         if (strcmp(inputFileWordsByLine[*line][0], "mtlcolor") == 0) {
             MaterialColor* newMtlColors = (MaterialColor*) realloc((*scene).mtlColors, ((*scene).mtlColorCount + 1) * sizeof(MaterialColor));
@@ -223,6 +238,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                 fprintf(stderr, "Memory allocation failed for material color.");
                 exit(-1);
             }
+            // TODO: can I use -> ???
             (*scene).mtlColors = newMtlColors;
             checkValues(inputFileWordsByLine[*line], 10, "mtlcolor");
             (*scene).mtlColors[(*scene).mtlColorCount].diffuseColor = (RGBColor) {

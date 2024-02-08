@@ -54,9 +54,9 @@ typedef struct {
 } Ellipse;
 
 typedef struct {
-    Vector3 direction;
+    Vector3 position;
     float w;
-    RGBColor color;
+    float i;
 } Light;
 
 typedef struct {
@@ -74,6 +74,7 @@ typedef struct {
     Ellipse* ellipses;
     int ellipseCount;
     Light* lights;
+    int lightCount;
 } Scene;
 
 typedef struct {

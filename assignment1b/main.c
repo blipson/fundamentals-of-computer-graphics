@@ -7,7 +7,7 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, cha
         for (int x = 0; x < scene.imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
             Ray ray = castRay(scene, viewingWindowLocation);
-            writePixel(outputFilePtr, traceRay(ray, scene, argv), x, scene.imSize.width);
+            writePixel(outputFilePtr, traceRay(ray, scene), x, scene.imSize.width);
         }
     }
 }
@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 
     char*** inputFileWordsByLine = readInputFile(argv[1]);
 
-    // Default because the arrays must be instantiated with NULL to avoid seg faults
+    // TODO: Handle accessing any of these arrays if they're not set. Make them required.
     Scene scene = {
             .eye = { .x = 0, .y = 0, .z = 0 },
             .viewDir = { .x = 0, .y = 0, .z = 0 },
@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
             .ellipses = NULL,
             .ellipseCount = 0,
             .lights = NULL,
+            .lightCount = 0,
     };
 
     int line = 0;
@@ -40,8 +41,6 @@ int main(int argc, char* argv[]) {
     readSceneObjects(inputFileWordsByLine, &line, &scene);
 
     freeInputFileWordsByLine(inputFileWordsByLine);
-
-    printScene(scene);
 
     ViewParameters viewParameters = {
             .w = normalize(multiply(scene.viewDir, -1)),
@@ -63,5 +62,6 @@ int main(int argc, char* argv[]) {
     render(outputFilePtr, scene, viewParameters, argv[1]);
 
     freeInput(scene);
+
     exit(0);
 }
