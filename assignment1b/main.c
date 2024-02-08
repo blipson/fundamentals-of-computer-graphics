@@ -5,6 +5,8 @@
 void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, char* argv) {
     for (int y = 0; y < scene.imSize.height; y++) {
         for (int x = 0; x < scene.imSize.width; x++) {
+            // if parallel:
+            //    some other createray fcn
             Ray ray = createRay(scene, viewParameters, x, y);
             writePixel(outputFilePtr, getPixelColor(ray, scene, y, argv), x, scene.imSize.width);
         }
@@ -54,6 +56,8 @@ int main(int argc, char* argv[]) {
                     .height = scene.parallel.frustumWidth <= 0 ? 2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio) : (scene.parallel.frustumWidth / viewParameters.aspectRatio),
             }
     };
+    // if parallel:
+    //    do some other set viewing window fcn
     setViewingWindow(scene, &viewParameters);
 
     FILE* outputFilePtr = openOutputFile(argv[1]);

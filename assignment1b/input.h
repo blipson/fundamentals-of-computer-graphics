@@ -20,10 +20,10 @@ void checkArgs(int argc, char* argv[]) {
         fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1a <path/to/input_file>`");
         exit(-1);
     }
-    if (strcmp(argv[0], "./raytracer1a") != 0) {
-        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1a <path/to/input_file>`");
-        exit(-1);
-    }
+//    if (strcmp(argv[0], "./raytracer1a") != 0) {
+//        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1a <path/to/input_file>`");
+//        exit(-1);
+//    }
 }
 
 char** readLine(char* line, char** wordsInLine) {

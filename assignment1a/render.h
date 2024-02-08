@@ -141,11 +141,10 @@ RGBColor getPixelColor(Ray ray, Scene scene, int y, char* argv) {
     int closestSphereIdx = -1;
     int closestEllipseIdx = -1;
 
-    Vector3 rayDir = normalize(subtract(ray.direction, ray.origin));
     for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
         Sphere sphere = scene.spheres[sphereIdx];
-        float A = dot(rayDir, rayDir);
-        float B = 2 * dot(rayDir, subtract(ray.origin, sphere.center));
+        float A = dot(ray.direction, ray.direction);
+        float B = 2 * dot(ray.direction, subtract(ray.origin, sphere.center));
         float C = dot(subtract(ray.origin, sphere.center), subtract(ray.origin, sphere.center)) - sphere.radius * sphere.radius;
 
         float discriminant = B * B - 4 * A * C;
@@ -171,14 +170,14 @@ RGBColor getPixelColor(Ray ray, Scene scene, int y, char* argv) {
     for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
         Ellipse ellipse = scene.ellipses[ellipseIdx];
 
-        float A = (rayDir.x * rayDir.x) / (ellipse.radius.x * ellipse.radius.x)
-                   + (rayDir.y * rayDir.y) / (ellipse.radius.y * ellipse.radius.y)
-                   + (rayDir.z * rayDir.z) / (ellipse.radius.z * ellipse.radius.z);
+        float A = (ray.direction.x * ray.direction.x) / (ellipse.radius.x * ellipse.radius.x)
+                   + (ray.direction.y * ray.direction.y) / (ellipse.radius.y * ellipse.radius.y)
+                   + (ray.direction.z * ray.direction.z) / (ellipse.radius.z * ellipse.radius.z);
 
 
-        float B = 2 * ((rayDir.x * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
-                        + (rayDir.y * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
-                        + (rayDir.z * (ray.origin.z - ellipse.center.z)) / (ellipse.radius.z * ellipse.radius.z));
+        float B = 2 * ((ray.direction.x * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
+                        + (ray.direction.y * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
+                        + (ray.direction.z * (ray.origin.z - ellipse.center.z)) / (ellipse.radius.z * ellipse.radius.z));
 
         float C = ((ray.origin.x - ellipse.center.x) * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
                    + ((ray.origin.y - ellipse.center.y) * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
