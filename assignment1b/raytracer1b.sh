@@ -4,3 +4,4 @@
 ./raytracer1b ./example4.txt
 ./raytracer1b ./example5.txt
 ./raytracer1b ./parallel.txt
+./raytracer1b ./ambientcoefficient.txt

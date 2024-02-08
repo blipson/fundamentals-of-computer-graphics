@@ -210,21 +210,20 @@ void readSceneSetup(
             checkValues(inputFileWordsByLine[*line], 1, "parallel");
             scene->parallel.frustumWidth = convertStringToFloat(inputFileWordsByLine[*line][1]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "light") == 0) {
-            Light* newLights = (Light*) realloc((*scene).lights, ((*scene).lightCount + 1) * sizeof(Light));
+            Light* newLights = (Light*) realloc(scene->lights, (scene->lightCount + 1) * sizeof(Light));
             if (newLights == NULL) {
                 fprintf(stderr, "Memory allocation failed for light.");
                 exit(-1);
             }
-            // TODO: can I use -> ???
-            (*scene).lights = newLights;
+            scene->lights = newLights;
             checkValues(inputFileWordsByLine[*line], 5, "light");
-            (*scene).lights[(*scene).lightCount].position = (Vector3) {
+            scene->lights[scene->lightCount].position = (Vector3) {
                     .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
                     .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
                     .z = convertStringToFloat(inputFileWordsByLine[*line][3])
             };
-            (*scene).lights[(*scene).lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
-            (*scene).lights[(*scene).lightCount].i = convertStringToFloat(inputFileWordsByLine[*line][5]);
+            scene->lights[scene->lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
+            scene->lights[scene->lightCount].i = convertStringToFloat(inputFileWordsByLine[*line][5]);
         }
         (*line)++;
     }
@@ -233,56 +232,55 @@ void readSceneSetup(
 void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     while (inputFileWordsByLine[*line][0] != NULL) {
         if (strcmp(inputFileWordsByLine[*line][0], "mtlcolor") == 0) {
-            MaterialColor* newMtlColors = (MaterialColor*) realloc((*scene).mtlColors, ((*scene).mtlColorCount + 1) * sizeof(MaterialColor));
+            MaterialColor* newMtlColors = (MaterialColor*) realloc(scene->mtlColors, (scene->mtlColorCount + 1) * sizeof(MaterialColor));
             if (newMtlColors == NULL) {
                 fprintf(stderr, "Memory allocation failed for material color.");
                 exit(-1);
             }
-            // TODO: can I use -> ???
-            (*scene).mtlColors = newMtlColors;
+            scene->mtlColors = newMtlColors;
             checkValues(inputFileWordsByLine[*line], 10, "mtlcolor");
-            (*scene).mtlColors[(*scene).mtlColorCount].diffuseColor = (RGBColor) {
+            scene->mtlColors[scene->mtlColorCount].diffuseColor = (RGBColor) {
                     .red = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][1])),
                     .green = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][2])),
                     .blue = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][3])),
             };
-            (*scene).mtlColors[(*scene).mtlColorCount].specularColor = (RGBColor) {
+            scene->mtlColors[scene->mtlColorCount].specularColor = (RGBColor) {
                     .red = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][4])),
                     .green = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][5])),
                     .blue = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][6])),
             };
-            (*scene).mtlColors[(*scene).mtlColorCount].ambientCoefficient = convertStringToFloat(inputFileWordsByLine[*line][7]);
-            (*scene).mtlColors[(*scene).mtlColorCount].diffuseCoefficient = convertStringToFloat(inputFileWordsByLine[*line][8]);
-            (*scene).mtlColors[(*scene).mtlColorCount].specularCoefficient = convertStringToFloat(inputFileWordsByLine[*line][9]);
-            (*scene).mtlColors[(*scene).mtlColorCount].specularExponent = convertStringToFloat(inputFileWordsByLine[*line][10]);
+            scene->mtlColors[scene->mtlColorCount].ambientCoefficient = convertStringToFloat(inputFileWordsByLine[*line][7]);
+            scene->mtlColors[scene->mtlColorCount].diffuseCoefficient = convertStringToFloat(inputFileWordsByLine[*line][8]);
+            scene->mtlColors[scene->mtlColorCount].specularCoefficient = convertStringToFloat(inputFileWordsByLine[*line][9]);
+            scene->mtlColors[scene->mtlColorCount].specularExponent = convertStringToFloat(inputFileWordsByLine[*line][10]);
 
             int objectLine = (*line) + 1;
             while (inputFileWordsByLine[objectLine][0] != NULL &&
                    strcmp(inputFileWordsByLine[objectLine][0], "mtlcolor") != 0) {
                 if (strcmp(inputFileWordsByLine[objectLine][0], "sphere") == 0) {
-                    Sphere* newSpheres = (Sphere*) realloc((*scene).spheres, ((*scene).sphereCount + 1) * sizeof(Sphere));
+                    Sphere* newSpheres = (Sphere*) realloc(scene->spheres, (scene->sphereCount + 1) * sizeof(Sphere));
                     if (newSpheres == NULL) {
                         fprintf(stderr, "Memory allocation failed for sphere.");
                         exit(-1);
                     }
-                    (*scene).spheres = newSpheres;
+                    scene->spheres = newSpheres;
                     checkValues(inputFileWordsByLine[objectLine], 4, "sphere");
                     Vector3 spherePosition = {
                             .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
                             .y = convertStringToFloat(inputFileWordsByLine[objectLine][2]),
                             .z = convertStringToFloat(inputFileWordsByLine[objectLine][3])
                     };
-                    (*scene).spheres[(*scene).sphereCount].center = spherePosition;
-                    (*scene).spheres[(*scene).sphereCount].radius = convertStringToFloat(inputFileWordsByLine[objectLine][4]);
-                    (*scene).spheres[(*scene).sphereCount].mtlColorIdx = (*scene).mtlColorCount;
-                    (*scene).sphereCount++;
+                    scene->spheres[scene->sphereCount].center = spherePosition;
+                    scene->spheres[scene->sphereCount].radius = convertStringToFloat(inputFileWordsByLine[objectLine][4]);
+                    scene->spheres[scene->sphereCount].mtlColorIdx = scene->mtlColorCount;
+                    scene->sphereCount++;
                 } else if (strcmp(inputFileWordsByLine[objectLine][0], "ellipse") == 0) {
-                    Ellipse* newEllipses = (Ellipse *) realloc((*scene).ellipses, ((*scene).ellipseCount + 1) * sizeof(Ellipse));
+                    Ellipse* newEllipses = (Ellipse *) realloc(scene->ellipses, (scene->ellipseCount + 1) * sizeof(Ellipse));
                     if (newEllipses == NULL) {
                         fprintf(stderr, "Memory allocation failed for ellipse.");
                         exit(-1);
                     }
-                    (*scene).ellipses = newEllipses;
+                    scene->ellipses = newEllipses;
                     checkValues(inputFileWordsByLine[objectLine], 6, "ellipse");
                     Vector3 ellipseCenter = {
                             .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
@@ -294,14 +292,14 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                             .y = convertStringToFloat(inputFileWordsByLine[objectLine][5]),
                             .z = convertStringToFloat(inputFileWordsByLine[objectLine][6])
                     };
-                    (*scene).ellipses[(*scene).ellipseCount].center = ellipseCenter;
-                    (*scene).ellipses[(*scene).ellipseCount].radius = ellipseRadius;
-                    (*scene).ellipses[(*scene).ellipseCount].mtlColorIdx = (*scene).mtlColorCount;
-                    (*scene).ellipseCount++;
+                    scene->ellipses[scene->ellipseCount].center = ellipseCenter;
+                    scene->ellipses[scene->ellipseCount].radius = ellipseRadius;
+                    scene->ellipses[scene->ellipseCount].mtlColorIdx = scene->mtlColorCount;
+                    scene->ellipseCount++;
                 }
                 objectLine++;
             }
-            (*scene).mtlColorCount++;
+            scene->mtlColorCount++;
             *line = objectLine;
         } else {
             (*line)++;
