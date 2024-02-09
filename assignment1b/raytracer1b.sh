@@ -1,10 +1,16 @@
-./raytracer1b ./tests/example1.txt
-./raytracer1b ./tests/example2.txt
-./raytracer1b ./tests/example3.txt
-./raytracer1b ./tests/example4.txt
-./raytracer1b ./tests/example5.txt
-./raytracer1b ./tests/parallel.txt
-./raytracer1b ./tests/ambientcoefficient.txt
-./raytracer1b ./tests/diffusecoefficient.txt
-./raytracer1b ./tests/specularcoefficient.txt
-./raytracer1b ./tests/directionallight.txt
+#!/bin/bash
+
+directory="./tests/"
+
+if [ -d "$directory" ]; then
+    rm -f "$directory"*.ppm
+    for file in "$directory"*.txt; do
+        if [ -f "$file" ]; then
+            ./raytracer1b "$file"
+        else
+            echo "Skipping non-regular file: $file"
+        fi
+    done
+else
+    echo "Directory $directory does not exist."
+fi
