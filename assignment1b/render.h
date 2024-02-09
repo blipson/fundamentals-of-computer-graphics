@@ -259,7 +259,12 @@ RGBColor shadeRay(Ray ray, Scene scene) {
 
         // TODO: Handle multiple lights
         // Q: Do I need to negate directional light?
-        Vector3 lightDirection = scene.lights[0].w == 1 ? normalize(subtract(scene.lights[0].position, intersectionPoint)) : normalize(multiply(scene.lights[0].position, -1));
+        Vector3 lightDirection;
+        if (scene.lightCount > 0) {
+            lightDirection = scene.lights[0].w == 1 ? normalize(subtract(scene.lights[0].position, intersectionPoint)) : normalize(multiply(scene.lights[0].position, -1));
+        } else {
+            lightDirection = (Vector3) { .x = 0, .y = 0, .z = 0};
+        }
         Vector3 intersectionToOrigin = normalize(subtract(scene.eye, intersectionPoint));
         Vector3 halfwayLightDirection = normalize(divide(add(lightDirection, intersectionToOrigin), 2));
 

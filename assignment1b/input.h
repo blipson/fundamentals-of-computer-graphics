@@ -224,6 +224,7 @@ void readSceneSetup(
             };
             scene->lights[scene->lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
             scene->lights[scene->lightCount].i = convertStringToFloat(inputFileWordsByLine[*line][5]);
+            scene->lightCount++;
         }
         (*line)++;
     }
