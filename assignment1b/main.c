@@ -6,8 +6,8 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, cha
     for (int y = 0; y < scene.imSize.height; y++) {
         for (int x = 0; x < scene.imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
-            Ray ray = castRay(scene, viewingWindowLocation);
-            writePixel(outputFilePtr, traceRay(ray, scene), x, scene.imSize.width);
+            Ray ray = traceRay(scene, viewingWindowLocation);
+            writePixel(outputFilePtr, shadeRay(ray, scene), x, scene.imSize.width);
         }
     }
 }
@@ -18,6 +18,7 @@ int main(int argc, char* argv[]) {
     char*** inputFileWordsByLine = readInputFile(argv[1]);
 
     // TODO: Handle accessing any of these arrays if they're not set. Make them required.
+    // will fix seg faults.
     Scene scene = {
             .eye = { .x = 0, .y = 0, .z = 0 },
             .viewDir = { .x = 0, .y = 0, .z = 0 },

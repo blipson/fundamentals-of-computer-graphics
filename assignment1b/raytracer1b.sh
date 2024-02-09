@@ -5,3 +5,6 @@
 ./raytracer1b ./example5.txt
 ./raytracer1b ./parallel.txt
 ./raytracer1b ./ambientcoefficient.txt
+./raytracer1b ./diffusecoefficient.txt
+./raytracer1b ./specularcoefficient.txt
+./raytracer1b ./directionallight.txt

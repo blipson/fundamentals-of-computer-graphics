@@ -41,6 +41,14 @@ RGBColor multiplyRGB(RGBColor c, float s) {
     };
 }
 
+RGBColor addRGB(RGBColor a, RGBColor b) {
+    return (RGBColor) {
+        .red = a.red + b.red,
+        .blue = a.blue + b.blue,
+        .green = a.green + b.green
+    };
+}
+
 Vector3 cross(Vector3 a, Vector3 b) {
     return (Vector3) {
             .x = (a.y * b.z) - (b.y * a.z),
@@ -79,6 +87,10 @@ Vector3 divide(Vector3 v, float c) {
 
 void printVector(Vector3 v) {
     printf("{x: %lf, y: %lf, z: %lf}\n", v.x, v.y, v.z);
+}
+
+void printRGBColor(RGBColor c) {
+    printf("{red: %hhu, green: %hhu, blue: %hhu}\n", c.red, c.green, c.blue);
 }
 
 void printViewParameters(ViewParameters viewParameters) {
@@ -165,7 +177,7 @@ Ray castPerspectiveRay(Vector3 eye, Vector3 viewingWindowLocation) {
     };
 }
 
-Ray castRay(Scene scene, Vector3 viewingWindowLocation) {
+Ray traceRay(Scene scene, Vector3 viewingWindowLocation) {
     if (scene.parallel.frustumWidth > 0) {
         return castParallelRay(scene.viewDir, viewingWindowLocation);
     } else {
@@ -173,7 +185,7 @@ Ray castRay(Scene scene, Vector3 viewingWindowLocation) {
     }
 }
 
-RGBColor traceRay(Ray ray, Scene scene) {
+RGBColor shadeRay(Ray ray, Scene scene) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     bool closestIsSphere = false;
     int closestSphereIdx = -1;
@@ -243,7 +255,38 @@ RGBColor traceRay(Ray ray, Scene scene) {
     }
 
     if (closestSphereIdx != -1 && closestIsSphere) {
-        return scene.mtlColors[scene.spheres[closestSphereIdx].mtlColorIdx].diffuseColor;
+        Sphere sphere = scene.spheres[closestSphereIdx];
+        MaterialColor mtlColor = scene.mtlColors[sphere.mtlColorIdx];
+        RGBColor diffuseColor = mtlColor.diffuseColor;
+        RGBColor specularColor = mtlColor.specularColor;
+
+        Vector3 intersectionPoint = add(ray.origin, multiply(ray.direction, closestIntersection)); // r/s p
+        Vector3 surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius)); // N
+
+        // TODO: Make colors use 0-1 for math then convert to RGB
+
+        // TODO: Handle multiple lights
+        // Q: Do I need to negate directional light?
+        Vector3 lightDirection = scene.lights[0].w == 1 ? normalize(subtract(scene.lights[0].position, intersectionPoint)) : normalize(multiply(scene.lights[0].position, -1));
+        Vector3 intersectionToOrigin = normalize(subtract(scene.eye, intersectionPoint));
+        Vector3 halfwayLightDirection = normalize(divide(add(lightDirection, intersectionToOrigin), 2));
+
+        RGBColor ambient = (RGBColor) {
+            .red =  (unsigned char)((float)diffuseColor.red * mtlColor.ambientCoefficient),
+            .green = (unsigned char)((float)diffuseColor.green * mtlColor.ambientCoefficient),
+            .blue = (unsigned char)((float)diffuseColor.blue * mtlColor.ambientCoefficient),
+        };
+        RGBColor diffuse = (RGBColor) {
+            .red = (unsigned char)((float)diffuseColor.red * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection)),
+            .green = (unsigned char)((float)diffuseColor.green * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection)),
+            .blue = (unsigned char)((float)diffuseColor.blue * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection)),
+        };
+        RGBColor specular = (RGBColor) {
+                .red =  (unsigned char)((float)specularColor.red * mtlColor.specularCoefficient * pow(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent)),
+                .green = (unsigned char)((float)specularColor.green * mtlColor.specularCoefficient * pow(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent)),
+                .blue = (unsigned char)((float)specularColor.blue * mtlColor.specularCoefficient * pow(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent)),
+        };
+        return addRGB(addRGB(ambient, diffuse), specular);
     } else if (closestEllipseIdx != -1 && !closestIsSphere) {
         return scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].diffuseColor;
     } else {
