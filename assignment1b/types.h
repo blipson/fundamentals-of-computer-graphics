@@ -29,8 +29,8 @@ typedef struct {
 } RGBColor;
 
 typedef struct {
-    RGBColor diffuseColor;
-    RGBColor specularColor;
+    Vector3 diffuseColor;
+    Vector3 specularColor;
     float ambientCoefficient;
     float diffuseCoefficient;
     float specularCoefficient;
@@ -65,7 +65,7 @@ typedef struct {
     Vector3 upDir;
     FieldOfView fov;
     ImSize imSize;
-    RGBColor bkgColor;
+    Vector3 bkgColor;
     Parallel parallel;
     MaterialColor* mtlColors;
     int mtlColorCount;

@@ -203,9 +203,9 @@ void readSceneSetup(
             scene->imSize.height = convertStringToInt(inputFileWordsByLine[*line][2]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "bkgcolor") == 0) {
             checkValues(inputFileWordsByLine[*line], 3, "bkgcolor");
-            scene->bkgColor.red = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][1]));
-            scene->bkgColor.green = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][2]));
-            scene->bkgColor.blue = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][3]));
+            scene->bkgColor.x = convertStringToFloat(inputFileWordsByLine[*line][1]);
+            scene->bkgColor.y = convertStringToFloat(inputFileWordsByLine[*line][2]);
+            scene->bkgColor.z = convertStringToFloat(inputFileWordsByLine[*line][3]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "parallel") == 0) {
             checkValues(inputFileWordsByLine[*line], 1, "parallel");
             scene->parallel.frustumWidth = convertStringToFloat(inputFileWordsByLine[*line][1]);
@@ -239,15 +239,15 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
             }
             scene->mtlColors = newMtlColors;
             checkValues(inputFileWordsByLine[*line], 10, "mtlcolor");
-            scene->mtlColors[scene->mtlColorCount].diffuseColor = (RGBColor) {
-                    .red = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][1])),
-                    .green = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][2])),
-                    .blue = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][3])),
+            scene->mtlColors[scene->mtlColorCount].diffuseColor = (Vector3) {
+                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
+                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
+                    .z = convertStringToFloat(inputFileWordsByLine[*line][3]),
             };
-            scene->mtlColors[scene->mtlColorCount].specularColor = (RGBColor) {
-                    .red = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][4])),
-                    .green = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][5])),
-                    .blue = convertFloatToUnsignedChar(convertStringToFloat(inputFileWordsByLine[*line][6])),
+            scene->mtlColors[scene->mtlColorCount].specularColor = (Vector3) {
+                    .x = convertStringToFloat(inputFileWordsByLine[*line][4]),
+                    .y = convertStringToFloat(inputFileWordsByLine[*line][5]),
+                    .z = convertStringToFloat(inputFileWordsByLine[*line][6]),
             };
             scene->mtlColors[scene->mtlColorCount].ambientCoefficient = convertStringToFloat(inputFileWordsByLine[*line][7]);
             scene->mtlColors[scene->mtlColorCount].diffuseCoefficient = convertStringToFloat(inputFileWordsByLine[*line][8]);
@@ -309,22 +309,22 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
 
 void printScene(Scene scene) {
     printf("--------------------SCENE--------------------\n");
-    printf("eye: %lf %lf %lf\n", scene.eye.x, scene.eye.y, scene.eye.z);
-    printf("viewdir: %lf %lf %lf\n", scene.viewDir.x, scene.viewDir.y, scene.viewDir.z);
-    printf("updir: %lf %lf %lf\n", scene.upDir.x, scene.upDir.y, scene.upDir.z);
-    printf("hfov: %lf\n", scene.fov.h);
+    printf("eye: %f %f %f\n", scene.eye.x, scene.eye.y, scene.eye.z);
+    printf("viewdir: %f %f %f\n", scene.viewDir.x, scene.viewDir.y, scene.viewDir.z);
+    printf("updir: %f %f %f\n", scene.upDir.x, scene.upDir.y, scene.upDir.z);
+    printf("hfov: %f\n", scene.fov.h);
     printf("imsize: %d %d\n", scene.imSize.width, scene.imSize.height);
-    printf("bkgcolor: %d %d %d\n", scene.bkgColor.red, scene.bkgColor.green, scene.bkgColor.blue);
-    printf("parallel: %lf\n", scene.parallel.frustumWidth);
+    printf("bkgcolor: %f %f %f\n", scene.bkgColor.x, scene.bkgColor.y, scene.bkgColor.z);
+    printf("parallel: %f\n", scene.parallel.frustumWidth);
     if (scene.mtlColors != NULL) {
         for (int mtlColorIdx = 0; mtlColorIdx < scene.mtlColorCount; mtlColorIdx++) {
-            printf("mtlcolor: %d %d %d %d %d %d %f %f %f %f\n",
-                   scene.mtlColors[mtlColorIdx].diffuseColor.red,
-                   scene.mtlColors[mtlColorIdx].diffuseColor.green,
-                   scene.mtlColors[mtlColorIdx].diffuseColor.blue,
-                   scene.mtlColors[mtlColorIdx].specularColor.red,
-                   scene.mtlColors[mtlColorIdx].specularColor.green,
-                   scene.mtlColors[mtlColorIdx].specularColor.blue,
+            printf("mtlcolor: %f %f %f %f %f %f %f %f %f %f\n",
+                   scene.mtlColors[mtlColorIdx].diffuseColor.x,
+                   scene.mtlColors[mtlColorIdx].diffuseColor.y,
+                   scene.mtlColors[mtlColorIdx].diffuseColor.z,
+                   scene.mtlColors[mtlColorIdx].specularColor.x,
+                   scene.mtlColors[mtlColorIdx].specularColor.y,
+                   scene.mtlColors[mtlColorIdx].specularColor.z,
                    scene.mtlColors[mtlColorIdx].ambientCoefficient,
                    scene.mtlColors[mtlColorIdx].diffuseCoefficient,
                    scene.mtlColors[mtlColorIdx].specularCoefficient,
@@ -332,13 +332,13 @@ void printScene(Scene scene) {
            );
             for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
                 if (scene.spheres[sphereIdx].mtlColorIdx == mtlColorIdx) {
-                    printf("sphere: %lf %lf %lf %lf\n", scene.spheres[sphereIdx].center.x, scene.spheres[sphereIdx].center.y, scene.spheres[sphereIdx].center.z, scene.spheres[sphereIdx].radius);
+                    printf("sphere: %f %f %f %f\n", scene.spheres[sphereIdx].center.x, scene.spheres[sphereIdx].center.y, scene.spheres[sphereIdx].center.z, scene.spheres[sphereIdx].radius);
                 }
             }
             for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
                 if (scene.ellipses[ellipseIdx].mtlColorIdx == mtlColorIdx) {
                     printf(
-                            "ellipse: %lf %lf %lf %lf %lf %lf\n",
+                            "ellipse: %f %f %f %f %f %f\n",
                             scene.ellipses[ellipseIdx].center.x,
                             scene.ellipses[ellipseIdx].center.y,
                             scene.ellipses[ellipseIdx].center.z,

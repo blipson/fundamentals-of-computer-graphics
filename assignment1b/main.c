@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
             .upDir = { .x = 0, .y = 0, .z = 0 },
             .fov = { .h = 0 },
             .imSize = { .width = 0, .height = 0 },
-            .bkgColor = { .red = 0, .green = 0, .blue = 0 },
+            .bkgColor = { .x = 0, .y = 0, .z = 0 },
             .parallel = { .frustumWidth = 0 },
             .mtlColors = NULL,
             .mtlColorCount = 0,

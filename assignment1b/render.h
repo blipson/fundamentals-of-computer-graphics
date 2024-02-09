@@ -33,22 +33,6 @@ Vector3 multiply(Vector3 v, float s) {
     };
 }
 
-RGBColor multiplyRGB(RGBColor c, float s) {
-    return (RGBColor) {
-        .red = c.red * s,
-        .green = c.green * s,
-        .blue = c.blue * s
-    };
-}
-
-RGBColor addRGB(RGBColor a, RGBColor b) {
-    return (RGBColor) {
-        .red = a.red + b.red,
-        .blue = a.blue + b.blue,
-        .green = a.green + b.green
-    };
-}
-
 Vector3 cross(Vector3 a, Vector3 b) {
     return (Vector3) {
             .x = (a.y * b.z) - (b.y * a.z),
@@ -185,6 +169,14 @@ Ray traceRay(Scene scene, Vector3 viewingWindowLocation) {
     }
 }
 
+RGBColor convertColorToRGBColor(Vector3 color) {
+    return (RGBColor) {
+        .red = convertFloatToUnsignedChar(color.x),
+        .green = convertFloatToUnsignedChar(color.y),
+        .blue = convertFloatToUnsignedChar(color.z)
+    };
+}
+
 RGBColor shadeRay(Ray ray, Scene scene) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     bool closestIsSphere = false;
@@ -257,8 +249,8 @@ RGBColor shadeRay(Ray ray, Scene scene) {
     if (closestSphereIdx != -1 && closestIsSphere) {
         Sphere sphere = scene.spheres[closestSphereIdx];
         MaterialColor mtlColor = scene.mtlColors[sphere.mtlColorIdx];
-        RGBColor diffuseColor = mtlColor.diffuseColor;
-        RGBColor specularColor = mtlColor.specularColor;
+        Vector3 diffuseColor = mtlColor.diffuseColor;
+        Vector3 specularColor = mtlColor.specularColor;
 
         Vector3 intersectionPoint = add(ray.origin, multiply(ray.direction, closestIntersection)); // r/s p
         Vector3 surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius)); // N
@@ -271,26 +263,26 @@ RGBColor shadeRay(Ray ray, Scene scene) {
         Vector3 intersectionToOrigin = normalize(subtract(scene.eye, intersectionPoint));
         Vector3 halfwayLightDirection = normalize(divide(add(lightDirection, intersectionToOrigin), 2));
 
-        RGBColor ambient = (RGBColor) {
-            .red =  (unsigned char)((float)diffuseColor.red * mtlColor.ambientCoefficient),
-            .green = (unsigned char)((float)diffuseColor.green * mtlColor.ambientCoefficient),
-            .blue = (unsigned char)((float)diffuseColor.blue * mtlColor.ambientCoefficient),
+        Vector3 ambient = (Vector3) {
+            .x =  diffuseColor.x * mtlColor.ambientCoefficient,
+            .y = diffuseColor.y * mtlColor.ambientCoefficient,
+            .z = diffuseColor.z * mtlColor.ambientCoefficient,
         };
-        RGBColor diffuse = (RGBColor) {
-            .red = (unsigned char)((float)diffuseColor.red * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection)),
-            .green = (unsigned char)((float)diffuseColor.green * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection)),
-            .blue = (unsigned char)((float)diffuseColor.blue * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection)),
+        Vector3 diffuse = (Vector3) {
+            .x = diffuseColor.x * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection),
+            .y = diffuseColor.y * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection),
+            .z = diffuseColor.z * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection),
         };
-        RGBColor specular = (RGBColor) {
-                .red =  (unsigned char)((float)specularColor.red * mtlColor.specularCoefficient * pow(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent)),
-                .green = (unsigned char)((float)specularColor.green * mtlColor.specularCoefficient * pow(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent)),
-                .blue = (unsigned char)((float)specularColor.blue * mtlColor.specularCoefficient * pow(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent)),
+        Vector3 specular = (Vector3) {
+                .x =  specularColor.x * mtlColor.specularCoefficient * powf(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent),
+                .y = specularColor.y * mtlColor.specularCoefficient * powf(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent),
+                .z = specularColor.z * mtlColor.specularCoefficient * powf(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent),
         };
-        return addRGB(addRGB(ambient, diffuse), specular);
+        return convertColorToRGBColor(add((add(ambient, diffuse)), specular));
     } else if (closestEllipseIdx != -1 && !closestIsSphere) {
-        return scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].diffuseColor;
+        return convertColorToRGBColor(scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].diffuseColor);
     } else {
-        return scene.bkgColor;
+        return convertColorToRGBColor(scene.bkgColor);
     }
 }
 
