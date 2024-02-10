@@ -17,8 +17,6 @@ int main(int argc, char* argv[]) {
 
     char*** inputFileWordsByLine = readInputFile(argv[1]);
 
-    // TODO: Handle accessing any of these arrays if they're not set. Make them required.
-    // will fix seg faults.
     Scene scene = {
             .eye = { .x = 0, .y = 0, .z = 0 },
             .viewDir = { .x = 0, .y = 0, .z = 0 },

@@ -6,6 +6,7 @@ if [ -d "$directory" ]; then
     rm -f "$directory"*.ppm
     for file in "$directory"*.txt; do
         if [ -f "$file" ]; then
+            echo "Rendering $file..."
             ./raytracer1b "$file"
         else
             echo "Skipping non-regular file: $file"

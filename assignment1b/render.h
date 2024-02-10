@@ -7,6 +7,10 @@ float max(float a, float b) {
     return (a > b) ? a : b;
 }
 
+float min(float a, float b) {
+    return (a <= b) ? a : b;
+}
+
 float magnitude(Vector3 v) {
     return sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
 }
@@ -171,9 +175,9 @@ Ray traceRay(Scene scene, Vector3 viewingWindowLocation) {
 
 RGBColor convertColorToRGBColor(Vector3 color) {
     return (RGBColor) {
-        .red = convertFloatToUnsignedChar(color.x),
-        .green = convertFloatToUnsignedChar(color.y),
-        .blue = convertFloatToUnsignedChar(color.z)
+        .red = convertFloatToUnsignedChar(min(color.x, 1)),
+        .green = convertFloatToUnsignedChar(min(color.y, 1)),
+        .blue = convertFloatToUnsignedChar(min(color.z, 1))
     };
 }
 
@@ -252,38 +256,40 @@ RGBColor shadeRay(Ray ray, Scene scene) {
         Vector3 diffuseColor = mtlColor.diffuseColor;
         Vector3 specularColor = mtlColor.specularColor;
 
-        Vector3 intersectionPoint = add(ray.origin, multiply(ray.direction, closestIntersection)); // r/s p
-        Vector3 surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius)); // N
-
-        // TODO: Make colors use 0-1 for math then convert to RGB
-
-        // TODO: Handle multiple lights
-        // Q: Do I need to negate directional light?
-        Vector3 lightDirection;
-        if (scene.lightCount > 0) {
-            lightDirection = scene.lights[0].w == 1 ? normalize(subtract(scene.lights[0].position, intersectionPoint)) : normalize(multiply(scene.lights[0].position, -1));
-        } else {
-            lightDirection = (Vector3) { .x = 0, .y = 0, .z = 0};
-        }
-        Vector3 intersectionToOrigin = normalize(subtract(scene.eye, intersectionPoint));
-        Vector3 halfwayLightDirection = normalize(divide(add(lightDirection, intersectionToOrigin), 2));
+        Vector3 intersectionPoint = add(ray.origin, multiply(ray.direction, closestIntersection));
+        Vector3 surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
 
         Vector3 ambient = (Vector3) {
-            .x =  diffuseColor.x * mtlColor.ambientCoefficient,
-            .y = diffuseColor.y * mtlColor.ambientCoefficient,
-            .z = diffuseColor.z * mtlColor.ambientCoefficient,
+                .x = diffuseColor.x * mtlColor.ambientCoefficient,
+                .y = diffuseColor.y * mtlColor.ambientCoefficient,
+                .z = diffuseColor.z * mtlColor.ambientCoefficient,
         };
+
+        // TODO: Handle multiple lights
+        Vector3 lightDirection = (Vector3) { .x = 0, .y = 0, .z = 0};
+        Vector3 halfwayLightDirection = (Vector3) { .x = 0, .y = 0, .z = 0};
+        float lightIntensity = 1;
+        if (scene.lightCount > 0) {
+            lightDirection = scene.lights[0].w == 1 ? normalize(subtract(scene.lights[0].position, intersectionPoint)) : normalize(multiply(scene.lights[0].position, -1));
+            Vector3 intersectionToOrigin = normalize(subtract(scene.eye, intersectionPoint));
+            halfwayLightDirection = normalize(divide(add(lightDirection, intersectionToOrigin), 2));
+            lightIntensity = scene.lights[0].i;
+        }
+
         Vector3 diffuse = (Vector3) {
-            .x = diffuseColor.x * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection),
-            .y = diffuseColor.y * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection),
-            .z = diffuseColor.z * mtlColor.diffuseCoefficient * dot(surfaceNormal, lightDirection),
+            .x = diffuseColor.x * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
+            .y = diffuseColor.y * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
+            .z = diffuseColor.z * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
         };
         Vector3 specular = (Vector3) {
-                .x =  specularColor.x * mtlColor.specularCoefficient * powf(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent),
-                .y = specularColor.y * mtlColor.specularCoefficient * powf(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent),
-                .z = specularColor.z * mtlColor.specularCoefficient * powf(dot(surfaceNormal, halfwayLightDirection), mtlColor.specularExponent),
+                .x =  specularColor.x * mtlColor.specularCoefficient * powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
+                .y = specularColor.y * mtlColor.specularCoefficient * powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
+                .z = specularColor.z * mtlColor.specularCoefficient * powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
         };
-        return convertColorToRGBColor(add((add(ambient, diffuse)), specular));
+
+        Vector3 lightIntensityApplied = multiply(add(diffuse, specular), lightIntensity);
+
+        return convertColorToRGBColor(add(ambient, lightIntensityApplied));
     } else if (closestEllipseIdx != -1 && !closestIsSphere) {
         return convertColorToRGBColor(scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].diffuseColor);
     } else {
