@@ -188,82 +188,102 @@ RGBColor convertColorToRGBColor(Vector3 color) {
     };
 }
 
-RGBColor shadeRay(Ray ray, Scene scene) {
+Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     bool closestIsSphere = false;
     int closestSphereIdx = -1;
     int closestEllipseIdx = -1;
 
     for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
-        Sphere sphere = scene.spheres[sphereIdx];
-        float A = dot(ray.direction, ray.direction);
-        float B = 2 * dot(ray.direction, subtract(ray.origin, sphere.center));
-        float C = dot(subtract(ray.origin, sphere.center), subtract(ray.origin, sphere.center)) - sphere.radius * sphere.radius;
+        if (sphereIdx != excludeIdx) {
+            Sphere sphere = scene.spheres[sphereIdx];
+            float A = dot(ray.direction, ray.direction);
+            float B = 2 * dot(ray.direction, subtract(ray.origin, sphere.center));
+            float C = dot(subtract(ray.origin, sphere.center), subtract(ray.origin, sphere.center)) -
+                      sphere.radius * sphere.radius;
 
-        float discriminant = B * B - 4 * A * C;
+            float discriminant = B * B - 4 * A * C;
 
-        if (discriminant >= 0) {
-            float sqrtDiscriminant = sqrtf(discriminant);
-            float t1 = (-B + sqrtDiscriminant) / (2 * A);
-            float t2 = (-B - sqrtDiscriminant) / (2 * A);
+            if (discriminant >= 0) {
+                float sqrtDiscriminant = sqrtf(discriminant);
+                float t1 = (-B + sqrtDiscriminant) / (2 * A);
+                float t2 = (-B - sqrtDiscriminant) / (2 * A);
 
-            if (t1 >= 0 && t1 < closestIntersection) {
-                closestIntersection = t1;
-                closestSphereIdx = sphereIdx;
-                closestIsSphere = true;
-            }
-            if (t2 >= 0 && t2 < closestIntersection) {
-                closestIntersection = t2;
-                closestSphereIdx = sphereIdx;
-                closestIsSphere = true;
+                if (t1 >= 0 && t1 < closestIntersection) {
+                    closestIntersection = t1;
+                    closestSphereIdx = sphereIdx;
+                    closestIsSphere = true;
+                }
+                if (t2 >= 0 && t2 < closestIntersection) {
+                    closestIntersection = t2;
+                    closestSphereIdx = sphereIdx;
+                    closestIsSphere = true;
+                }
             }
         }
     }
 
     for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
-        Ellipse ellipse = scene.ellipses[ellipseIdx];
+        if (ellipseIdx != excludeIdx) {
+            Ellipse ellipse = scene.ellipses[ellipseIdx];
 
-        float A = (ray.direction.x * ray.direction.x) / (ellipse.radius.x * ellipse.radius.x)
-                  + (ray.direction.y * ray.direction.y) / (ellipse.radius.y * ellipse.radius.y)
-                  + (ray.direction.z * ray.direction.z) / (ellipse.radius.z * ellipse.radius.z);
-
-
-        float B = 2 * ((ray.direction.x * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
-                       + (ray.direction.y * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
-                       + (ray.direction.z * (ray.origin.z - ellipse.center.z)) / (ellipse.radius.z * ellipse.radius.z));
-
-        float C = ((ray.origin.x - ellipse.center.x) * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
-                   + ((ray.origin.y - ellipse.center.y) * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
-                   + ((ray.origin.z - ellipse.center.z) * (ray.origin.z - ellipse.center.z)) / (ellipse.radius.z * ellipse.radius.z) - 1;
+            float A = (ray.direction.x * ray.direction.x) / (ellipse.radius.x * ellipse.radius.x)
+                      + (ray.direction.y * ray.direction.y) / (ellipse.radius.y * ellipse.radius.y)
+                      + (ray.direction.z * ray.direction.z) / (ellipse.radius.z * ellipse.radius.z);
 
 
-        float discriminant = B * B - 4 * A * C;
+            float B = 2 * ((ray.direction.x * (ray.origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
+                           +
+                           (ray.direction.y * (ray.origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
+                           + (ray.direction.z * (ray.origin.z - ellipse.center.z)) /
+                             (ellipse.radius.z * ellipse.radius.z));
 
-        if (discriminant >= 0) {
-            float sqrtDiscriminant = sqrtf(discriminant);
-            float t1 = (-B + sqrtDiscriminant) / (2 * A);
-            float t2 = (-B - sqrtDiscriminant) / (2 * A);
+            float C = ((ray.origin.x - ellipse.center.x) * (ray.origin.x - ellipse.center.x)) /
+                      (ellipse.radius.x * ellipse.radius.x)
+                      + ((ray.origin.y - ellipse.center.y) * (ray.origin.y - ellipse.center.y)) /
+                        (ellipse.radius.y * ellipse.radius.y)
+                      + ((ray.origin.z - ellipse.center.z) * (ray.origin.z - ellipse.center.z)) /
+                        (ellipse.radius.z * ellipse.radius.z) - 1;
 
-            if (t1 >= 0 && t1 < closestIntersection) {
-                closestIntersection = t1;
-                closestEllipseIdx = ellipseIdx;
-                closestIsSphere = false;
-            }
-            if (t2 >= 0 && t2 < closestIntersection) {
-                closestIntersection = t2;
-                closestEllipseIdx = ellipseIdx;
-                closestIsSphere = false;
+
+            float discriminant = B * B - 4 * A * C;
+
+            if (discriminant >= 0) {
+                float sqrtDiscriminant = sqrtf(discriminant);
+                float t1 = (-B + sqrtDiscriminant) / (2 * A);
+                float t2 = (-B - sqrtDiscriminant) / (2 * A);
+
+                if (t1 >= 0 && t1 < closestIntersection) {
+                    closestIntersection = t1;
+                    closestEllipseIdx = ellipseIdx;
+                    closestIsSphere = false;
+                }
+                if (t2 >= 0 && t2 < closestIntersection) {
+                    closestIntersection = t2;
+                    closestEllipseIdx = ellipseIdx;
+                    closestIsSphere = false;
+                }
             }
         }
     }
 
-    if (closestSphereIdx != -1 && closestIsSphere) {
-        Sphere sphere = scene.spheres[closestSphereIdx];
+    return (Intersection) {
+        .closestIntersection = closestIntersection,
+        .closestSphereIdx = closestSphereIdx,
+        .closestEllipseIdx = closestEllipseIdx,
+        .closestIsSphere = closestIsSphere
+    };
+}
+
+RGBColor shadeRay(Ray ray, Scene scene) {
+    Intersection intersection = castRay(ray, scene, -1);
+    if (intersection.closestSphereIdx != -1 && intersection.closestIsSphere) {
+        Sphere sphere = scene.spheres[intersection.closestSphereIdx];
         MaterialColor mtlColor = scene.mtlColors[sphere.mtlColorIdx];
         Vector3 diffuseColor = mtlColor.diffuseColor;
         Vector3 specularColor = mtlColor.specularColor;
 
-        Vector3 intersectionPoint = add(ray.origin, multiply(ray.direction, closestIntersection));
+        Vector3 intersectionPoint = add(ray.origin, multiply(ray.direction, intersection.closestIntersection));
         Vector3 surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
 
         Vector3 ambient = (Vector3) {
@@ -297,18 +317,20 @@ RGBColor shadeRay(Ray ray, Scene scene) {
                 };
                 float shadow = 1;
                 // handle directional shadow rays
-//                Ray shadowRay = castRay(intersectionPoint, lightDirection);
-//                if (shadowRay.objectIdx != -1) {
-//                     The shadow ray intersects with an object, so the point is in shadow.
-//                    shadow = 0;
-//                }
+                Intersection shadowRay = castRay((Ray) {
+                        .origin = intersectionPoint,
+                        .direction = lightDirection
+                }, scene, intersection.closestSphereIdx);
+                if (shadowRay.closestSphereIdx != -1) {
+                    shadow = 0;
+                }
                 Vector3 shadowsApplied = multiply(multiply(add(diffuse, specular), lightIntensity), shadow);
                 lightsApplied = add(lightsApplied, shadowsApplied);
             }
         }
         return convertColorToRGBColor(add(ambient, lightsApplied));
-    } else if (closestEllipseIdx != -1 && !closestIsSphere) {
-        return convertColorToRGBColor(scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].diffuseColor);
+    } else if (intersection.closestEllipseIdx != -1 && !intersection.closestIsSphere) {
+        return convertColorToRGBColor(scene.mtlColors[scene.ellipses[intersection.closestEllipseIdx].mtlColorIdx].diffuseColor);
     } else {
         return convertColorToRGBColor(scene.bkgColor);
     }

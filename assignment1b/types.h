@@ -99,8 +99,10 @@ typedef struct {
 } ViewParameters;
 
 typedef struct {
-    int objectIdx;
-    float distance;
+    float closestIntersection;
+    int closestSphereIdx;
+    int closestEllipseIdx;
+    bool closestIsSphere;
 } Intersection;
 
 #endif
