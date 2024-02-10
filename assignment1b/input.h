@@ -173,6 +173,14 @@ void checkValues(char** line, int expectedNumber, char* type) {
     }
 }
 
+float max(float a, float b) {
+    return (a > b) ? a : b;
+}
+
+float min(float a, float b) {
+    return (a <= b) ? a : b;
+}
+
 void readSceneSetup(
         char*** inputFileWordsByLine,
         int* line,
@@ -223,7 +231,8 @@ void readSceneSetup(
                     .z = convertStringToFloat(inputFileWordsByLine[*line][3])
             };
             scene->lights[scene->lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
-            scene->lights[scene->lightCount].i = convertStringToFloat(inputFileWordsByLine[*line][5]);
+            // clamp light intensity to 0-1. Remove the max() for an eclipse effect, remove the min for a very bright thing
+            scene->lights[scene->lightCount].i = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0);
             scene->lightCount++;
         }
         (*line)++;

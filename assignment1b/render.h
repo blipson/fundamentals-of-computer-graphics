@@ -3,14 +3,6 @@
 
 #include <float.h>
 
-float max(float a, float b) {
-    return (a > b) ? a : b;
-}
-
-float min(float a, float b) {
-    return (a <= b) ? a : b;
-}
-
 float magnitude(Vector3 v) {
     return sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
 }
