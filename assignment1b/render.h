@@ -265,31 +265,33 @@ RGBColor shadeRay(Ray ray, Scene scene) {
                 .z = diffuseColor.z * mtlColor.ambientCoefficient,
         };
 
-        // TODO: Handle multiple lights
-        Vector3 lightDirection = (Vector3) { .x = 0, .y = 0, .z = 0};
-        Vector3 halfwayLightDirection = (Vector3) { .x = 0, .y = 0, .z = 0};
-        float lightIntensity = 1;
+        // Default to allow scenes with no lights
+        Vector3 lightsApplied = (Vector3) { .x = 0, .y = 0, .z = 0};
         if (scene.lightCount > 0) {
-            lightDirection = scene.lights[0].w == 1 ? normalize(subtract(scene.lights[0].position, intersectionPoint)) : normalize(multiply(scene.lights[0].position, -1));
-            Vector3 intersectionToOrigin = normalize(subtract(scene.eye, intersectionPoint));
-            halfwayLightDirection = normalize(divide(add(lightDirection, intersectionToOrigin), 2));
-            lightIntensity = scene.lights[0].i;
+            for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++) {
+                Vector3 lightDirection = scene.lights[lightIdx].w == 1
+                        ? normalize(subtract(scene.lights[lightIdx].position, intersectionPoint))
+                        : normalize(multiply(scene.lights[lightIdx].position, -1));
+                Vector3 intersectionToOrigin = normalize(subtract(scene.eye, intersectionPoint));
+                Vector3 halfwayLightDirection = normalize(divide(add(lightDirection, intersectionToOrigin), 2));
+                float lightIntensity = scene.lights[lightIdx].i;
+                Vector3 diffuse = (Vector3) {
+                        .x = diffuseColor.x * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
+                        .y = diffuseColor.y * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
+                        .z = diffuseColor.z * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
+                };
+                Vector3 specular = (Vector3) {
+                        .x =  specularColor.x * mtlColor.specularCoefficient *
+                              powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
+                        .y = specularColor.y * mtlColor.specularCoefficient *
+                             powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
+                        .z = specularColor.z * mtlColor.specularCoefficient *
+                             powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
+                };
+                lightsApplied = add(lightsApplied, multiply(add(diffuse, specular), lightIntensity));
+            }
         }
-
-        Vector3 diffuse = (Vector3) {
-            .x = diffuseColor.x * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
-            .y = diffuseColor.y * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
-            .z = diffuseColor.z * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
-        };
-        Vector3 specular = (Vector3) {
-                .x =  specularColor.x * mtlColor.specularCoefficient * powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
-                .y = specularColor.y * mtlColor.specularCoefficient * powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
-                .z = specularColor.z * mtlColor.specularCoefficient * powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
-        };
-
-        Vector3 lightIntensityApplied = multiply(add(diffuse, specular), lightIntensity);
-
-        return convertColorToRGBColor(add(ambient, lightIntensityApplied));
+        return convertColorToRGBColor(add(ambient, lightsApplied));
     } else if (closestEllipseIdx != -1 && !closestIsSphere) {
         return convertColorToRGBColor(scene.mtlColors[scene.ellipses[closestEllipseIdx].mtlColorIdx].diffuseColor);
     } else {
