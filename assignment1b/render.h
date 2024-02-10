@@ -143,14 +143,29 @@ Vector3 getViewingWindowLocation(ViewParameters viewParameters, int x, int y) {
     );
 }
 
-Ray castParallelRay(Vector3 viewDir, Vector3 viewingWindowLocation) {
+//Intersection castRay(Ray ray, Scene scene) {
+//    Intersection closestIntersection = { .objectIdx = -1, .distance = FLT_MAX };
+//
+//    for (int objectIdx = 0; objectIdx < scene.sphereCount; objectIdx++) {
+//        // Other intersection tests for additional objects can be added here.
+//        Sphere sphere = scene.spheres[objectIdx];
+//        float t;
+//        if (intersectSphere(ray.origin, ray.direction, sphere, &t) && t < closestIntersection.distance) {
+//            closestIntersection.objectIdx = objectIdx;
+//            closestIntersection.distance = t;
+//        }
+//    }
+//    return closestIntersection;
+//}
+
+Ray traceParallelRay(Vector3 viewDir, Vector3 viewingWindowLocation) {
     return (Ray) {
             .origin = viewingWindowLocation,
             .direction = normalize(viewDir)
     };
 }
 
-Ray castPerspectiveRay(Vector3 eye, Vector3 viewingWindowLocation) {
+Ray tracePerspectiveRay(Vector3 eye, Vector3 viewingWindowLocation) {
     return (Ray) {
             .origin = eye,
             .direction = normalize(subtract(viewingWindowLocation, eye))
@@ -159,9 +174,9 @@ Ray castPerspectiveRay(Vector3 eye, Vector3 viewingWindowLocation) {
 
 Ray traceRay(Scene scene, Vector3 viewingWindowLocation) {
     if (scene.parallel.frustumWidth > 0) {
-        return castParallelRay(scene.viewDir, viewingWindowLocation);
+        return traceParallelRay(scene.viewDir, viewingWindowLocation);
     } else {
-        return castPerspectiveRay(scene.eye, viewingWindowLocation);
+        return tracePerspectiveRay(scene.eye, viewingWindowLocation);
     }
 }
 
@@ -280,7 +295,15 @@ RGBColor shadeRay(Ray ray, Scene scene) {
                         .z = specularColor.z * mtlColor.specularCoefficient *
                              powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
                 };
-                lightsApplied = add(lightsApplied, multiply(add(diffuse, specular), lightIntensity));
+                float shadow = 1;
+                // handle directional shadow rays
+//                Ray shadowRay = castRay(intersectionPoint, lightDirection);
+//                if (shadowRay.objectIdx != -1) {
+//                     The shadow ray intersects with an object, so the point is in shadow.
+//                    shadow = 0;
+//                }
+                Vector3 shadowsApplied = multiply(multiply(add(diffuse, specular), lightIntensity), shadow);
+                lightsApplied = add(lightsApplied, shadowsApplied);
             }
         }
         return convertColorToRGBColor(add(ambient, lightsApplied));

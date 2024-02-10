@@ -98,4 +98,9 @@ typedef struct {
     Vector3 dv;
 } ViewParameters;
 
+typedef struct {
+    int objectIdx;
+    float distance;
+} Intersection;
+
 #endif
