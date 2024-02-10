@@ -275,15 +275,15 @@ Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
     };
 }
 
-RGBColor shadeRay(Ray ray, Scene scene) {
-    Intersection intersection = castRay(ray, scene, -1);
+RGBColor shadeRay(Ray viewingRay, Scene scene) {
+    Intersection intersection = castRay(viewingRay, scene, -1);
     if (intersection.closestSphereIdx != -1 && intersection.closestIsSphere) {
         Sphere sphere = scene.spheres[intersection.closestSphereIdx];
         MaterialColor mtlColor = scene.mtlColors[sphere.mtlColorIdx];
         Vector3 diffuseColor = mtlColor.diffuseColor;
         Vector3 specularColor = mtlColor.specularColor;
 
-        Vector3 intersectionPoint = add(ray.origin, multiply(ray.direction, intersection.closestIntersection));
+        Vector3 intersectionPoint = add(viewingRay.origin, multiply(viewingRay.direction, intersection.closestIntersection));
         Vector3 surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
 
         Vector3 ambient = (Vector3) {
