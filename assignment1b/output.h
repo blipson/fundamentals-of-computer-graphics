@@ -16,7 +16,7 @@ FILE* openOutputFile(char* inputFileName) {
         exit(-1);
     }
     char outputFileName[MAX_INPUT_FILE_NAME_LENGTH + 3];
-    char* inputFileNameWithoutExtension = substr(inputFileName, 0, (int)strlen(inputFileName) - 4);
+    char* inputFileNameWithoutExtension = substr(inputFileName, 0, (int) strlen(inputFileName) - 4);
     snprintf(outputFileName, sizeof(outputFileName), "%s%s", inputFileNameWithoutExtension, OUTPUT_FILE_SUFFIX);
     free(inputFileNameWithoutExtension);
 

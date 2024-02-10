@@ -18,13 +18,13 @@ int main(int argc, char* argv[]) {
     char*** inputFileWordsByLine = readInputFile(argv[1]);
 
     Scene scene = {
-            .eye = { .x = 0, .y = 0, .z = 0 },
-            .viewDir = { .x = 0, .y = 0, .z = 0 },
-            .upDir = { .x = 0, .y = 0, .z = 0 },
-            .fov = { .h = 0 },
-            .imSize = { .width = 0, .height = 0 },
-            .bkgColor = { .x = 0, .y = 0, .z = 0 },
-            .parallel = { .frustumWidth = 0 },
+            .eye = {.x = 0, .y = 0, .z = 0},
+            .viewDir = {.x = 0, .y = 0, .z = 0},
+            .upDir = {.x = 0, .y = 0, .z = 0},
+            .fov = {.h = 0},
+            .imSize = {.width = 0, .height = 0},
+            .bkgColor = {.x = 0, .y = 0, .z = 0},
+            .parallel = {.frustumWidth = 0},
             .mtlColors = NULL,
             .mtlColorCount = 0,
             .spheres = NULL,
@@ -49,8 +49,12 @@ int main(int argc, char* argv[]) {
             .d = 1.0f,
             .aspectRatio = (float) scene.imSize.width / (float) scene.imSize.height,
             .viewingWindow = {
-                    .width = scene.parallel.frustumWidth <= 0 ? 2 * viewParameters.d * tanf(scene.fov.h / 2) : scene.parallel.frustumWidth,
-                    .height = scene.parallel.frustumWidth <= 0 ? 2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio) : (scene.parallel.frustumWidth / viewParameters.aspectRatio),
+                    .width = scene.parallel.frustumWidth <= 0 ?
+                             (2 * viewParameters.d * tanf(scene.fov.h / 2)) :
+                             (scene.parallel.frustumWidth),
+                    .height = scene.parallel.frustumWidth <= 0 ?
+                              (2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio)) :
+                              ((scene.parallel.frustumWidth / viewParameters.aspectRatio)),
             }
     };
 

@@ -17,13 +17,13 @@
 
 void checkArgs(int argc, char* argv[]) {
     if (argc != 2) {
-        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1a <path/to/input_file>`");
+        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b <path/to/input_file>`");
         exit(-1);
     }
-//    if (strcmp(argv[0], "./raytracer1a") != 0) {
-//        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1a <path/to/input_file>`");
-//        exit(-1);
-//    }
+    if (strcmp(argv[0], "./raytracer1b") != 0) {
+        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b <path/to/input_file>`");
+        exit(-1);
+    }
 }
 
 char** readLine(char* line, char** wordsInLine) {
@@ -39,7 +39,7 @@ char** readLine(char* line, char** wordsInLine) {
         }
 
         if (length > 0) {
-            wordsInLine[wordIdx] = (char *) malloc(strlen(token) + 1);
+            wordsInLine[wordIdx] = (char*) malloc(strlen(token) + 1);
             if (wordsInLine[wordIdx] == NULL) {
                 fprintf(stderr, "Memory allocation error for word in line.");
                 exit(-1);
@@ -88,10 +88,8 @@ char*** readInputFile(char* inputFileName) {
 
         char currentLine[MAX_LINE_LENGTH];
         int line = 0;
-        while (
-                (inputFileWordsByLine[line] = malloc(MAX_WORDS_PER_LINE * sizeof(char*))) != NULL &&
-                fgets(currentLine, MAX_LINE_LENGTH, inputFilePtr) != NULL
-        ) {
+        while ((inputFileWordsByLine[line] = malloc(MAX_WORDS_PER_LINE * sizeof(char*))) != NULL &&
+               fgets(currentLine, MAX_LINE_LENGTH, inputFilePtr) != NULL) {
             if (currentLine[0] == '\n' || currentLine[0] == '\0') {
                 continue;
             }
@@ -130,7 +128,7 @@ void freeInputFileWordsByLine(char*** inputFileWordsByLine) {
 }
 
 float convertStringToFloat(char* s) {
-    char *end;
+    char* end;
     float result = strtof(s, &end);
     if (*end == '\0') {
         return result;
@@ -156,7 +154,7 @@ unsigned char convertFloatToUnsignedChar(float normalizedValue) {
     } else if (normalizedValue > 1.0) {
         normalizedValue = 1.0f;
     }
-    unsigned char result = (unsigned char)(normalizedValue * 255.0);
+    unsigned char result = (unsigned char) (normalizedValue * 255.0);
     return result;
 }
 
@@ -285,7 +283,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                     scene->spheres[scene->sphereCount].mtlColorIdx = scene->mtlColorCount;
                     scene->sphereCount++;
                 } else if (strcmp(inputFileWordsByLine[objectLine][0], "ellipse") == 0) {
-                    Ellipse* newEllipses = (Ellipse *) realloc(scene->ellipses, (scene->ellipseCount + 1) * sizeof(Ellipse));
+                    Ellipse* newEllipses = (Ellipse*) realloc(scene->ellipses, (scene->ellipseCount + 1) * sizeof(Ellipse));
                     if (newEllipses == NULL) {
                         fprintf(stderr, "Memory allocation failed for ellipse.");
                         exit(-1);
@@ -339,7 +337,7 @@ void printScene(Scene scene) {
                    scene.mtlColors[mtlColorIdx].diffuseCoefficient,
                    scene.mtlColors[mtlColorIdx].specularCoefficient,
                    scene.mtlColors[mtlColorIdx].specularExponent
-           );
+            );
             for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
                 if (scene.spheres[sphereIdx].mtlColorIdx == mtlColorIdx) {
                     printf("sphere: %f %f %f %f\n", scene.spheres[sphereIdx].center.x, scene.spheres[sphereIdx].center.y, scene.spheres[sphereIdx].center.z, scene.spheres[sphereIdx].radius);

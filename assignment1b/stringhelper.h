@@ -19,8 +19,7 @@ char* substr(char* s, int x, int y) {
     return ret;
 }
 
-bool endsWith(char* string, char* ending)
-{
+bool endsWith(char* string, char* ending) {
     string = strrchr(string, '.');
 
     if (string != NULL && strcmp(string, ending) == 0) {
