@@ -7,7 +7,7 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, cha
         for (int x = 0; x < scene.imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
             Ray viewingRay = traceRay(scene, viewingWindowLocation);
-            writePixel(outputFilePtr, shadeRay(viewingRay, scene), x, scene.imSize.width);
+            writePixel(outputFilePtr, shadeRay(viewingRay, scene, x, y), x, scene.imSize.width);
         }
     }
 }

@@ -60,6 +60,14 @@ typedef struct {
 } Light;
 
 typedef struct {
+    Vector3 color;
+    float min;
+    float max;
+    float distMin;
+    float distMax;
+} DepthCueing;
+
+typedef struct {
     Vector3 eye;
     Vector3 viewDir;
     Vector3 upDir;
@@ -75,6 +83,7 @@ typedef struct {
     int ellipseCount;
     Light* lights;
     int lightCount;
+    DepthCueing depthCueing;
 } Scene;
 
 typedef struct {

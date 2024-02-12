@@ -25,6 +25,10 @@ Vector3 normalize(Vector3 v) {
     }
 }
 
+float normalizef(float value, float min, float max) {
+    return value / (max - min);
+}
+
 Vector3 multiply(Vector3 v, float s) {
     return (Vector3) {
             .x = v.x * s,
@@ -281,7 +285,7 @@ Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
     };
 }
 
-RGBColor shadeRay(Ray viewingRay, Scene scene) {
+RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
     Intersection intersection = castRay(viewingRay, scene, -1);
     if (intersection.closestSphereIdx != -1 && intersection.closestIsSphere) {
         Sphere sphere = scene.spheres[intersection.closestSphereIdx];
@@ -327,7 +331,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
                         .direction = lightDirection
                 }, scene, intersection.closestSphereIdx);
                 if (shadowRay.closestSphereIdx != -1) {
-                    if (scene.lights[lightIdx].w == 1 && shadowRay.closestIntersection < distance(intersectionPoint, lightDirection)) {
+                    if (scene.lights[lightIdx].w == 1 && shadowRay.closestIntersection < distance(intersectionPoint, scene.lights[lightIdx].position)) {
                         shadow = 0;
                     }
                     if (scene.lights[lightIdx].w == 0 && shadowRay.closestIntersection > 0) {
@@ -336,6 +340,12 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
                 }
                 Vector3 shadowsApplied = multiply(multiply(add(diffuse, specular), lightIntensity), shadow);
                 lightsApplied = add(lightsApplied, shadowsApplied);
+
+//                float distanceToCamera = distance(scene.eye, intersectionPoint);
+//                float depthCueFactor = 1.0f - normalizef(distanceToCamera, scene.depthCueing.distMin, scene.depthCueing.distMax);
+//                diffuse = multiply(diffuse, depthCueFactor);
+//                specular = multiply(specular, depthCueFactor);
+//                ambient = multiply(specular, depthCueFactor);
             }
         }
         return convertColorToRGBColor(add(ambient, lightsApplied));

@@ -13,17 +13,17 @@
 #define MAX_LINE_COUNT 500
 #define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
 #define MAX_LINE_LENGTH 50
-#define KEYWORD_COUNT 11
+#define KEYWORD_COUNT 12
 
 void checkArgs(int argc, char* argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b <path/to/input_file>`");
         exit(-1);
     }
-    if (strcmp(argv[0], "./raytracer1b") != 0) {
-        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b <path/to/input_file>`");
-        exit(-1);
-    }
+//    if (strcmp(argv[0], "./raytracer1b") != 0) {
+//        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b <path/to/input_file>`");
+//        exit(-1);
+//    }
 }
 
 char** readLine(char* line, char** wordsInLine) {
@@ -63,7 +63,7 @@ char** readLine(char* line, char** wordsInLine) {
 }
 
 bool isKeyword(const char* target) {
-    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light"};
+    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light", "depthcueing"};
     for (size_t i = 0; i < KEYWORD_COUNT; i++) {
         if (strcmp(target, keywords[i]) == 0) {
             return true;
@@ -232,6 +232,18 @@ void readSceneSetup(
             // clamp light intensity to 0-1. Remove the max() for an eclipse effect, remove the min for a very bright thing
             scene->lights[scene->lightCount].i = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0);
             scene->lightCount++;
+        } else if (strcmp(inputFileWordsByLine[*line][0], "depthcueing") == 0) {
+            scene->depthCueing = (DepthCueing) {
+                    .color = (Vector3) {
+                            .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
+                            .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
+                            .z = convertStringToFloat(inputFileWordsByLine[*line][3]),
+                    },
+                    .min = convertStringToFloat(inputFileWordsByLine[*line][4]),
+                    .max = convertStringToFloat(inputFileWordsByLine[*line][5]),
+                    .distMin = convertStringToFloat(inputFileWordsByLine[*line][6]),
+                    .distMax = convertStringToFloat(inputFileWordsByLine[*line][7]),
+            };
         }
         (*line)++;
     }
