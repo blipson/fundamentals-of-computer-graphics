@@ -338,14 +338,15 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
                         shadow = 0;
                     }
                 }
+                if (scene.depthCueing.distMax > 0) {
+                    float distanceToCamera = distance(scene.eye, intersectionPoint);
+                    float depthCueFactor = 1.0f - normalizef(distanceToCamera, scene.depthCueing.distMin, scene.depthCueing.distMax);
+                    diffuse = multiply(diffuse, depthCueFactor);
+                    specular = multiply(specular, depthCueFactor);
+                    ambient = multiply(specular, depthCueFactor);
+                }
                 Vector3 shadowsApplied = multiply(multiply(add(diffuse, specular), lightIntensity), shadow);
                 lightsApplied = add(lightsApplied, shadowsApplied);
-
-//                float distanceToCamera = distance(scene.eye, intersectionPoint);
-//                float depthCueFactor = 1.0f - normalizef(distanceToCamera, scene.depthCueing.distMin, scene.depthCueing.distMax);
-//                diffuse = multiply(diffuse, depthCueFactor);
-//                specular = multiply(specular, depthCueFactor);
-//                ambient = multiply(specular, depthCueFactor);
             }
         }
         return convertColorToRGBColor(add(ambient, lightsApplied));

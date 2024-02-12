@@ -8,7 +8,16 @@ depthcueing 0 0 0 0 1 0 225
 light 0 0 0 1 1
 
 mtlcolor 0 1 0 1 1 1 0.2 0.8 0 1
-sphere 50 50 -200 25
+sphere 60 60 -200 10
 
 mtlcolor 0 1 0 1 1 1 0.2 0.8 0 1
-sphere 0 0 -10 1
+sphere 25 25 -175 10
+
+mtlcolor 0 1 0 1 1 1 0.2 0.8 0 1
+sphere 35 -35 -150 10
+
+mtlcolor 0 1 0 1 1 1 0.2 0.8 0 1
+sphere -25 25 -100 10
+
+mtlcolor 0 1 0 1 1 1 0.2 0.8 0 1
+sphere -5 -5 -50 10
