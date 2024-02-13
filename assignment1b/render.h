@@ -285,6 +285,21 @@ Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
     };
 }
 
+float randomFloat() {
+    return ((float) rand() / (float) RAND_MAX);
+}
+
+Vector3 randomUnitVector() {
+    float z = 1.0f - 2.0f * randomFloat();
+    float phi = 2.0f * (float) M_PI * randomFloat();
+    float sqrtOneMinusZSquared = sqrtf(1.0f - z * z);
+
+    float x = sqrtOneMinusZSquared * cosf(phi);
+    float y = sqrtOneMinusZSquared * sinf(phi);
+
+    return (Vector3){x, y, z};
+}
+
 RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
     Intersection intersection = castRay(viewingRay, scene, -1);
     if (intersection.closestSphereIdx != -1 && intersection.closestIsSphere) {
@@ -345,19 +360,28 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
                         .z = scene.depthCueing.color.z * mtlColor.specularCoefficient *
                              powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
                 };
-                float shadow = 1;
-                Intersection shadowRay = castRay((Ray) {
-                        .origin = intersectionPoint,
-                        .direction = lightDirection
-                }, scene, intersection.closestSphereIdx);
-                if (shadowRay.closestSphereIdx != -1) {
-                    if (light.w == 1 && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) {
-                        shadow = 0;
-                    }
-                    if (light.w == 0 && shadowRay.closestIntersection > 0) {
-                        shadow = 0;
+
+                float softShadow = 0.0f;
+                int numShadowRays = 500;
+
+                for (int i = 0; i < numShadowRays; ++i) {
+                    Vector3 jitteredLightDirection = add(lightDirection, multiply(randomUnitVector(), 0.005f));
+
+                    Intersection shadowRay = castRay((Ray) {
+                            .origin = intersectionPoint,
+                            .direction = normalize(jitteredLightDirection)
+                    }, scene, intersection.closestSphereIdx);
+
+                    if (shadowRay.closestSphereIdx != -1) {
+                        if ((light.w == 1 && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) ||
+                            (light.w == 0 && shadowRay.closestIntersection > 0)) {
+                            softShadow += 1.0f / (float) numShadowRays;
+                        }
                     }
                 }
+
+                float shadow = 1.0f - softShadow;
+
                 if (scene.depthCueing.distMax > 0) {
                     float distanceToCamera = distance(scene.eye, intersectionPoint);
                     float depthCueFactor = normalizef(distanceToCamera, scene.depthCueing.distMin, scene.depthCueing.distMax);
