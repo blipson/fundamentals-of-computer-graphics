@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     freeInputFileWordsByLine(inputFileWordsByLine);
 
     ViewParameters viewParameters = {
-            .w = normalize(multiply(scene.viewDir, -1)),
+            .w = normalize(scale(scene.viewDir, -1)),
             .u = normalize(cross(scene.viewDir, scene.upDir)),
             .v = cross(viewParameters.u, normalize(scene.viewDir)),
             .n = normalize(scene.viewDir),

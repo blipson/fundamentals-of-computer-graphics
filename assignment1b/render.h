@@ -29,7 +29,15 @@ float normalizef(float value, float min, float max) {
     return value / (max - min);
 }
 
-Vector3 multiply(Vector3 v, float s) {
+Vector3 multiply(Vector3 a, Vector3 b) {
+    return (Vector3) {
+        .x = a.x * b.x,
+        .y = a.y * a.y,
+        .z = a.z * b.z
+    };
+}
+
+Vector3 scale(Vector3 v, float s) {
     return (Vector3) {
             .x = v.x * s,
             .y = v.y * s,
@@ -107,8 +115,8 @@ void printViewParameters(ViewParameters viewParameters) {
 void setViewingWindowValues(Scene scene, ViewParameters* viewParameters, Vector3 viewDirTimesDistance) {
     float halfWidth = viewParameters->viewingWindow.width / 2;
     float halfHeight = viewParameters->viewingWindow.height / 2;
-    Vector3 widthTimesHorizontal = multiply(viewParameters->u, halfWidth);
-    Vector3 heightTimesVertical = multiply(viewParameters->v, halfHeight);
+    Vector3 widthTimesHorizontal = scale(viewParameters->u, halfWidth);
+    Vector3 heightTimesVertical = scale(viewParameters->v, halfHeight);
     Vector3 eyePlusViewVector = add(scene.eye, viewDirTimesDistance);
     Vector3 perspectiveMinusDimensions = subtract(eyePlusViewVector, widthTimesHorizontal);
     Vector3 perspectivePlusDimensions = add(eyePlusViewVector, widthTimesHorizontal);
@@ -129,7 +137,7 @@ void setParallelViewingWindow(Scene scene, ViewParameters* viewParameters) {
 }
 
 void setPerspectiveViewingWindow(Scene scene, ViewParameters* viewParameters) {
-    setViewingWindowValues(scene, viewParameters, multiply(viewParameters->n, viewParameters->d));
+    setViewingWindowValues(scene, viewParameters, scale(viewParameters->n, viewParameters->d));
 }
 
 void setViewingWindow(Scene scene, ViewParameters* viewParameters) {
@@ -144,12 +152,12 @@ Vector3 getViewingWindowLocation(ViewParameters viewParameters, int x, int y) {
     return add(
             add(
                     viewParameters.viewingWindow.ul,
-                    multiply(
+                    scale(
                             viewParameters.dh,
                             (float) x
                     )
             ),
-            multiply(viewParameters.dv, (float) y)
+            scale(viewParameters.dv, (float) y)
     );
 }
 
@@ -294,7 +302,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
         Vector3 specularColor = mtlColor.specularColor;
 
         Vector3 intersectionPoint = add(viewingRay.origin,
-                                        multiply(viewingRay.direction, intersection.closestIntersection));
+                                        scale(viewingRay.direction, intersection.closestIntersection));
         Vector3 surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
 
         Vector3 ambient = (Vector3) {
@@ -302,13 +310,19 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
                 .y = diffuseColor.y * mtlColor.ambientCoefficient,
                 .z = diffuseColor.z * mtlColor.ambientCoefficient,
         };
+        Vector3 depthCueingAmbient = (Vector3) {
+                .x = scene.depthCueing.color.x * mtlColor.ambientCoefficient,
+                .y = scene.depthCueing.color.y * mtlColor.ambientCoefficient,
+                .z = scene.depthCueing.color.z * mtlColor.ambientCoefficient,
+        };
 
         Vector3 lightsApplied = (Vector3) {.x = 0, .y = 0, .z = 0};
+        Vector3 depthCueingLightsApplied = (Vector3) {.x = 0, .y = 0, .z = 0};
         if (scene.lightCount > 0) {
             for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++) {
                 Vector3 lightDirection = scene.lights[lightIdx].w == 1
                                          ? normalize(subtract(scene.lights[lightIdx].position, intersectionPoint))
-                                         : normalize(multiply(scene.lights[lightIdx].position, -1));
+                                         : normalize(scale(scene.lights[lightIdx].position, -1));
                 Vector3 intersectionToOrigin = normalize(subtract(scene.eye, intersectionPoint));
                 Vector3 halfwayLightDirection = normalize(divide(add(lightDirection, intersectionToOrigin), 2));
                 float lightIntensity = scene.lights[lightIdx].i;
@@ -317,12 +331,25 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
                         .y = diffuseColor.y * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
                         .z = diffuseColor.z * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
                 };
+                Vector3 depthCueingDiffuse = (Vector3) {
+                        .x = scene.depthCueing.color.x * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
+                        .y = scene.depthCueing.color.y * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
+                        .z = scene.depthCueing.color.z * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0),
+                };
                 Vector3 specular = (Vector3) {
                         .x =  specularColor.x * mtlColor.specularCoefficient *
                               powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
                         .y = specularColor.y * mtlColor.specularCoefficient *
                              powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
                         .z = specularColor.z * mtlColor.specularCoefficient *
+                             powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
+                };
+                Vector3 depthCueingSpecular = (Vector3) {
+                        .x =  scene.depthCueing.color.x * mtlColor.specularCoefficient *
+                              powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
+                        .y = scene.depthCueing.color.y * mtlColor.specularCoefficient *
+                             powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
+                        .z = scene.depthCueing.color.z * mtlColor.specularCoefficient *
                              powf(max(dot(surfaceNormal, halfwayLightDirection), 0), mtlColor.specularExponent),
                 };
                 float shadow = 1;
@@ -340,16 +367,23 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
                 }
                 if (scene.depthCueing.distMax > 0) {
                     float distanceToCamera = distance(scene.eye, intersectionPoint);
-                    float depthCueFactor = 1.0f - normalizef(distanceToCamera, scene.depthCueing.distMin, scene.depthCueing.distMax);
-                    diffuse = multiply(diffuse, depthCueFactor);
-                    specular = multiply(specular, depthCueFactor);
-                    ambient = multiply(specular, depthCueFactor);
+                    float depthCueFactor = normalizef(distanceToCamera, scene.depthCueing.distMin, scene.depthCueing.distMax);
+                    diffuse = scale(diffuse, 1.0f - depthCueFactor);
+                    specular = scale(specular, 1.0f - depthCueFactor);
+                    ambient = scale(specular, 1.0f - depthCueFactor);
+                    depthCueingDiffuse = scale(depthCueingDiffuse, depthCueFactor);
+                    depthCueingSpecular = scale(depthCueingSpecular, depthCueFactor);
+                    depthCueingAmbient = scale(depthCueingAmbient, depthCueFactor);
                 }
-                Vector3 shadowsApplied = multiply(multiply(add(diffuse, specular), lightIntensity), shadow);
+                Vector3 shadowsApplied = scale(scale(add(diffuse, specular), lightIntensity), shadow);
+                Vector3 depthCueingShadowsApplied = scale(scale(add(depthCueingDiffuse, depthCueingSpecular), lightIntensity), shadow);
                 lightsApplied = add(lightsApplied, shadowsApplied);
+                depthCueingLightsApplied = add(lightsApplied, depthCueingShadowsApplied);
             }
         }
-        return convertColorToRGBColor(add(ambient, lightsApplied));
+        Vector3 ambientApplied = add(ambient, lightsApplied);
+        Vector3 depthCueingAmbientApplied = add(depthCueingAmbient, depthCueingLightsApplied);
+        return convertColorToRGBColor(add(ambientApplied, depthCueingAmbientApplied));
     } else if (intersection.closestEllipseIdx != -1 && !intersection.closestIsSphere) {
         return convertColorToRGBColor(
                 scene.mtlColors[scene.ellipses[intersection.closestEllipseIdx].mtlColorIdx].diffuseColor);
