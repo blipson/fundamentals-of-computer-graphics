@@ -57,6 +57,9 @@ typedef struct {
     Vector3 position;
     float w;
     float i;
+    float constantAttenuation;
+    float linearAttenuation;
+    float quadraticAttenuation;
 } Light;
 
 typedef struct {

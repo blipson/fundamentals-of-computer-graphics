@@ -6,24 +6,24 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <stdbool.h>
-#include <_ctype.h>
+#include <ctype.h>
 #include "types.h"
 #include <math.h>
 
 #define MAX_LINE_COUNT 500
 #define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
 #define MAX_LINE_LENGTH 50
-#define KEYWORD_COUNT 12
+#define KEYWORD_COUNT 13
 
 void checkArgs(int argc, char* argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b <path/to/input_file>`");
         exit(-1);
     }
-//    if (strcmp(argv[0], "./raytracer1b") != 0) {
-//        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b <path/to/input_file>`");
-//        exit(-1);
-//    }
+    if (strcmp(argv[0], "./raytracer1b") != 0) {
+        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b <path/to/input_file>`");
+        exit(-1);
+    }
 }
 
 char** readLine(char* line, char** wordsInLine) {
@@ -63,7 +63,7 @@ char** readLine(char* line, char** wordsInLine) {
 }
 
 bool isKeyword(const char* target) {
-    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light", "depthcueing"};
+    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light", "depthcueing", "attlight"};
     for (size_t i = 0; i < KEYWORD_COUNT; i++) {
         if (strcmp(target, keywords[i]) == 0) {
             return true;
@@ -244,6 +244,27 @@ void readSceneSetup(
                     .distMin = convertStringToFloat(inputFileWordsByLine[*line][6]),
                     .distMax = convertStringToFloat(inputFileWordsByLine[*line][7]),
             };
+        } else if (strcmp(inputFileWordsByLine[*line][0], "attlight") == 0) {
+            // todo: refactor this to make it DRY with "light"
+            Light* newLights = (Light*) realloc(scene->lights, (scene->lightCount + 1) * sizeof(Light));
+            if (newLights == NULL) {
+                fprintf(stderr, "Memory allocation failed for light.");
+                exit(-1);
+            }
+            scene->lights = newLights;
+            checkValues(inputFileWordsByLine[*line], 8, "light");
+            scene->lights[scene->lightCount].position = (Vector3) {
+                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
+                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
+                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
+            };
+            scene->lights[scene->lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
+            // clamp light intensity to 0-1. Remove the max() for an eclipse effect, remove the min for a very bright thing
+            scene->lights[scene->lightCount].i = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0);
+            scene->lights[scene->lightCount].constantAttenuation = convertStringToFloat(inputFileWordsByLine[*line][6]);
+            scene->lights[scene->lightCount].linearAttenuation = convertStringToFloat(inputFileWordsByLine[*line][7]);
+            scene->lights[scene->lightCount].quadraticAttenuation = convertStringToFloat(inputFileWordsByLine[*line][8]);
+            scene->lightCount++;
         }
         (*line)++;
     }
