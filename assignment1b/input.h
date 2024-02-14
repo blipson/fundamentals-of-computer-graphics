@@ -16,14 +16,14 @@
 #define KEYWORD_COUNT 13
 
 void checkArgs(int argc, char* argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b <path/to/input_file>`");
+    if (argc > 3 || argc < 2) {
+        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b [-s:soft shadows] <path/to/input_file>`");
         exit(-1);
     }
-    if (strcmp(argv[0], "./raytracer1b") != 0) {
-        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b <path/to/input_file>`");
-        exit(-1);
-    }
+//    if (strcmp(argv[0], "./raytracer1b") != 0) {
+//        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1b <path/to/input_file>`");
+//        exit(-1);
+//    }
 }
 
 char** readLine(char* line, char** wordsInLine) {
@@ -72,8 +72,14 @@ bool isKeyword(const char* target) {
     return false;
 }
 
-char*** readInputFile(char* inputFileName) {
+char*** readInputFile(char* argv[]) {
     char*** inputFileWordsByLine = NULL;
+    char* inputFileName = NULL;
+    if (strcmp(argv[1], "-s") != 0) {
+        inputFileName = argv[1];
+    } else {
+        inputFileName = argv[2];
+    }
 
     FILE* inputFilePtr;
     inputFilePtr = fopen(inputFileName, "r");
@@ -182,7 +188,8 @@ float min(float a, float b) {
 void readSceneSetup(
         char*** inputFileWordsByLine,
         int* line,
-        Scene* scene
+        Scene* scene,
+        bool softShadows
 ) {
     while (inputFileWordsByLine[*line][0] != NULL && strcmp(inputFileWordsByLine[*line][0], "mtlcolor") != 0) {
         if (strcmp(inputFileWordsByLine[*line][0], "eye") == 0) {
@@ -266,6 +273,7 @@ void readSceneSetup(
             scene->lights[scene->lightCount].quadraticAttenuation = convertStringToFloat(inputFileWordsByLine[*line][8]);
             scene->lightCount++;
         }
+        scene->softShadows = softShadows;
         (*line)++;
     }
 }

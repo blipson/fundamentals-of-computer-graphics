@@ -2,12 +2,12 @@
 #include "output.h"
 #include "render.h"
 
-void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, char* argv) {
+void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters) {
     for (int y = 0; y < scene.imSize.height; y++) {
         for (int x = 0; x < scene.imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
             Ray viewingRay = traceRay(scene, viewingWindowLocation);
-            writePixel(outputFilePtr, shadeRay(viewingRay, scene, x, y), x, scene.imSize.width);
+            writePixel(outputFilePtr, shadeRay(viewingRay, scene), x, scene.imSize.width);
         }
     }
 }
@@ -15,7 +15,8 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, cha
 int main(int argc, char* argv[]) {
     checkArgs(argc, argv);
 
-    char*** inputFileWordsByLine = readInputFile(argv[1]);
+    // todo: check for -s in only one spot
+    char*** inputFileWordsByLine = readInputFile(argv);
 
     Scene scene = {
             .eye = {.x = 0, .y = 0, .z = 0},
@@ -33,10 +34,11 @@ int main(int argc, char* argv[]) {
             .ellipseCount = 0,
             .lights = NULL,
             .lightCount = 0,
+            .softShadows = false,
     };
 
     int line = 0;
-    readSceneSetup(inputFileWordsByLine, &line, &scene);
+    readSceneSetup(inputFileWordsByLine, &line, &scene, strcmp(argv[1], "-s") == 0);
     readSceneObjects(inputFileWordsByLine, &line, &scene);
 
     freeInputFileWordsByLine(inputFileWordsByLine);
@@ -60,9 +62,9 @@ int main(int argc, char* argv[]) {
 
     setViewingWindow(scene, &viewParameters);
 
-    FILE* outputFilePtr = openOutputFile(argv[1]);
+    FILE* outputFilePtr = openOutputFile(strcmp(argv[1], "-s") != 0 ? argv[1] : argv[2]);
     writeHeader(outputFilePtr, scene.imSize.width, scene.imSize.height);
-    render(outputFilePtr, scene, viewParameters, argv[1]);
+    render(outputFilePtr, scene, viewParameters);
 
     freeInput(scene);
 

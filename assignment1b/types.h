@@ -87,6 +87,7 @@ typedef struct {
     Light* lights;
     int lightCount;
     DepthCueing depthCueing;
+    bool softShadows;
 } Scene;
 
 typedef struct {

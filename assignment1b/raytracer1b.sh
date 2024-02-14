@@ -9,7 +9,11 @@ if [ -d "$directory" ]; then
     for file in "$directory"*.txt; do
         if [ -f "$file" ]; then
             echo "Rendering $file..."
-            ./raytracer1b "$file"
+            if [[ "$file" == "./tests/softshadows.txt" ]]; then
+              ./raytracer1b -s "$file"
+            else
+              ./raytracer1b "$file"
+            fi
         else
             echo "Skipping non-regular file: $file"
         fi
