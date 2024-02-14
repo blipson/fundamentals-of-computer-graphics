@@ -5,9 +5,13 @@ This is a program to render a scene containing ellipses and spheres in 3D space.
 `$ make`
 
 # Usage
+#### Notes:
+
+- The `-s` flag is optional. If included, the scene will render using soft shadows instead of hard shadows. _This will take a lot longer._
+
 To run individual files:
 
-`$ ./raytracer1b <path/to/input_file>`
+`$ ./raytracer1b [-s:soft shadows] <path/to/input_file>`
 
 To run all the provided examples in the `tests/` directory:
 
