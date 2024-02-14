@@ -1,4 +1,4 @@
-imsize 7680 4320
+imsize 1920 1080
 eye 0 0 0
 viewdir 0 0 -1
 hfov 45

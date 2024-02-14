@@ -367,7 +367,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
                 float shadow = 1.0f;
                 if (scene.softShadows) {
                     float softShadow = 0.0f;
-                    int numShadowRays = 50;
+                    int numShadowRays = 500;
 
                     for (int i = 0; i < numShadowRays; ++i) {
                         Vector3 jitteredLightDirection = add(lightDirection, multiply(randomUnitVector(), 0.005f));
