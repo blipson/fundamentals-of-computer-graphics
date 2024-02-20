@@ -1,2 +1,2 @@
 assignment1b: main.c
-	cc main.c -o raytracer1b
+	cc main.c -o raytracer1b -lm

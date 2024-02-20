@@ -1,6 +1,8 @@
 #ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_TYPES_H
 #define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_TYPES_H
 
+#include <stdbool.h>
+
 typedef struct {
     float x;
     float y;

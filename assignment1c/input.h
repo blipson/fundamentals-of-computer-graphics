@@ -1,14 +1,13 @@
 #ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_INPUT_H
 #define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_INPUT_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <stdbool.h>
-#include <ctype.h>
 #include "types.h"
 #include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
 
 #define MAX_LINE_COUNT 500
 #define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
@@ -238,6 +237,9 @@ void readSceneSetup(
             scene->lights[scene->lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
             // clamp light intensity to 0-1. Remove the max() for an eclipse effect, remove the min for a very bright thing
             scene->lights[scene->lightCount].i = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0);
+            scene->lights[scene->lightCount].constantAttenuation = 0;
+            scene->lights[scene->lightCount].linearAttenuation = 0;
+            scene->lights[scene->lightCount].quadraticAttenuation = 0;
             scene->lightCount++;
         } else if (strcmp(inputFileWordsByLine[*line][0], "depthcueing") == 0) {
             scene->depthCueing = (DepthCueing) {
