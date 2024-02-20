@@ -1,0 +1,23 @@
+imsize 512 512
+eye 0 0 0
+viewdir 0 0 -1
+hfov 45
+updir 0 1 0
+bkgcolor 0 0 0
+depthcueing 0.4 0.05 0.05 0 1 0 225
+light 10 10 -25 1 1
+
+mtlcolor 0 1 0 1 1 1 0.2 0.8 0 1
+sphere 60 60 -200 10
+
+mtlcolor 0 1 0 1 1 1 0.2 0.8 0 1
+sphere 25 25 -175 10
+
+mtlcolor 0 1 0 1 1 1 0.2 0.8 0 1
+sphere 35 -35 -150 10
+
+mtlcolor 0 1 0 1 1 1 0.2 0.8 0 1
+sphere -25 25 -100 10
+
+mtlcolor 0 1 0 1 1 1 0.2 0.8 0 1
+sphere -5 -5 -50 10

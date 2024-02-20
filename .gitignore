@@ -15,3 +15,6 @@ assignment1b/raytracer1b
 assignment1b/*.ppm
 assignment1b/tests/*.ppm
 assignment1b/*.png
+assignment1c/raytracer1c
+assignment1c/*.ppm
+assignment1c/tests/*.ppm
