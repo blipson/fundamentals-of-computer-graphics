@@ -2,11 +2,11 @@
 #include "output.h"
 #include "render.h"
 
-void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters) {
+void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, bool parallel) {
     for (int y = 0; y < scene.imSize.height; y++) {
         for (int x = 0; x < scene.imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
-            Ray viewingRay = traceRay(scene, viewingWindowLocation);
+            Ray viewingRay = traceRay(scene, viewingWindowLocation, parallel);
             writePixel(outputFilePtr, shadeRay(viewingRay, scene), x, scene.imSize.width);
         }
     }
@@ -42,6 +42,7 @@ int main(int argc, char* argv[]) {
     readSceneObjects(inputFileWordsByLine, &line, &scene);
 
     freeInputFileWordsByLine(inputFileWordsByLine);
+    bool parallel = scene.parallel.frustumWidth > 0;
 
     ViewParameters viewParameters = {
             .w = normalize(multiply(scene.viewDir, -1)),
@@ -51,20 +52,20 @@ int main(int argc, char* argv[]) {
             .d = 1.0f,
             .aspectRatio = (float) scene.imSize.width / (float) scene.imSize.height,
             .viewingWindow = {
-                    .width = scene.parallel.frustumWidth <= 0 ?
-                             (2 * viewParameters.d * tanf(scene.fov.h / 2)) :
-                             (scene.parallel.frustumWidth),
-                    .height = scene.parallel.frustumWidth <= 0 ?
-                              (2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio)) :
-                              ((scene.parallel.frustumWidth / viewParameters.aspectRatio)),
+                    .width = parallel ?
+                             (scene.parallel.frustumWidth) :
+                             (2 * viewParameters.d * tanf(scene.fov.h / 2)),
+                    .height = parallel ?
+                              ((scene.parallel.frustumWidth / viewParameters.aspectRatio)) :
+                              (2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio)),
             }
     };
 
-    setViewingWindow(scene, &viewParameters);
+    setViewingWindow(scene, &viewParameters, parallel);
 
     FILE* outputFilePtr = openOutputFile(softShadows ? argv[2] : argv[1]);
     writeHeader(outputFilePtr, scene.imSize.width, scene.imSize.height);
-    render(outputFilePtr, scene, viewParameters);
+    render(outputFilePtr, scene, viewParameters, parallel);
 
     freeInput(scene);
 

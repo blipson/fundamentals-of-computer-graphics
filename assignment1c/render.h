@@ -132,8 +132,8 @@ void setPerspectiveViewingWindow(Scene scene, ViewParameters* viewParameters) {
     setViewingWindowValues(scene, viewParameters, multiply(viewParameters->n, viewParameters->d));
 }
 
-void setViewingWindow(Scene scene, ViewParameters* viewParameters) {
-    if (scene.parallel.frustumWidth > 0) {
+void setViewingWindow(Scene scene, ViewParameters* viewParameters, bool parallel) {
+    if (parallel) {
         setParallelViewingWindow(scene, viewParameters);
     } else {
         setPerspectiveViewingWindow(scene, viewParameters);
@@ -182,8 +182,8 @@ Ray tracePerspectiveRay(Vector3 eye, Vector3 viewingWindowLocation) {
     };
 }
 
-Ray traceRay(Scene scene, Vector3 viewingWindowLocation) {
-    if (scene.parallel.frustumWidth > 0) {
+Ray traceRay(Scene scene, Vector3 viewingWindowLocation, bool parallel) {
+    if (parallel) {
         return traceParallelRay(scene.viewDir, viewingWindowLocation);
     } else {
         return tracePerspectiveRay(scene.eye, viewingWindowLocation);
