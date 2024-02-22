@@ -222,24 +222,6 @@ void readSceneSetup(
             checkValues(inputFileWordsByLine[*line], 1, "parallel");
             scene->parallel.frustumWidth = convertStringToFloat(inputFileWordsByLine[*line][1]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "light") == 0) {
-            Light* newLights = (Light*) realloc(scene->lights, (scene->lightCount + 1) * sizeof(Light));
-            if (newLights == NULL) {
-                fprintf(stderr, "Memory allocation failed for light.");
-                exit(-1);
-            }
-            scene->lights = newLights;
-            checkValues(inputFileWordsByLine[*line], 5, "light");
-            scene->lights[scene->lightCount].position = (Vector3) {
-                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
-                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
-                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
-            };
-            scene->lights[scene->lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
-            // clamp light intensity to 0-1. Remove the max() for an eclipse effect, remove the min for a very bright thing
-            scene->lights[scene->lightCount].i = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0);
-            scene->lights[scene->lightCount].constantAttenuation = 0;
-            scene->lights[scene->lightCount].linearAttenuation = 0;
-            scene->lights[scene->lightCount].quadraticAttenuation = 0;
             scene->lightCount++;
         } else if (strcmp(inputFileWordsByLine[*line][0], "depthcueing") == 0) {
             scene->depthCueing = (DepthCueing) {
@@ -276,6 +258,52 @@ void readSceneSetup(
             scene->lightCount++;
         }
         scene->softShadows = softShadows;
+        (*line)++;
+    }
+    scene->lights = (Light*) malloc(scene->lightCount * sizeof(Light));
+    if (scene->lights == NULL) {
+        fprintf(stderr, "Memory allocation failed for light.");
+        exit(-1);
+    }
+}
+
+void readLightSetup(
+        char*** inputFileWordsByLine,
+        int* line,
+        Scene* scene
+) {
+    int lightCount = 0;
+    while (inputFileWordsByLine[*line][0] != NULL && strcmp(inputFileWordsByLine[*line][0], "mtlcolor") != 0) {
+        if (strcmp(inputFileWordsByLine[*line][0], "light") == 0) {
+            checkValues(inputFileWordsByLine[*line], 5, "light");
+            scene->lights[lightCount].position = (Vector3) {
+                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
+                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
+                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
+            };
+            scene->lights[lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
+            // clamp light intensity to 0-1. Remove the max() for an eclipse effect, remove the min for a very bright thing
+            scene->lights[lightCount].i = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0);
+            scene->lights[lightCount].constantAttenuation = 0;
+            scene->lights[lightCount].linearAttenuation = 0;
+            scene->lights[lightCount].quadraticAttenuation = 0;
+            lightCount++;
+        } else if (strcmp(inputFileWordsByLine[*line][0], "attlight") == 0) {
+            // todo: refactor this to make it DRY with "light"
+            checkValues(inputFileWordsByLine[*line], 8, "attlight");
+            scene->lights[lightCount].position = (Vector3) {
+                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
+                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
+                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
+            };
+            scene->lights[lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
+            // clamp light intensity to 0-1. Remove the max() for an eclipse effect, remove the min for a very bright thing
+            scene->lights[lightCount].i = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0);
+            scene->lights[lightCount].constantAttenuation = convertStringToFloat(inputFileWordsByLine[*line][6]);
+            scene->lights[lightCount].linearAttenuation = convertStringToFloat(inputFileWordsByLine[*line][7]);
+            scene->lights[lightCount].quadraticAttenuation = convertStringToFloat(inputFileWordsByLine[*line][8]);
+            lightCount++;
+        }
         (*line)++;
     }
 }
@@ -357,6 +385,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
         }
     }
 }
+
 
 void printScene(Scene scene) {
     printf("--------------------SCENE--------------------\n");

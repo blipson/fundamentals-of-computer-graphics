@@ -39,6 +39,8 @@ int main(int argc, char* argv[]) {
 
     int line = 0;
     readSceneSetup(inputFileWordsByLine, &line, &scene, strcmp(argv[1], "-s") == 0);
+    line = 0;
+    readLightSetup(inputFileWordsByLine, &line, &scene);
     readSceneObjects(inputFileWordsByLine, &line, &scene);
 
     freeInputFileWordsByLine(inputFileWordsByLine);
