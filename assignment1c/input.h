@@ -13,6 +13,10 @@
 #define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
 #define MAX_LINE_LENGTH 50
 #define KEYWORD_COUNT 13
+#define INITIAL_LIGHT_COUNT 10
+#define INITIAL_MTLCOLOR_COUNT 10
+#define INITIAL_SPHERE_COUNT 10
+#define INITIAL_ELLIPSE_COUNT 10
 
 void checkArgs(int argc, char* argv[]) {
     if (argc > 3 || argc < 2) {
@@ -71,13 +75,13 @@ bool isKeyword(const char* target) {
     return false;
 }
 
-char*** readInputFile(char* argv[]) {
+char*** readInputFile(char* argv[], bool softShadows) {
     char*** inputFileWordsByLine = NULL;
     char* inputFileName = NULL;
-    if (strcmp(argv[1], "-s") != 0) {
-        inputFileName = argv[1];
-    } else {
+    if (softShadows) {
         inputFileName = argv[2];
+    } else {
+        inputFileName = argv[1];
     }
 
     FILE* inputFilePtr;
@@ -190,6 +194,7 @@ void readSceneSetup(
         Scene* scene,
         bool softShadows
 ) {
+    int lightAllocationCount = 1;
     while (inputFileWordsByLine[*line][0] != NULL && strcmp(inputFileWordsByLine[*line][0], "mtlcolor") != 0) {
         if (strcmp(inputFileWordsByLine[*line][0], "eye") == 0) {
             checkValues(inputFileWordsByLine[*line], 3, "eye");
@@ -222,12 +227,16 @@ void readSceneSetup(
             checkValues(inputFileWordsByLine[*line], 1, "parallel");
             scene->parallel.frustumWidth = convertStringToFloat(inputFileWordsByLine[*line][1]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "light") == 0) {
-            Light* newLights = (Light*) realloc(scene->lights, (scene->lightCount + 1) * sizeof(Light));
-            if (newLights == NULL) {
-                fprintf(stderr, "Memory allocation failed for light.");
-                exit(-1);
+            if (scene->lightCount >= INITIAL_LIGHT_COUNT * lightAllocationCount) {
+                printf("reallocating lights\n");
+                lightAllocationCount++;
+                Light* newLights = (Light*) realloc(scene->lights, (INITIAL_LIGHT_COUNT * lightAllocationCount) * sizeof(Light));
+                if (newLights == NULL) {
+                    fprintf(stderr, "Memory allocation failed for light.");
+                    exit(-1);
+                }
+                scene->lights = newLights;
             }
-            scene->lights = newLights;
             checkValues(inputFileWordsByLine[*line], 5, "light");
             scene->lights[scene->lightCount].position = (Vector3) {
                     .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
@@ -281,14 +290,20 @@ void readSceneSetup(
 }
 
 void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
+    int mtlColorAllocationCount = 1;
+    int sphereAllocationCount = 1;
+    int ellipseAllocationCount = 1;
     while (inputFileWordsByLine[*line][0] != NULL) {
         if (strcmp(inputFileWordsByLine[*line][0], "mtlcolor") == 0) {
-            MaterialColor* newMtlColors = (MaterialColor*) realloc(scene->mtlColors, (scene->mtlColorCount + 1) * sizeof(MaterialColor));
-            if (newMtlColors == NULL) {
-                fprintf(stderr, "Memory allocation failed for material color.");
-                exit(-1);
+            if (scene->mtlColorCount >= INITIAL_MTLCOLOR_COUNT * mtlColorAllocationCount) {
+                mtlColorAllocationCount++;
+                MaterialColor* newMtlColors = (MaterialColor*) realloc(scene->mtlColors, (INITIAL_MTLCOLOR_COUNT * mtlColorAllocationCount) * sizeof(MaterialColor));
+                if (newMtlColors == NULL) {
+                    fprintf(stderr, "Memory allocation failed for material color.");
+                    exit(-1);
+                }
+                scene->mtlColors = newMtlColors;
             }
-            scene->mtlColors = newMtlColors;
             checkValues(inputFileWordsByLine[*line], 10, "mtlcolor");
             scene->mtlColors[scene->mtlColorCount].diffuseColor = (Vector3) {
                     .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
@@ -309,12 +324,15 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
             while (inputFileWordsByLine[objectLine][0] != NULL &&
                    strcmp(inputFileWordsByLine[objectLine][0], "mtlcolor") != 0) {
                 if (strcmp(inputFileWordsByLine[objectLine][0], "sphere") == 0) {
-                    Sphere* newSpheres = (Sphere*) realloc(scene->spheres, (scene->sphereCount + 1) * sizeof(Sphere));
-                    if (newSpheres == NULL) {
-                        fprintf(stderr, "Memory allocation failed for sphere.");
-                        exit(-1);
+                    if (scene->sphereCount >= INITIAL_SPHERE_COUNT * sphereAllocationCount) {
+                        sphereAllocationCount++;
+                        Sphere* newSpheres = (Sphere*) realloc(scene->spheres, (INITIAL_SPHERE_COUNT * sphereAllocationCount) * sizeof(Sphere));
+                        if (newSpheres == NULL) {
+                            fprintf(stderr, "Memory allocation failed for sphere.");
+                            exit(-1);
+                        }
+                        scene->spheres = newSpheres;
                     }
-                    scene->spheres = newSpheres;
                     checkValues(inputFileWordsByLine[objectLine], 4, "sphere");
                     Vector3 spherePosition = {
                             .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
@@ -326,12 +344,15 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                     scene->spheres[scene->sphereCount].mtlColorIdx = scene->mtlColorCount;
                     scene->sphereCount++;
                 } else if (strcmp(inputFileWordsByLine[objectLine][0], "ellipse") == 0) {
-                    Ellipse* newEllipses = (Ellipse*) realloc(scene->ellipses, (scene->ellipseCount + 1) * sizeof(Ellipse));
-                    if (newEllipses == NULL) {
-                        fprintf(stderr, "Memory allocation failed for ellipse.");
-                        exit(-1);
+                    if (scene->ellipseCount >= INITIAL_ELLIPSE_COUNT * ellipseAllocationCount) {
+                        ellipseAllocationCount++;
+                        Ellipse* newEllipses = (Ellipse*) realloc(scene->ellipses, (INITIAL_ELLIPSE_COUNT * ellipseAllocationCount) * sizeof(Ellipse));
+                        if (newEllipses == NULL) {
+                            fprintf(stderr, "Memory allocation failed for ellipse.");
+                            exit(-1);
+                        }
+                        scene->ellipses = newEllipses;
                     }
-                    scene->ellipses = newEllipses;
                     checkValues(inputFileWordsByLine[objectLine], 6, "ellipse");
                     Vector3 ellipseCenter = {
                             .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
@@ -405,6 +426,9 @@ void printScene(Scene scene) {
 }
 
 void freeInput(Scene scene) {
+    if (scene.lights != NULL) {
+        free(scene.lights);
+    }
     if (scene.mtlColors != NULL) {
         free(scene.mtlColors);
     }

@@ -14,9 +14,9 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters) {
 
 int main(int argc, char* argv[]) {
     checkArgs(argc, argv);
+    bool softShadows = strcmp(argv[1], "-s") == 0;
 
-    // todo: check for -s in only one spot
-    char*** inputFileWordsByLine = readInputFile(argv);
+    char*** inputFileWordsByLine = readInputFile(argv, softShadows);
 
     Scene scene = {
             .eye = {.x = 0, .y = 0, .z = 0},
@@ -26,19 +26,19 @@ int main(int argc, char* argv[]) {
             .imSize = {.width = 0, .height = 0},
             .bkgColor = {.x = 0, .y = 0, .z = 0},
             .parallel = {.frustumWidth = 0},
-            .mtlColors = NULL,
+            .mtlColors = (MaterialColor*) malloc(INITIAL_MTLCOLOR_COUNT * sizeof(MaterialColor)),
             .mtlColorCount = 0,
-            .spheres = NULL,
+            .spheres = (Sphere*) malloc(INITIAL_SPHERE_COUNT * sizeof(Sphere)),
             .sphereCount = 0,
-            .ellipses = NULL,
+            .ellipses = (Ellipse*) malloc(INITIAL_ELLIPSE_COUNT * sizeof(Ellipse)),
             .ellipseCount = 0,
-            .lights = NULL,
+            .lights = (Light*) malloc(INITIAL_LIGHT_COUNT * sizeof(Light)),
             .lightCount = 0,
             .softShadows = false,
     };
 
     int line = 0;
-    readSceneSetup(inputFileWordsByLine, &line, &scene, strcmp(argv[1], "-s") == 0);
+    readSceneSetup(inputFileWordsByLine, &line, &scene, softShadows);
     readSceneObjects(inputFileWordsByLine, &line, &scene);
 
     freeInputFileWordsByLine(inputFileWordsByLine);
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
 
     setViewingWindow(scene, &viewParameters);
 
-    FILE* outputFilePtr = openOutputFile(strcmp(argv[1], "-s") != 0 ? argv[1] : argv[2]);
+    FILE* outputFilePtr = openOutputFile(softShadows ? argv[2] : argv[1]);
     writeHeader(outputFilePtr, scene.imSize.width, scene.imSize.height);
     render(outputFilePtr, scene, viewParameters);
 
