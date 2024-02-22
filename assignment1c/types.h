@@ -123,11 +123,18 @@ typedef struct {
     Vector3 dv;
 } ViewParameters;
 
+enum ObjectType {
+    SPHERE,
+    ELLIPSE,
+    TRIANGLE
+};
+
 typedef struct {
     float closestIntersection;
     int closestSphereIdx;
     int closestEllipseIdx;
-    bool closestIsSphere;
+    int closestFaceIdx;
+    enum ObjectType closestObject;
 } Intersection;
 
 #endif

@@ -1,5 +1,6 @@
 #ifndef FUNDAMENTALS_OF_COMPUTER_GRAPHICS_RENDER_H
 #define FUNDAMENTALS_OF_COMPUTER_GRAPHICS_RENDER_H
+#define EPSILON 1e-6
 
 #include <float.h>
 
@@ -198,11 +199,12 @@ RGBColor convertColorToRGBColor(Vector3 color) {
     };
 }
 
-Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
+Intersection castRay(Ray ray, Scene scene, int excludeIdx, int x, int y) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
-    bool closestIsSphere = false;
+    enum ObjectType closestObject;
     int closestSphereIdx = -1;
     int closestEllipseIdx = -1;
+    int closestFaceIdx = -1;
 
     for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
         if (sphereIdx != excludeIdx) {
@@ -222,12 +224,12 @@ Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
                 if (t1 >= 0 && t1 < closestIntersection) {
                     closestIntersection = t1;
                     closestSphereIdx = sphereIdx;
-                    closestIsSphere = true;
+                    closestObject = SPHERE;
                 }
                 if (t2 >= 0 && t2 < closestIntersection) {
                     closestIntersection = t2;
                     closestSphereIdx = sphereIdx;
-                    closestIsSphere = true;
+                    closestObject = SPHERE;
                 }
             }
         }
@@ -266,13 +268,52 @@ Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
                 if (t1 >= 0 && t1 < closestIntersection) {
                     closestIntersection = t1;
                     closestEllipseIdx = ellipseIdx;
-                    closestIsSphere = false;
+                    closestObject = ELLIPSE;
                 }
                 if (t2 >= 0 && t2 < closestIntersection) {
                     closestIntersection = t2;
                     closestEllipseIdx = ellipseIdx;
-                    closestIsSphere = false;
+                    closestObject = ELLIPSE;
                 }
+            }
+        }
+    }
+
+    for (int faceIdx = 0; faceIdx < scene.faceCount; faceIdx ++) {
+        Vector3 p0 = scene.vertexes[scene.faces[faceIdx].v1];
+        Vector3 p1 = scene.vertexes[scene.faces[faceIdx].v2];
+        Vector3 p2 = scene.vertexes[scene.faces[faceIdx].v3];
+
+        Vector3 e1 = subtract(p1, p0);
+        Vector3 e2 = subtract(p2, p0);
+        Vector3 n = cross(e1, e2);
+
+        // Q: is this right for D???
+        // -dot()?? does it work?
+        float D = -1 * dot(n, p0);
+
+        float denominator = dot(n, ray.direction);
+        if (fabsf(denominator) < EPSILON) {
+            continue;
+        }
+
+        float t = (-1 * (dot(n, ray.origin) + D)) / denominator;
+
+        Vector3 intersectionPoint = add(ray.origin, multiply(ray.direction, t));
+        float A = magnitude(n);
+        float a = magnitude(divide(cross(subtract(p1, intersectionPoint), subtract(p2, intersectionPoint)), A));
+        float b = magnitude(divide(cross(subtract(intersectionPoint, p0), subtract(p2, p0)), A));
+        // you can use p0 instead of p1 in the second subtract, doesn't matter
+        float c = magnitude(divide(cross(subtract(p1, p0), subtract(intersectionPoint, p1)), A));
+
+        // TODO: compare what you have with the slides
+        // beta and gamma both between 0 and 1
+        // AND beta + gamma between 0 and 1
+        if ((a + b + c) < 1.0f + EPSILON) {
+            if (t > 0 && t < closestIntersection) {
+                closestIntersection = t;
+                closestFaceIdx = faceIdx;
+                closestObject = TRIANGLE;
             }
         }
     }
@@ -281,7 +322,8 @@ Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
             .closestIntersection = closestIntersection,
             .closestSphereIdx = closestSphereIdx,
             .closestEllipseIdx = closestEllipseIdx,
-            .closestIsSphere = closestIsSphere
+            .closestFaceIdx = closestFaceIdx,
+            .closestObject = closestObject
     };
 }
 
@@ -300,11 +342,11 @@ Vector3 randomUnitVector() {
     return (Vector3){x, y, z};
 }
 
-RGBColor shadeRay(Ray viewingRay, Scene scene) {
+RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
     // todo: refactor
     // todo: make lighting work with ellipses
-    Intersection intersection = castRay(viewingRay, scene, -1);
-    if (intersection.closestSphereIdx != -1 && intersection.closestIsSphere) {
+    Intersection intersection = castRay(viewingRay, scene, -1, x, y);
+    if (intersection.closestSphereIdx != -1 && intersection.closestObject == SPHERE) {
         Sphere sphere = scene.spheres[intersection.closestSphereIdx];
         MaterialColor mtlColor = scene.mtlColors[sphere.mtlColorIdx];
         Vector3 diffuseColor = mtlColor.diffuseColor;
@@ -375,7 +417,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
                         Intersection shadowRay = castRay((Ray) {
                                 .origin = intersectionPoint,
                                 .direction = normalize(jitteredLightDirection)
-                        }, scene, intersection.closestSphereIdx);
+                        }, scene, intersection.closestSphereIdx, 0, 0);
 
                         if (shadowRay.closestSphereIdx != -1) {
                             if ((light.w == 1 && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) ||
@@ -389,7 +431,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
                     Intersection shadowRay = castRay((Ray) {
                             .origin = intersectionPoint,
                             .direction = lightDirection
-                    }, scene, intersection.closestSphereIdx);
+                    }, scene, intersection.closestSphereIdx, 0, 0);
                     if (shadowRay.closestSphereIdx != -1) {
                         if (light.w == 1 && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) {
                             shadow = 0;
@@ -411,6 +453,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
                     depthCueingAmbient = multiply(depthCueingAmbient, depthCueFactor);
                 }
                 float attenuationFactor = 1.0f;
+                // try 0.0f instead of 0
                 if (light.constantAttenuation > 0 || light.linearAttenuation > 0 || light.quadraticAttenuation > 0) {
                     attenuationFactor = 1.0f / (light.constantAttenuation + light.linearAttenuation * distance(intersectionPoint, light.position) + light.quadraticAttenuation * powf(distance(intersectionPoint, light.position), 2));
                 }
@@ -424,9 +467,15 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
         Vector3 ambientApplied = add(ambient, lightsApplied);
         Vector3 depthCueingAmbientApplied = add(depthCueingAmbient, depthCueingLightsApplied);
         return convertColorToRGBColor(add(ambientApplied, depthCueingAmbientApplied));
-    } else if (intersection.closestEllipseIdx != -1 && !intersection.closestIsSphere) {
+    } else if (intersection.closestEllipseIdx != -1 && intersection.closestObject == ELLIPSE) {
         return convertColorToRGBColor(
                 scene.mtlColors[scene.ellipses[intersection.closestEllipseIdx].mtlColorIdx].diffuseColor);
+    } else if (intersection.closestFaceIdx != -1 && intersection.closestObject == TRIANGLE) {
+        return convertColorToRGBColor((Vector3) {
+            .x = 1,
+            .y = 0,
+            .z = 0
+        });
     } else {
         return convertColorToRGBColor(scene.bkgColor);
     }
