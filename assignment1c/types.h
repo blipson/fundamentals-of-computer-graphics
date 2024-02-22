@@ -73,6 +73,12 @@ typedef struct {
 } DepthCueing;
 
 typedef struct {
+    int v1;
+    int v2;
+    int v3;
+} Face;
+
+typedef struct {
     Vector3 eye;
     Vector3 viewDir;
     Vector3 upDir;
@@ -90,6 +96,10 @@ typedef struct {
     int lightCount;
     DepthCueing depthCueing;
     bool softShadows;
+    Vector3* vertexes;
+    int vertexCount;
+    Face* faces;
+    int faceCount;
 } Scene;
 
 typedef struct {

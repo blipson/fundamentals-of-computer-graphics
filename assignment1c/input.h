@@ -12,11 +12,13 @@
 #define MAX_LINE_COUNT 500
 #define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
 #define MAX_LINE_LENGTH 50
-#define KEYWORD_COUNT 13
+#define KEYWORD_COUNT 15
 #define INITIAL_LIGHT_COUNT 10
 #define INITIAL_MTLCOLOR_COUNT 10
 #define INITIAL_SPHERE_COUNT 10
 #define INITIAL_ELLIPSE_COUNT 10
+#define INITIAL_VERTEX_COUNT 1000
+#define INITIAL_FACE_COUNT 1000
 
 void checkArgs(int argc, char* argv[]) {
     if (argc > 3 || argc < 2) {
@@ -66,7 +68,7 @@ char** readLine(char* line, char** wordsInLine) {
 }
 
 bool isKeyword(const char* target) {
-    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light", "depthcueing", "attlight"};
+    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light", "depthcueing", "attlight", "v", "f"};
     for (size_t i = 0; i < KEYWORD_COUNT; i++) {
         if (strcmp(target, keywords[i]) == 0) {
             return true;
@@ -195,7 +197,7 @@ void readSceneSetup(
         bool softShadows
 ) {
     int lightAllocationCount = 1;
-    while (inputFileWordsByLine[*line][0] != NULL && strcmp(inputFileWordsByLine[*line][0], "mtlcolor") != 0) {
+    while (inputFileWordsByLine[*line][0] != NULL && strcmp(inputFileWordsByLine[*line][0], "mtlcolor") != 0 && strcmp(inputFileWordsByLine[*line][0], "v") != 0) {
         if (strcmp(inputFileWordsByLine[*line][0], "eye") == 0) {
             checkValues(inputFileWordsByLine[*line], 3, "eye");
             scene->eye.x = convertStringToFloat(inputFileWordsByLine[*line][1]);
@@ -293,7 +295,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     int mtlColorAllocationCount = 1;
     int sphereAllocationCount = 1;
     int ellipseAllocationCount = 1;
-    while (inputFileWordsByLine[*line][0] != NULL) {
+    while (inputFileWordsByLine[*line][0] != NULL && strcmp(inputFileWordsByLine[*line][0], "v") != 0) {
         if (strcmp(inputFileWordsByLine[*line][0], "mtlcolor") == 0) {
             if (scene->mtlColorCount >= INITIAL_MTLCOLOR_COUNT * mtlColorAllocationCount) {
                 mtlColorAllocationCount++;
@@ -328,7 +330,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                         sphereAllocationCount++;
                         Sphere* newSpheres = (Sphere*) realloc(scene->spheres, (INITIAL_SPHERE_COUNT * sphereAllocationCount) * sizeof(Sphere));
                         if (newSpheres == NULL) {
-                            fprintf(stderr, "Memory allocation failed for sphere.");
+                            fprintf(stderr, "Memory allocation failed for spheres.");
                             exit(-1);
                         }
                         scene->spheres = newSpheres;
@@ -348,7 +350,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                         ellipseAllocationCount++;
                         Ellipse* newEllipses = (Ellipse*) realloc(scene->ellipses, (INITIAL_ELLIPSE_COUNT * ellipseAllocationCount) * sizeof(Ellipse));
                         if (newEllipses == NULL) {
-                            fprintf(stderr, "Memory allocation failed for ellipse.");
+                            fprintf(stderr, "Memory allocation failed for ellipses.");
                             exit(-1);
                         }
                         scene->ellipses = newEllipses;
@@ -379,6 +381,49 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     }
 }
 
+void readSceneTriangles(char*** inputFileWordsByLine, int* line, Scene* scene) {
+    int vertexAllocationCount = 1;
+    int faceAllocationCount = 1;
+    while (inputFileWordsByLine[*line][0] != NULL) {
+        if (strcmp(inputFileWordsByLine[*line][0], "v") == 0) {
+            if (scene->vertexCount >= INITIAL_VERTEX_COUNT * vertexAllocationCount) {
+                vertexAllocationCount++;
+                Vector3* newVertexes = (Vector3*) realloc(scene->vertexes, (INITIAL_VERTEX_COUNT * vertexAllocationCount) * sizeof(Vector3));
+                if (newVertexes == NULL) {
+                    fprintf(stderr, "Memory allocation failed for vertexes.");
+                    exit(-1);
+                }
+                scene->vertexes = newVertexes;
+            }
+            checkValues(inputFileWordsByLine[*line], 3, "v");
+            scene->vertexes[scene->vertexCount] = (Vector3) {
+                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
+                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
+                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
+            };
+            scene->vertexCount++;
+        } else if (strcmp(inputFileWordsByLine[*line][0], "f") == 0) {
+            if (scene->faceCount >= INITIAL_FACE_COUNT * faceAllocationCount) {
+                faceAllocationCount++;
+                Face * newFaces = (Face *) realloc(scene->faces, (INITIAL_FACE_COUNT * faceAllocationCount) * sizeof(Face));
+                if (newFaces == NULL) {
+                    fprintf(stderr, "Memory allocation failed for faces.");
+                    exit(-1);
+                }
+                scene->faces = newFaces;
+            }
+            checkValues(inputFileWordsByLine[*line], 3, "f");
+            scene->faces[scene->faceCount] = (Face) {
+                    .v1 = convertStringToInt(inputFileWordsByLine[*line][1]),
+                    .v2 = convertStringToInt(inputFileWordsByLine[*line][2]),
+                    .v3 = convertStringToInt(inputFileWordsByLine[*line][3])
+            };
+            scene->faceCount++;
+        }
+        (*line)++;
+    }
+}
+
 void printScene(Scene scene) {
     printf("--------------------SCENE--------------------\n");
     printf("eye: %f %f %f\n", scene.eye.x, scene.eye.y, scene.eye.z);
@@ -402,24 +447,38 @@ void printScene(Scene scene) {
                    scene.mtlColors[mtlColorIdx].specularCoefficient,
                    scene.mtlColors[mtlColorIdx].specularExponent
             );
-            for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
-                if (scene.spheres[sphereIdx].mtlColorIdx == mtlColorIdx) {
-                    printf("sphere: %f %f %f %f\n", scene.spheres[sphereIdx].center.x, scene.spheres[sphereIdx].center.y, scene.spheres[sphereIdx].center.z, scene.spheres[sphereIdx].radius);
+            if (scene.spheres != NULL) {
+                for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
+                    if (scene.spheres[sphereIdx].mtlColorIdx == mtlColorIdx) {
+                        printf("sphere: %f %f %f %f\n", scene.spheres[sphereIdx].center.x, scene.spheres[sphereIdx].center.y, scene.spheres[sphereIdx].center.z, scene.spheres[sphereIdx].radius);
+                    }
                 }
             }
-            for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
-                if (scene.ellipses[ellipseIdx].mtlColorIdx == mtlColorIdx) {
-                    printf(
-                            "ellipse: %f %f %f %f %f %f\n",
-                            scene.ellipses[ellipseIdx].center.x,
-                            scene.ellipses[ellipseIdx].center.y,
-                            scene.ellipses[ellipseIdx].center.z,
-                            scene.ellipses[ellipseIdx].radius.x,
-                            scene.ellipses[ellipseIdx].radius.y,
-                            scene.ellipses[ellipseIdx].radius.z
-                    );
+            if (scene.ellipses != NULL) {
+                for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
+                    if (scene.ellipses[ellipseIdx].mtlColorIdx == mtlColorIdx) {
+                        printf(
+                                "ellipse: %f %f %f %f %f %f\n",
+                                scene.ellipses[ellipseIdx].center.x,
+                                scene.ellipses[ellipseIdx].center.y,
+                                scene.ellipses[ellipseIdx].center.z,
+                                scene.ellipses[ellipseIdx].radius.x,
+                                scene.ellipses[ellipseIdx].radius.y,
+                                scene.ellipses[ellipseIdx].radius.z
+                        );
+                    }
                 }
             }
+        }
+    }
+    if (scene.vertexes != NULL) {
+        for (int vertexIdx = 0; vertexIdx < scene.vertexCount; vertexIdx++) {
+            printf("vertex: %f %f %f\n", scene.vertexes[vertexIdx].x, scene.vertexes[vertexIdx].y, scene.vertexes[vertexIdx].z);
+        }
+    }
+    if (scene.faces != NULL) {
+        for (int faceIdx = 0; faceIdx < scene.faceCount; faceIdx++) {
+            printf("face: %d %d %d\n", scene.faces[faceIdx].v1, scene.faces[faceIdx].v2, scene.faces[faceIdx].v3);
         }
     }
     printf("---------------------------------------------\n\n");
@@ -437,6 +496,12 @@ void freeInput(Scene scene) {
     }
     if (scene.ellipses != NULL) {
         free(scene.ellipses);
+    }
+    if (scene.vertexes != NULL) {
+        free(scene.vertexes);
+    }
+    if (scene.faces != NULL) {
+        free(scene.faces);
     }
 }
 

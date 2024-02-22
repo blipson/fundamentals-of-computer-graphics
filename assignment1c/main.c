@@ -35,13 +35,19 @@ int main(int argc, char* argv[]) {
             .lights = (Light*) malloc(INITIAL_LIGHT_COUNT * sizeof(Light)),
             .lightCount = 0,
             .softShadows = false,
+            .vertexes = (Vector3*) malloc(INITIAL_VERTEX_COUNT * sizeof(Vector3)),
+            .vertexCount = 0,
+            .faces = (Face*) malloc(INITIAL_FACE_COUNT * sizeof(Face)),
+            .faceCount = 0,
     };
 
     int line = 0;
     readSceneSetup(inputFileWordsByLine, &line, &scene, softShadows);
     readSceneObjects(inputFileWordsByLine, &line, &scene);
+    readSceneTriangles(inputFileWordsByLine, &line, &scene);
 
     freeInputFileWordsByLine(inputFileWordsByLine);
+    printScene(scene);
     bool parallel = scene.parallel.frustumWidth > 0;
 
     ViewParameters viewParameters = {
