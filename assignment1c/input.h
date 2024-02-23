@@ -160,12 +160,12 @@ int convertStringToInt(char* s) {
 }
 
 unsigned char convertFloatToUnsignedChar(float normalizedValue) {
-    if (normalizedValue < 0.0) {
+    if (normalizedValue < 0.0f) {
         normalizedValue = 0.0f;
-    } else if (normalizedValue > 1.0) {
+    } else if (normalizedValue > 1.0f) {
         normalizedValue = 1.0f;
     }
-    unsigned char result = (unsigned char) (normalizedValue * 255.0);
+    unsigned char result = (unsigned char) (normalizedValue * 255.0f);
     return result;
 }
 
@@ -188,6 +188,31 @@ float max(float a, float b) {
 
 float min(float a, float b) {
     return (a <= b) ? a : b;
+}
+
+
+void readLight(char** const* inputFileWordsByLine, const int* line, Scene* scene, int lightAllocationCount, bool attLight) {
+    if (scene->lightCount >= INITIAL_LIGHT_COUNT * lightAllocationCount) {
+        lightAllocationCount++;
+        Light* newLights = (Light*) realloc(scene->lights, (INITIAL_LIGHT_COUNT * lightAllocationCount) * sizeof(Light));
+        if (newLights == NULL) {
+            fprintf(stderr, "Memory allocation failed for light.");
+            exit(-1);
+        }
+        scene->lights = newLights;
+    }
+    checkValues(inputFileWordsByLine[*line], attLight ? 8 : 5,  attLight ? "attlight" : "light");
+    scene->lights[scene->lightCount].position = (Vector3) {
+            .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
+            .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
+            .z = convertStringToFloat(inputFileWordsByLine[*line][3])
+    };
+    scene->lights[scene->lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
+    scene->lights[scene->lightCount].i = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0); // clamp light intensity to 0-1
+    scene->lights[scene->lightCount].constantAttenuation = attLight ? convertStringToFloat(inputFileWordsByLine[*line][6]) : 0.0f;
+    scene->lights[scene->lightCount].linearAttenuation = attLight ? convertStringToFloat(inputFileWordsByLine[*line][7]) : 0.0f;
+    scene->lights[scene->lightCount].quadraticAttenuation = attLight ? convertStringToFloat(inputFileWordsByLine[*line][8]) : 0.0f;
+    scene->lightCount++;
 }
 
 void readSceneSetup(
@@ -229,29 +254,7 @@ void readSceneSetup(
             checkValues(inputFileWordsByLine[*line], 1, "parallel");
             scene->parallel.frustumWidth = convertStringToFloat(inputFileWordsByLine[*line][1]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "light") == 0) {
-            if (scene->lightCount >= INITIAL_LIGHT_COUNT * lightAllocationCount) {
-                printf("reallocating lights\n");
-                lightAllocationCount++;
-                Light* newLights = (Light*) realloc(scene->lights, (INITIAL_LIGHT_COUNT * lightAllocationCount) * sizeof(Light));
-                if (newLights == NULL) {
-                    fprintf(stderr, "Memory allocation failed for light.");
-                    exit(-1);
-                }
-                scene->lights = newLights;
-            }
-            checkValues(inputFileWordsByLine[*line], 5, "light");
-            scene->lights[scene->lightCount].position = (Vector3) {
-                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
-                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
-                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
-            };
-            scene->lights[scene->lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
-            // clamp light intensity to 0-1. Remove the max() for an eclipse effect, remove the min for a very bright thing
-            scene->lights[scene->lightCount].i = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0);
-            scene->lights[scene->lightCount].constantAttenuation = 0;
-            scene->lights[scene->lightCount].linearAttenuation = 0;
-            scene->lights[scene->lightCount].quadraticAttenuation = 0;
-            scene->lightCount++;
+            readLight(inputFileWordsByLine, line, scene, lightAllocationCount, false);
         } else if (strcmp(inputFileWordsByLine[*line][0], "depthcueing") == 0) {
             scene->depthCueing = (DepthCueing) {
                     .color = (Vector3) {
@@ -265,26 +268,7 @@ void readSceneSetup(
                     .distMax = convertStringToFloat(inputFileWordsByLine[*line][7]),
             };
         } else if (strcmp(inputFileWordsByLine[*line][0], "attlight") == 0) {
-            // todo: refactor this to make it DRY with "light"
-            Light* newLights = (Light*) realloc(scene->lights, (scene->lightCount + 1) * sizeof(Light));
-            if (newLights == NULL) {
-                fprintf(stderr, "Memory allocation failed for light.");
-                exit(-1);
-            }
-            scene->lights = newLights;
-            checkValues(inputFileWordsByLine[*line], 8, "light");
-            scene->lights[scene->lightCount].position = (Vector3) {
-                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
-                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
-                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
-            };
-            scene->lights[scene->lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
-            // clamp light intensity to 0-1. Remove the max() for an eclipse effect, remove the min for a very bright thing
-            scene->lights[scene->lightCount].i = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0);
-            scene->lights[scene->lightCount].constantAttenuation = convertStringToFloat(inputFileWordsByLine[*line][6]);
-            scene->lights[scene->lightCount].linearAttenuation = convertStringToFloat(inputFileWordsByLine[*line][7]);
-            scene->lights[scene->lightCount].quadraticAttenuation = convertStringToFloat(inputFileWordsByLine[*line][8]);
-            scene->lightCount++;
+            readLight(inputFileWordsByLine, line, scene, lightAllocationCount, true);
         }
         scene->softShadows = softShadows;
         (*line)++;
