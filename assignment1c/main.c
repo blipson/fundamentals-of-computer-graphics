@@ -47,7 +47,6 @@ int main(int argc, char* argv[]) {
     readSceneTriangles(inputFileWordsByLine, &line, &scene);
 
     freeInputFileWordsByLine(inputFileWordsByLine);
-    printScene(scene);
     bool parallel = scene.parallel.frustumWidth > 0;
 
     ViewParameters viewParameters = {

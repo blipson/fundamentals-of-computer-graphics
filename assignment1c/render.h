@@ -280,9 +280,9 @@ Intersection castRay(Ray ray, Scene scene, int excludeIdx, int x, int y) {
     }
 
     for (int faceIdx = 0; faceIdx < scene.faceCount; faceIdx ++) {
-        Vector3 p0 = scene.vertexes[scene.faces[faceIdx].v1];
-        Vector3 p1 = scene.vertexes[scene.faces[faceIdx].v2];
-        Vector3 p2 = scene.vertexes[scene.faces[faceIdx].v3];
+        Vector3 p0 = scene.vertexes[scene.faces[faceIdx].v1 - 1];
+        Vector3 p1 = scene.vertexes[scene.faces[faceIdx].v2 - 1];
+        Vector3 p2 = scene.vertexes[scene.faces[faceIdx].v3 - 1];
 
         Vector3 e1 = subtract(p1, p0);
         Vector3 e2 = subtract(p2, p0);
