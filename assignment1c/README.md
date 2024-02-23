@@ -1,5 +1,5 @@
 # Assignment 1c
-This is a program to render a scene containing ellipses and spheres in 3D space.
+This is a program to render a scene containing ellipsoids and spheres in 3D space.
 
 # Building
 `$ make`

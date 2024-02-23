@@ -218,27 +218,27 @@ void checkSphereIntersections(int excludeIdx, Ray* ray, Scene* scene, float* clo
     }
 }
 
-void checkEllipsoidIntersection(Ray* ray, Scene* scene, int excludeIdx, int ellipseIdx, float* closestIntersection, enum ObjectType* closestObject, int* closestEllipseIdx) {
-    if (ellipseIdx != excludeIdx) {
-        Ellipse ellipse = (*scene).ellipses[ellipseIdx];
+void checkEllipsoidIntersection(Ray* ray, Scene* scene, int excludeIdx, int ellipsoidIdx, float* closestIntersection, enum ObjectType* closestObject, int* closestEllipsoidIdx) {
+    if (ellipsoidIdx != excludeIdx) {
+        Ellipsoid ellipsoid = (*scene).ellipsoids[ellipsoidIdx];
 
-        float A = ((*ray).direction.x * (*ray).direction.x) / (ellipse.radius.x * ellipse.radius.x)
-                  + ((*ray).direction.y * (*ray).direction.y) / (ellipse.radius.y * ellipse.radius.y)
-                  + ((*ray).direction.z * (*ray).direction.z) / (ellipse.radius.z * ellipse.radius.z);
+        float A = ((*ray).direction.x * (*ray).direction.x) / (ellipsoid.radius.x * ellipsoid.radius.x)
+                  + ((*ray).direction.y * (*ray).direction.y) / (ellipsoid.radius.y * ellipsoid.radius.y)
+                  + ((*ray).direction.z * (*ray).direction.z) / (ellipsoid.radius.z * ellipsoid.radius.z);
 
 
-        float B = 2.0f * (((*ray).direction.x * ((*ray).origin.x - ellipse.center.x)) / (ellipse.radius.x * ellipse.radius.x)
+        float B = 2.0f * (((*ray).direction.x * ((*ray).origin.x - ellipsoid.center.x)) / (ellipsoid.radius.x * ellipsoid.radius.x)
                           +
-                          ((*ray).direction.y * ((*ray).origin.y - ellipse.center.y)) / (ellipse.radius.y * ellipse.radius.y)
-                          + ((*ray).direction.z * ((*ray).origin.z - ellipse.center.z)) /
-                            (ellipse.radius.z * ellipse.radius.z));
+                          ((*ray).direction.y * ((*ray).origin.y - ellipsoid.center.y)) / (ellipsoid.radius.y * ellipsoid.radius.y)
+                          + ((*ray).direction.z * ((*ray).origin.z - ellipsoid.center.z)) /
+                            (ellipsoid.radius.z * ellipsoid.radius.z));
 
-        float C = (((*ray).origin.x - ellipse.center.x) * ((*ray).origin.x - ellipse.center.x)) /
-                  (ellipse.radius.x * ellipse.radius.x)
-                  + (((*ray).origin.y - ellipse.center.y) * ((*ray).origin.y - ellipse.center.y)) /
-                    (ellipse.radius.y * ellipse.radius.y)
-                  + (((*ray).origin.z - ellipse.center.z) * ((*ray).origin.z - ellipse.center.z)) /
-                    (ellipse.radius.z * ellipse.radius.z) - 1.0f;
+        float C = (((*ray).origin.x - ellipsoid.center.x) * ((*ray).origin.x - ellipsoid.center.x)) /
+                  (ellipsoid.radius.x * ellipsoid.radius.x)
+                  + (((*ray).origin.y - ellipsoid.center.y) * ((*ray).origin.y - ellipsoid.center.y)) /
+                    (ellipsoid.radius.y * ellipsoid.radius.y)
+                  + (((*ray).origin.z - ellipsoid.center.z) * ((*ray).origin.z - ellipsoid.center.z)) /
+                    (ellipsoid.radius.z * ellipsoid.radius.z) - 1.0f;
 
 
         float discriminant = B * B - 4.0f * A * C;
@@ -250,21 +250,21 @@ void checkEllipsoidIntersection(Ray* ray, Scene* scene, int excludeIdx, int elli
 
             if (t1 >= 0.0f && t1 < (*closestIntersection)) {
                 (*closestIntersection) = t1;
-                (*closestEllipseIdx) = ellipseIdx;
-                (*closestObject) = ELLIPSE;
+                (*closestEllipsoidIdx) = ellipsoidIdx;
+                (*closestObject) = ELLIPSOID;
             }
             if (t2 >= 0.0f && t2 < (*closestIntersection)) {
                 (*closestIntersection) = t2;
-                (*closestEllipseIdx) = ellipseIdx;
-                (*closestObject) = ELLIPSE;
+                (*closestEllipsoidIdx) = ellipsoidIdx;
+                (*closestObject) = ELLIPSOID;
             }
         }
     }
 }
 
-void checkEllipsoidIntersections(int excludeIdx, Ray* ray, Scene* scene, float* closestIntersection, enum ObjectType* closestObject, int* closestEllipseIdx) {
-    for (int ellipseIdx = 0; ellipseIdx < (*scene).ellipseCount; ellipseIdx++) {
-        checkEllipsoidIntersection(ray, scene, excludeIdx, ellipseIdx, closestIntersection, closestObject, closestEllipseIdx);
+void checkEllipsoidIntersections(int excludeIdx, Ray* ray, Scene* scene, float* closestIntersection, enum ObjectType* closestObject, int* closestEllipsoidIdx) {
+    for (int ellipsoidIdx = 0; ellipsoidIdx < (*scene).ellipsoidCount; ellipsoidIdx++) {
+        checkEllipsoidIntersection(ray, scene, excludeIdx, ellipsoidIdx, closestIntersection, closestObject, closestEllipsoidIdx);
     }
 }
 
@@ -316,19 +316,19 @@ Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     enum ObjectType closestObject;
     int closestSphereIdx = -1;
-    int closestEllipseIdx = -1;
+    int closestEllipsoidIdx = -1;
     int closestFaceIdx = -1;
 
     checkSphereIntersections(excludeIdx, &ray, &scene, &closestIntersection, &closestObject, &closestSphereIdx);
 
-    checkEllipsoidIntersections(excludeIdx, &ray, &scene, &closestIntersection, &closestObject, &closestEllipseIdx);
+    checkEllipsoidIntersections(excludeIdx, &ray, &scene, &closestIntersection, &closestObject, &closestEllipsoidIdx);
 
     checkFaceIntersections(&ray, &scene, &closestIntersection, &closestObject, &closestFaceIdx);
 
     return (Intersection) {
             .closestIntersection = closestIntersection,
             .closestSphereIdx = closestSphereIdx,
-            .closestEllipseIdx = closestEllipseIdx,
+            .closestEllipsoidIdx = closestEllipsoidIdx,
             .closestFaceIdx = closestFaceIdx,
             .closestObject = closestObject
     };
@@ -472,10 +472,10 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
         Vector3 ambientApplied = add(ambient, lightsApplied);
         Vector3 depthCueingAmbientApplied = add(depthCueingAmbient, depthCueingLightsApplied);
         return convertColorToRGBColor(add(ambientApplied, depthCueingAmbientApplied));
-    } else if (intersection.closestEllipseIdx != -1 && intersection.closestObject == ELLIPSE) {
-        // todo: make lighting work with ellipses
+    } else if (intersection.closestEllipsoidIdx != -1 && intersection.closestObject == ELLIPSOID) {
+        // todo: make lighting work with ellipsoids
         return convertColorToRGBColor(
-                scene.mtlColors[scene.ellipses[intersection.closestEllipseIdx].mtlColorIdx].diffuseColor);
+                scene.mtlColors[scene.ellipsoids[intersection.closestEllipsoidIdx].mtlColorIdx].diffuseColor);
     } else if (intersection.closestFaceIdx != -1 && intersection.closestObject == TRIANGLE) {
         // todo: make lighting work with faces
         return convertColorToRGBColor((Vector3) {

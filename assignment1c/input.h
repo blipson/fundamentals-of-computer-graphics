@@ -16,7 +16,7 @@
 #define INITIAL_LIGHT_COUNT 10
 #define INITIAL_MTLCOLOR_COUNT 10
 #define INITIAL_SPHERE_COUNT 10
-#define INITIAL_ELLIPSE_COUNT 10
+#define INITIAL_ELLIPSOID_COUNT 10
 #define INITIAL_VERTEX_COUNT 1000
 #define INITIAL_FACE_COUNT 1000
 
@@ -278,7 +278,7 @@ void readSceneSetup(
 void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     int mtlColorAllocationCount = 1;
     int sphereAllocationCount = 1;
-    int ellipseAllocationCount = 1;
+    int ellipsoidAllocationCount = 1;
     while (inputFileWordsByLine[*line][0] != NULL && strcmp(inputFileWordsByLine[*line][0], "v") != 0) {
         if (strcmp(inputFileWordsByLine[*line][0], "mtlcolor") == 0) {
             if (scene->mtlColorCount >= INITIAL_MTLCOLOR_COUNT * mtlColorAllocationCount) {
@@ -330,30 +330,30 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                     scene->spheres[scene->sphereCount].mtlColorIdx = scene->mtlColorCount;
                     scene->sphereCount++;
                 } else if (strcmp(inputFileWordsByLine[objectLine][0], "ellipse") == 0) {
-                    if (scene->ellipseCount >= INITIAL_ELLIPSE_COUNT * ellipseAllocationCount) {
-                        ellipseAllocationCount++;
-                        Ellipse* newEllipses = (Ellipse*) realloc(scene->ellipses, (INITIAL_ELLIPSE_COUNT * ellipseAllocationCount) * sizeof(Ellipse));
-                        if (newEllipses == NULL) {
-                            fprintf(stderr, "Memory allocation failed for ellipses.");
+                    if (scene->ellipsoidCount >= INITIAL_ELLIPSOID_COUNT * ellipsoidAllocationCount) {
+                        ellipsoidAllocationCount++;
+                        Ellipsoid* newEllipsoids = (Ellipsoid*) realloc(scene->ellipsoids, (INITIAL_ELLIPSOID_COUNT * ellipsoidAllocationCount) * sizeof(Ellipsoid));
+                        if (newEllipsoids == NULL) {
+                            fprintf(stderr, "Memory allocation failed for ellipsoids.");
                             exit(-1);
                         }
-                        scene->ellipses = newEllipses;
+                        scene->ellipsoids = newEllipsoids;
                     }
                     checkValues(inputFileWordsByLine[objectLine], 6, "ellipse");
-                    Vector3 ellipseCenter = {
+                    Vector3 ellipsoidCenter = {
                             .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
                             .y = convertStringToFloat(inputFileWordsByLine[objectLine][2]),
                             .z = convertStringToFloat(inputFileWordsByLine[objectLine][3])
                     };
-                    Vector3 ellipseRadius = {
+                    Vector3 ellipsoidRadius = {
                             .x = convertStringToFloat(inputFileWordsByLine[objectLine][4]),
                             .y = convertStringToFloat(inputFileWordsByLine[objectLine][5]),
                             .z = convertStringToFloat(inputFileWordsByLine[objectLine][6])
                     };
-                    scene->ellipses[scene->ellipseCount].center = ellipseCenter;
-                    scene->ellipses[scene->ellipseCount].radius = ellipseRadius;
-                    scene->ellipses[scene->ellipseCount].mtlColorIdx = scene->mtlColorCount;
-                    scene->ellipseCount++;
+                    scene->ellipsoids[scene->ellipsoidCount].center = ellipsoidCenter;
+                    scene->ellipsoids[scene->ellipsoidCount].radius = ellipsoidRadius;
+                    scene->ellipsoids[scene->ellipsoidCount].mtlColorIdx = scene->mtlColorCount;
+                    scene->ellipsoidCount++;
                 }
                 objectLine++;
             }
@@ -438,17 +438,17 @@ void printScene(Scene scene) {
                     }
                 }
             }
-            if (scene.ellipses != NULL) {
-                for (int ellipseIdx = 0; ellipseIdx < scene.ellipseCount; ellipseIdx++) {
-                    if (scene.ellipses[ellipseIdx].mtlColorIdx == mtlColorIdx) {
+            if (scene.ellipsoids != NULL) {
+                for (int ellipsoidIdx = 0; ellipsoidIdx < scene.ellipsoidCount; ellipsoidIdx++) {
+                    if (scene.ellipsoids[ellipsoidIdx].mtlColorIdx == mtlColorIdx) {
                         printf(
                                 "ellipse: %f %f %f %f %f %f\n",
-                                scene.ellipses[ellipseIdx].center.x,
-                                scene.ellipses[ellipseIdx].center.y,
-                                scene.ellipses[ellipseIdx].center.z,
-                                scene.ellipses[ellipseIdx].radius.x,
-                                scene.ellipses[ellipseIdx].radius.y,
-                                scene.ellipses[ellipseIdx].radius.z
+                                scene.ellipsoids[ellipsoidIdx].center.x,
+                                scene.ellipsoids[ellipsoidIdx].center.y,
+                                scene.ellipsoids[ellipsoidIdx].center.z,
+                                scene.ellipsoids[ellipsoidIdx].radius.x,
+                                scene.ellipsoids[ellipsoidIdx].radius.y,
+                                scene.ellipsoids[ellipsoidIdx].radius.z
                         );
                     }
                 }
@@ -478,8 +478,8 @@ void freeInput(Scene scene) {
     if (scene.spheres != NULL) {
         free(scene.spheres);
     }
-    if (scene.ellipses != NULL) {
-        free(scene.ellipses);
+    if (scene.ellipsoids != NULL) {
+        free(scene.ellipsoids);
     }
     if (scene.vertexes != NULL) {
         free(scene.vertexes);
