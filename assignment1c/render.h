@@ -286,15 +286,35 @@ int checkFaceIntersection(const Ray* ray, const Scene* scene, float* closestInte
 
     float t = (-1.0f * (dot(n, (*ray).origin) + D)) / denominator;
 
-    Vector3 intersectionPoint = add((*ray).origin, multiply((*ray).direction, t));
-    float A = magnitude(n);
-    float a = magnitude(divide(cross(subtract(p1, intersectionPoint), subtract(p2, intersectionPoint)), A));
-    float b = magnitude(divide(cross(subtract(intersectionPoint, p0), subtract(p2, p0)), A));
-    // you can use p0 instead of p1 in the second subtract, doesn't matter
-    float c = magnitude(divide(cross(subtract(p1, p0), subtract(intersectionPoint, p1)), A));
+    Vector3 planeIntersectionPoint = add((*ray).origin, multiply((*ray).direction, t));
 
-    // TODO: compare what you have with the slides
-    if ((a + b + c) < 1.0f + EPSILON) {
+    float d11 = dot(e1, e1);
+    float d12 = dot(e1, e2);
+    float d22 = dot(e2, e2);
+
+    Vector3 ep = subtract(planeIntersectionPoint, p0);
+    float d1p = dot(e1, ep);
+    float d2p = dot(e2, ep);
+
+    float determinant = (d11 * d22) - (d12 * d12);
+    if (fabsf(determinant) < EPSILON) {
+        return -1;
+    }
+
+    float beta = (d22 * d1p - d12 * d2p) / determinant;
+    float gamma = (d11 * d2p - d12 * d1p) / determinant;
+    float alpha = 1.0f - beta - gamma;
+
+    // Alternative method, what is this?
+    float A = magnitude(n);
+    float alternativeAlpha = magnitude(divide(cross(subtract(p1, planeIntersectionPoint), subtract(p2, planeIntersectionPoint)), A));
+    float alternativeBeta = magnitude(divide(cross(ep, e2), A));
+    // you can use p0 instead of p1 in the second subtract, doesn't matter
+    float alternativeGamma = magnitude(divide(cross(e1, subtract(planeIntersectionPoint, p1)), A));
+
+
+    // Q: why do I have to do fabsf here? it's not in the slides but it's the only way it works
+    if ((fabsf(alpha) + fabsf(beta) + fabsf(gamma)) < 1.0f + EPSILON) {
         if (t > 0.0f && t < (*closestIntersection)) {
             (*closestIntersection) = t;
             (*closestFaceIdx) = faceIdx;
@@ -351,141 +371,153 @@ Vector3 randomUnitVector() {
 
 RGBColor shadeRay(Ray viewingRay, Scene scene) {
     Intersection intersection = castRay(viewingRay, scene, -1);
+    Vector3 intersectionPoint = add(
+            viewingRay.origin,
+            multiply(
+                    viewingRay.direction,
+                    intersection.closestIntersection
+            )
+    );
+
+    MaterialColor mtlColor;
+    Vector3 surfaceNormal;
+
     if (intersection.closestSphereIdx != -1 && intersection.closestObject == SPHERE) {
-        // todo: refactor to make DRY with faces
         Sphere sphere = scene.spheres[intersection.closestSphereIdx];
-        MaterialColor mtlColor = scene.mtlColors[sphere.mtlColorIdx];
-        Vector3 diffuseColor = mtlColor.diffuseColor;
-        Vector3 specularColor = mtlColor.specularColor;
-
-        Vector3 intersectionPoint = add(viewingRay.origin,
-                                        multiply(viewingRay.direction, intersection.closestIntersection));
-        Vector3 surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
-
-        Vector3 ambient = (Vector3) {
-                .x = diffuseColor.x * mtlColor.ambientCoefficient,
-                .y = diffuseColor.y * mtlColor.ambientCoefficient,
-                .z = diffuseColor.z * mtlColor.ambientCoefficient,
-        };
-        Vector3 depthCueingAmbient = (Vector3) {
-                .x = scene.depthCueing.color.x * mtlColor.ambientCoefficient,
-                .y = scene.depthCueing.color.y * mtlColor.ambientCoefficient,
-                .z = scene.depthCueing.color.z * mtlColor.ambientCoefficient,
-        };
-
-        Vector3 lightsApplied = (Vector3) {.x = 0.0f, .y = 0.0f, .z = 0.0f};
-        Vector3 depthCueingLightsApplied = (Vector3) {.x = 0.0f, .y = 0.0f, .z = 0.0f};
-        if (scene.lightCount > 0) {
-            for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++) {
-                Light light = scene.lights[lightIdx];
-                Vector3 lightDirection = light.w == 1.0f
-                                         ? normalize(subtract(light.position, intersectionPoint))
-                                         : normalize(multiply(light.position, -1.0f));
-                Vector3 intersectionToOrigin = normalize(subtract(scene.eye, intersectionPoint));
-                Vector3 halfwayLightDirection = normalize(divide(add(lightDirection, intersectionToOrigin), 2.0f));
-                float lightIntensity = light.i;
-                Vector3 diffuse = (Vector3) {
-                        .x = diffuseColor.x * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
-                        .y = diffuseColor.y * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
-                        .z = diffuseColor.z * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
-                };
-                Vector3 depthCueingDiffuse = (Vector3) {
-                        .x = scene.depthCueing.color.x * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
-                        .y = scene.depthCueing.color.y * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
-                        .z = scene.depthCueing.color.z * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
-                };
-                Vector3 specular = (Vector3) {
-                        .x =  specularColor.x * mtlColor.specularCoefficient *
-                              powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
-                        .y = specularColor.y * mtlColor.specularCoefficient *
-                             powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
-                        .z = specularColor.z * mtlColor.specularCoefficient *
-                             powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
-                };
-                Vector3 depthCueingSpecular = (Vector3) {
-                        .x =  scene.depthCueing.color.x * mtlColor.specularCoefficient *
-                              powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
-                        .y = scene.depthCueing.color.y * mtlColor.specularCoefficient *
-                             powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
-                        .z = scene.depthCueing.color.z * mtlColor.specularCoefficient *
-                             powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
-                };
-
-
-                float shadow = 1.0f;
-                if (scene.softShadows) {
-                    float softShadow = 0.0f;
-                    int numShadowRays = 500;
-
-                    for (int i = 0; i < numShadowRays; ++i) {
-                        Vector3 jitteredLightDirection = add(lightDirection, multiply(randomUnitVector(), 0.005f));
-
-                        Intersection shadowRay = castRay((Ray) {
-                                .origin = intersectionPoint,
-                                .direction = normalize(jitteredLightDirection)
-                        }, scene, intersection.closestSphereIdx);
-
-                        if (shadowRay.closestSphereIdx != -1) {
-                            if ((light.w == 1.0f && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) ||
-                                (light.w == 0.0f && shadowRay.closestIntersection > 0.0f)) {
-                                softShadow += 1.0f / (float) numShadowRays;
-                            }
-                        }
-                    }
-                    shadow = 1.0f - softShadow;
-                } else {
-                    Intersection shadowRay = castRay((Ray) {
-                            .origin = intersectionPoint,
-                            .direction = lightDirection
-                    }, scene, intersection.closestSphereIdx);
-                    if (shadowRay.closestSphereIdx != -1) {
-                        if (light.w == 1.0f && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) {
-                            shadow = 0.0f;
-                        }
-                        if (light.w == 0.0f && shadowRay.closestIntersection > 0.0f) {
-                            shadow = 0.0f;
-                        }
-                    }
-                }
-
-                if (scene.depthCueing.distMax > 0.0f) {
-                    float distanceToCamera = distance(scene.eye, intersectionPoint);
-                    float depthCueFactor = normalizef(distanceToCamera, scene.depthCueing.distMin, scene.depthCueing.distMax);
-                    diffuse = multiply(diffuse, 1.0f - depthCueFactor);
-                    specular = multiply(specular, 1.0f - depthCueFactor);
-                    ambient = multiply(specular, 1.0f - depthCueFactor);
-                    depthCueingDiffuse = multiply(depthCueingDiffuse, depthCueFactor);
-                    depthCueingSpecular = multiply(depthCueingSpecular, depthCueFactor);
-                    depthCueingAmbient = multiply(depthCueingAmbient, depthCueFactor);
-                }
-                float attenuationFactor = 1.0f;
-                if (light.constantAttenuation > 0.0f || light.linearAttenuation > 0.0f || light.quadraticAttenuation > 0.0f) {
-                    attenuationFactor = 1.0f / (light.constantAttenuation + light.linearAttenuation * distance(intersectionPoint, light.position) + light.quadraticAttenuation * powf(distance(intersectionPoint, light.position), 2.0f));
-                }
-                Vector3 lightSourceAttenuationApplied = multiply(multiply(add(diffuse, specular), lightIntensity), attenuationFactor);
-                Vector3 shadowsApplied = multiply(lightSourceAttenuationApplied, shadow);
-                Vector3 depthCueingShadowsApplied = multiply(multiply(add(depthCueingDiffuse, depthCueingSpecular), lightIntensity), shadow);
-                lightsApplied = add(lightsApplied, shadowsApplied);
-                depthCueingLightsApplied = add(lightsApplied, depthCueingShadowsApplied);
-            }
-        }
-        Vector3 ambientApplied = add(ambient, lightsApplied);
-        Vector3 depthCueingAmbientApplied = add(depthCueingAmbient, depthCueingLightsApplied);
-        return convertColorToRGBColor(add(ambientApplied, depthCueingAmbientApplied));
+        mtlColor = scene.mtlColors[sphere.mtlColorIdx];
+        surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
     } else if (intersection.closestEllipsoidIdx != -1 && intersection.closestObject == ELLIPSOID) {
-        // todo: make lighting work with ellipsoids
-        return convertColorToRGBColor(
-                scene.mtlColors[scene.ellipsoids[intersection.closestEllipsoidIdx].mtlColorIdx].diffuseColor);
+        Ellipsoid ellipsoid = scene.ellipsoids[intersection.closestEllipsoidIdx];
+        mtlColor = scene.mtlColors[ellipsoid.mtlColorIdx];
+        // todo: Calculate the surface normal for the ellipsoid
+        surfaceNormal = normalize(divide(subtract(intersectionPoint, ellipsoid.center), ellipsoid.radius.x));
     } else if (intersection.closestFaceIdx != -1 && intersection.closestObject == TRIANGLE) {
-        // todo: make lighting work with faces
-        return convertColorToRGBColor((Vector3) {
-            .x = 1.0f,
-            .y = 0.0f,
-            .z = 0.0f
-        });
+        Face face = scene.faces[intersection.closestFaceIdx];
+        mtlColor = scene.mtlColors[face.mtlColorIdx];
+
+        Vector3 p0 = scene.vertexes[scene.faces[intersection.closestFaceIdx].v1 - 1];
+        Vector3 p1 = scene.vertexes[scene.faces[intersection.closestFaceIdx].v2 - 1];
+        Vector3 p2 = scene.vertexes[scene.faces[intersection.closestFaceIdx].v3 - 1];
+
+        Vector3 e1 = subtract(p1, p0);
+        Vector3 e2 = subtract(p2, p0);
+        surfaceNormal = normalize(cross(e1, e2));
     } else {
         return convertColorToRGBColor(scene.bkgColor);
     }
+
+    Vector3 diffuseColor = mtlColor.diffuseColor;
+    Vector3 specularColor = mtlColor.specularColor;
+    Vector3 ambient = (Vector3) {
+            .x = diffuseColor.x * mtlColor.ambientCoefficient,
+            .y = diffuseColor.y * mtlColor.ambientCoefficient,
+            .z = diffuseColor.z * mtlColor.ambientCoefficient,
+    };
+    Vector3 depthCueingAmbient = (Vector3) {
+            .x = scene.depthCueing.color.x * mtlColor.ambientCoefficient,
+            .y = scene.depthCueing.color.y * mtlColor.ambientCoefficient,
+            .z = scene.depthCueing.color.z * mtlColor.ambientCoefficient,
+    };
+
+    Vector3 lightsApplied = (Vector3) {.x = 0.0f, .y = 0.0f, .z = 0.0f};
+    Vector3 depthCueingLightsApplied = (Vector3) {.x = 0.0f, .y = 0.0f, .z = 0.0f};
+    if (scene.lightCount > 0) {
+        for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++) {
+            Light light = scene.lights[lightIdx];
+            Vector3 lightDirection = light.w == 1.0f
+                                     ? normalize(subtract(light.position, intersectionPoint))
+                                     : normalize(multiply(light.position, -1.0f));
+            Vector3 intersectionToOrigin = normalize(subtract(scene.eye, intersectionPoint));
+            Vector3 halfwayLightDirection = normalize(divide(add(lightDirection, intersectionToOrigin), 2.0f));
+            float lightIntensity = light.i;
+            Vector3 diffuse = (Vector3) {
+                    .x = diffuseColor.x * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
+                    .y = diffuseColor.y * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
+                    .z = diffuseColor.z * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
+            };
+            Vector3 depthCueingDiffuse = (Vector3) {
+                    .x = scene.depthCueing.color.x * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
+                    .y = scene.depthCueing.color.y * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
+                    .z = scene.depthCueing.color.z * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
+            };
+            Vector3 specular = (Vector3) {
+                    .x =  specularColor.x * mtlColor.specularCoefficient *
+                          powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
+                    .y = specularColor.y * mtlColor.specularCoefficient *
+                         powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
+                    .z = specularColor.z * mtlColor.specularCoefficient *
+                         powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
+            };
+            Vector3 depthCueingSpecular = (Vector3) {
+                    .x =  scene.depthCueing.color.x * mtlColor.specularCoefficient *
+                          powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
+                    .y = scene.depthCueing.color.y * mtlColor.specularCoefficient *
+                         powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
+                    .z = scene.depthCueing.color.z * mtlColor.specularCoefficient *
+                         powf(max(dot(surfaceNormal, halfwayLightDirection), 0.0f), mtlColor.specularExponent),
+            };
+
+
+            float shadow = 1.0f;
+            if (scene.softShadows) {
+                float softShadow = 0.0f;
+                int numShadowRays = 500;
+
+                for (int i = 0; i < numShadowRays; ++i) {
+                    Vector3 jitteredLightDirection = add(lightDirection, multiply(randomUnitVector(), 0.005f));
+
+                    Intersection shadowRay = castRay((Ray) {
+                            .origin = intersectionPoint,
+                            .direction = normalize(jitteredLightDirection)
+                    }, scene, intersection.closestSphereIdx);
+
+                    if (shadowRay.closestSphereIdx != -1) {
+                        if ((light.w == 1.0f && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) ||
+                            (light.w == 0.0f && shadowRay.closestIntersection > 0.0f)) {
+                            softShadow += 1.0f / (float) numShadowRays;
+                        }
+                    }
+                }
+                shadow = 1.0f - softShadow;
+            } else {
+                Intersection shadowRay = castRay((Ray) {
+                        .origin = intersectionPoint,
+                        .direction = lightDirection
+                }, scene, intersection.closestSphereIdx);
+                if (shadowRay.closestSphereIdx != -1) {
+                    if (light.w == 1.0f && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) {
+                        shadow = 0.0f;
+                    }
+                    if (light.w == 0.0f && shadowRay.closestIntersection > 0.0f) {
+                        shadow = 0.0f;
+                    }
+                }
+            }
+
+            if (scene.depthCueing.distMax > 0.0f) {
+                float distanceToCamera = distance(scene.eye, intersectionPoint);
+                float depthCueFactor = normalizef(distanceToCamera, scene.depthCueing.distMin, scene.depthCueing.distMax);
+                diffuse = multiply(diffuse, 1.0f - depthCueFactor);
+                specular = multiply(specular, 1.0f - depthCueFactor);
+                ambient = multiply(specular, 1.0f - depthCueFactor);
+                depthCueingDiffuse = multiply(depthCueingDiffuse, depthCueFactor);
+                depthCueingSpecular = multiply(depthCueingSpecular, depthCueFactor);
+                depthCueingAmbient = multiply(depthCueingAmbient, depthCueFactor);
+            }
+            float attenuationFactor = 1.0f;
+            if (light.constantAttenuation > 0.0f || light.linearAttenuation > 0.0f || light.quadraticAttenuation > 0.0f) {
+                attenuationFactor = 1.0f / (light.constantAttenuation + light.linearAttenuation * distance(intersectionPoint, light.position) + light.quadraticAttenuation * powf(distance(intersectionPoint, light.position), 2.0f));
+            }
+            Vector3 lightSourceAttenuationApplied = multiply(multiply(add(diffuse, specular), lightIntensity), attenuationFactor);
+            Vector3 shadowsApplied = multiply(lightSourceAttenuationApplied, shadow);
+            Vector3 depthCueingShadowsApplied = multiply(multiply(add(depthCueingDiffuse, depthCueingSpecular), lightIntensity), shadow);
+            lightsApplied = add(lightsApplied, shadowsApplied);
+            depthCueingLightsApplied = add(lightsApplied, depthCueingShadowsApplied);
+        }
+    }
+    Vector3 ambientApplied = add(ambient, lightsApplied);
+    Vector3 depthCueingAmbientApplied = add(depthCueingAmbient, depthCueingLightsApplied);
+    return convertColorToRGBColor(add(ambientApplied, depthCueingAmbientApplied));
 }
 
 #endif

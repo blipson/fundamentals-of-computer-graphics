@@ -9,7 +9,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-#define MAX_LINE_COUNT 500
+#define MAX_LINE_COUNT 50000
 #define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
 #define MAX_LINE_LENGTH 50
 #define KEYWORD_COUNT 15
@@ -275,11 +275,32 @@ void readSceneSetup(
     }
 }
 
+void readVertex(char** const* inputFileWordsByLine, Scene* scene, int vertexAllocationCount, int objectLine) {
+    if (scene->vertexCount >= INITIAL_VERTEX_COUNT * vertexAllocationCount) {
+        vertexAllocationCount++;
+        Vector3* newVertexes = (Vector3*) realloc(scene->vertexes, (INITIAL_VERTEX_COUNT * vertexAllocationCount) * sizeof(Vector3));
+        if (newVertexes == NULL) {
+            fprintf(stderr, "Memory allocation failed for vertexes.");
+            exit(-1);
+        }
+        scene->vertexes = newVertexes;
+    }
+    checkValues(inputFileWordsByLine[objectLine], 3, "v");
+    scene->vertexes[scene->vertexCount] = (Vector3) {
+            .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
+            .y = convertStringToFloat(inputFileWordsByLine[objectLine][2]),
+            .z = convertStringToFloat(inputFileWordsByLine[objectLine][3])
+    };
+    scene->vertexCount++;
+}
+
 void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     int mtlColorAllocationCount = 1;
     int sphereAllocationCount = 1;
+    int vertexAllocationCount = 1;
+    int faceAllocationCount = 1;
     int ellipsoidAllocationCount = 1;
-    while (inputFileWordsByLine[*line][0] != NULL && strcmp(inputFileWordsByLine[*line][0], "v") != 0) {
+    while (inputFileWordsByLine[*line][0] != NULL) {
         if (strcmp(inputFileWordsByLine[*line][0], "mtlcolor") == 0) {
             if (scene->mtlColorCount >= INITIAL_MTLCOLOR_COUNT * mtlColorAllocationCount) {
                 mtlColorAllocationCount++;
@@ -354,57 +375,37 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                     scene->ellipsoids[scene->ellipsoidCount].radius = ellipsoidRadius;
                     scene->ellipsoids[scene->ellipsoidCount].mtlColorIdx = scene->mtlColorCount;
                     scene->ellipsoidCount++;
+                } else if (strcmp(inputFileWordsByLine[objectLine][0], "v") == 0) {
+                    readVertex(inputFileWordsByLine, scene, vertexAllocationCount, objectLine);
+                } else if (strcmp(inputFileWordsByLine[objectLine][0], "f") == 0) {
+                    if (scene->faceCount >= INITIAL_FACE_COUNT * faceAllocationCount) {
+                        faceAllocationCount++;
+                        Face * newFaces = (Face *) realloc(scene->faces, (INITIAL_FACE_COUNT * faceAllocationCount) * sizeof(Face));
+                        if (newFaces == NULL) {
+                            fprintf(stderr, "Memory allocation failed for faces.");
+                            exit(-1);
+                        }
+                        scene->faces = newFaces;
+                    }
+                    checkValues(inputFileWordsByLine[objectLine], 3, "f");
+                    scene->faces[scene->faceCount] = (Face) {
+                            .v1 = convertStringToInt(inputFileWordsByLine[objectLine][1]),
+                            .v2 = convertStringToInt(inputFileWordsByLine[objectLine][2]),
+                            .v3 = convertStringToInt(inputFileWordsByLine[objectLine][3]),
+                            .mtlColorIdx = scene->mtlColorCount
+                    };
+                    scene->faceCount++;
                 }
                 objectLine++;
             }
             scene->mtlColorCount++;
             *line = objectLine;
-        } else {
+        } else if (strcmp(inputFileWordsByLine[*line][0], "v") == 0) {
+            readVertex(inputFileWordsByLine, scene, vertexAllocationCount, *line);
+            (*line)++;
+        } else  {
             (*line)++;
         }
-    }
-}
-
-void readSceneTriangles(char*** inputFileWordsByLine, int* line, Scene* scene) {
-    int vertexAllocationCount = 1;
-    int faceAllocationCount = 1;
-    while (inputFileWordsByLine[*line][0] != NULL) {
-        if (strcmp(inputFileWordsByLine[*line][0], "v") == 0) {
-            if (scene->vertexCount >= INITIAL_VERTEX_COUNT * vertexAllocationCount) {
-                vertexAllocationCount++;
-                Vector3* newVertexes = (Vector3*) realloc(scene->vertexes, (INITIAL_VERTEX_COUNT * vertexAllocationCount) * sizeof(Vector3));
-                if (newVertexes == NULL) {
-                    fprintf(stderr, "Memory allocation failed for vertexes.");
-                    exit(-1);
-                }
-                scene->vertexes = newVertexes;
-            }
-            checkValues(inputFileWordsByLine[*line], 3, "v");
-            scene->vertexes[scene->vertexCount] = (Vector3) {
-                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
-                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
-                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
-            };
-            scene->vertexCount++;
-        } else if (strcmp(inputFileWordsByLine[*line][0], "f") == 0) {
-            if (scene->faceCount >= INITIAL_FACE_COUNT * faceAllocationCount) {
-                faceAllocationCount++;
-                Face * newFaces = (Face *) realloc(scene->faces, (INITIAL_FACE_COUNT * faceAllocationCount) * sizeof(Face));
-                if (newFaces == NULL) {
-                    fprintf(stderr, "Memory allocation failed for faces.");
-                    exit(-1);
-                }
-                scene->faces = newFaces;
-            }
-            checkValues(inputFileWordsByLine[*line], 3, "f");
-            scene->faces[scene->faceCount] = (Face) {
-                    .v1 = convertStringToInt(inputFileWordsByLine[*line][1]),
-                    .v2 = convertStringToInt(inputFileWordsByLine[*line][2]),
-                    .v3 = convertStringToInt(inputFileWordsByLine[*line][3])
-            };
-            scene->faceCount++;
-        }
-        (*line)++;
     }
 }
 

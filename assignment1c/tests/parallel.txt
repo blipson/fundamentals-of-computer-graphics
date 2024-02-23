@@ -5,8 +5,9 @@ hfov 45
 updir 0 1 0
 bkgcolor 0.2 0.2 0.2
 parallel 8
+light 0 5 -4 1 0.5
 
-mtlcolor 1 0 0 0 0 0 1 0 0 0
+mtlcolor 1 0 0 1 1 1 0.2 0.6 0.2 50
 sphere 2 2 -8 1
 sphere 2 -2 -8 1
 sphere -2 2 -8 1

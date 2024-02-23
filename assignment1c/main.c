@@ -9,6 +9,7 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
             Ray viewingRay = traceRay(scene, viewingWindowLocation, parallel);
             writePixel(outputFilePtr, shadeRay(viewingRay, scene), x, scene.imSize.width);
         }
+        printf("y: %d\n", y);
     }
 }
 
@@ -44,7 +45,6 @@ int main(int argc, char* argv[]) {
     int line = 0;
     readSceneSetup(inputFileWordsByLine, &line, &scene, softShadows);
     readSceneObjects(inputFileWordsByLine, &line, &scene);
-    readSceneTriangles(inputFileWordsByLine, &line, &scene);
 
     freeInputFileWordsByLine(inputFileWordsByLine);
     bool parallel = scene.parallel.frustumWidth > 0;
