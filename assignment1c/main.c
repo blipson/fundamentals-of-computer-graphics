@@ -20,13 +20,13 @@ int main(int argc, char* argv[]) {
     char*** inputFileWordsByLine = readInputFile(argv, softShadows);
 
     Scene scene = {
-            .eye = {.x = 0, .y = 0, .z = 0},
-            .viewDir = {.x = 0, .y = 0, .z = 0},
-            .upDir = {.x = 0, .y = 0, .z = 0},
-            .fov = {.h = 0},
+            .eye = {.x = 0.0f, .y = 0.0f, .z = 0.0f},
+            .viewDir = {.x = 0.0f, .y = 0.0f, .z = 0.0f},
+            .upDir = {.x = 0.0f, .y = 0.0f, .z = 0.0f},
+            .fov = {.h = 0.0f, .v = 0.0f },
             .imSize = {.width = 0, .height = 0},
-            .bkgColor = {.x = 0, .y = 0, .z = 0},
-            .parallel = {.frustumWidth = 0},
+            .bkgColor = {.x = 0.0f, .y = 0.0f, .z = 0.0f},
+            .parallel = {.frustumWidth = 0.0f},
             .mtlColors = (MaterialColor*) malloc(INITIAL_MTLCOLOR_COUNT * sizeof(MaterialColor)),
             .mtlColorCount = 0,
             .spheres = (Sphere*) malloc(INITIAL_SPHERE_COUNT * sizeof(Sphere)),
@@ -47,9 +47,9 @@ int main(int argc, char* argv[]) {
     int line = 0;
     readSceneSetup(inputFileWordsByLine, &line, &scene, softShadows);
     readSceneObjects(inputFileWordsByLine, &line, &scene);
-
     freeInputFileWordsByLine(inputFileWordsByLine);
-    bool parallel = scene.parallel.frustumWidth > 0;
+    bool parallel = scene.parallel.frustumWidth > 0.0f;
+    bool horizontalFov = scene.fov.h > 0.0f;
 
     ViewParameters viewParameters = {
             .w = normalize(multiply(scene.viewDir, -1)),
@@ -61,10 +61,14 @@ int main(int argc, char* argv[]) {
             .viewingWindow = {
                     .width = parallel ?
                              (scene.parallel.frustumWidth) :
-                             (2 * viewParameters.d * tanf(scene.fov.h / 2)),
+                             horizontalFov ?
+                             (2 * viewParameters.d * tanf(scene.fov.h / 2)) :
+                             (2 * viewParameters.d * tanf(scene.fov.v / 2)) * viewParameters.aspectRatio,
                     .height = parallel ?
                               ((scene.parallel.frustumWidth / viewParameters.aspectRatio)) :
-                              (2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio)),
+                              horizontalFov ?
+                              (2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio)) :
+                              (2 * viewParameters.d * (tanf(scene.fov.v / 2))),
             }
     };
 

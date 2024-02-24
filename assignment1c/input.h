@@ -12,7 +12,7 @@
 #define MAX_LINE_COUNT 50000
 #define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
 #define MAX_LINE_LENGTH 50
-#define KEYWORD_COUNT 16
+#define KEYWORD_COUNT 17
 #define INITIAL_LIGHT_COUNT 10
 #define INITIAL_MTLCOLOR_COUNT 10
 #define INITIAL_SPHERE_COUNT 10
@@ -33,7 +33,7 @@ void checkArgs(int argc, char* argv[]) {
 }
 
 char** readLine(char* line, char** wordsInLine) {
-    char* delimiters = " \t\n";
+    char* delimiters = " \t\n\r";
     char* token = strtok(line, delimiters);
     int wordIdx = 0;
 
@@ -69,9 +69,9 @@ char** readLine(char* line, char** wordsInLine) {
 }
 
 bool isKeyword(const char* target) {
-    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light", "depthcueing", "attlight", "v", "vn", "f"};
+    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "vfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light", "depthcueing", "attlight", "v", "vn", "f"};
     for (size_t i = 0; i < KEYWORD_COUNT; i++) {
-        if (strcmp(target, keywords[i]) == 0) {
+        if (target == NULL || strcmp(target, keywords[i]) == 0) {
             return true;
         }
     }
@@ -94,7 +94,7 @@ char*** readInputFile(char* argv[], bool softShadows) {
         inputFileWordsByLine = malloc(MAX_LINE_COUNT * sizeof(char**));
 
         if (inputFileWordsByLine == NULL) {
-            fprintf(stderr, "Memory allocation error with reading the input file lines.");
+            fprintf(stderr, "Memory allocation error with reading the input file lines.\n");
             exit(-1);
         }
 
@@ -102,22 +102,22 @@ char*** readInputFile(char* argv[], bool softShadows) {
         int line = 0;
         while ((inputFileWordsByLine[line] = malloc(MAX_WORDS_PER_LINE * sizeof(char*))) != NULL &&
                fgets(currentLine, MAX_LINE_LENGTH, inputFilePtr) != NULL) {
-            if (currentLine[0] == '\n' || currentLine[0] == '\0') {
+            if (currentLine[0] == '\n' || currentLine[0] == '\0' || currentLine[0] == '\r') {
                 continue;
             }
             if (line > MAX_LINE_COUNT) {
-                fprintf(stderr, "Invalid file format. Too many lines.");
+                fprintf(stderr, "Invalid file format. Too many lines.\n");
                 exit(-1);
             }
             readLine(currentLine, inputFileWordsByLine[line]);
             if (!isKeyword(inputFileWordsByLine[line][0])) {
-                fprintf(stderr, "Invalid keyword in input file: %s", inputFileWordsByLine[line][0]);
+                fprintf(stderr, "Invalid keyword in input file: %s\n", inputFileWordsByLine[line][0]);
                 exit(-1);
             }
             line++;
         }
     } else {
-        fprintf(stderr, "Unable to open the input file specified.");
+        fprintf(stderr, "Unable to open the input file specified.\n");
         exit(-1);
     }
 
@@ -154,7 +154,7 @@ int convertStringToInt(char* s) {
     char* end;
     int i = (int) strtol(s, &end, 10);
     if (strcmp("", end) != 0 && *end != 0) {
-        fprintf(stderr, "Improper file format. Invalid integer value: %s", s);
+        fprintf(stderr, "Improper file format. Invalid integer value: %s\n", s);
         exit(-1);
     }
     return i;
@@ -172,12 +172,12 @@ unsigned char convertFloatToUnsignedChar(float normalizedValue) {
 
 void checkValues(char** line, int expectedNumber, char* type) {
     if (line[expectedNumber + 1] != NULL) {
-        fprintf(stderr, "Too many values given for '%s', it expects %d.", type, expectedNumber);
+        fprintf(stderr, "Too many values given for '%s', it expects %d\n", type, expectedNumber);
         exit(-1);
     }
     for (int i = 1; i <= expectedNumber; i++) {
         if (line[i] == NULL) {
-            fprintf(stderr, "Too few values given for '%s', it expects %d.", type, expectedNumber);
+            fprintf(stderr, "Too few values given for '%s', it expects %d\n", type, expectedNumber);
             exit(-1);
         }
     }
@@ -197,7 +197,7 @@ void readLight(char** const* inputFileWordsByLine, const int* line, Scene* scene
         lightAllocationCount++;
         Light* newLights = (Light*) realloc(scene->lights, (INITIAL_LIGHT_COUNT * lightAllocationCount) * sizeof(Light));
         if (newLights == NULL) {
-            fprintf(stderr, "Memory allocation failed for light.");
+            fprintf(stderr, "Memory allocation failed for light\n");
             exit(-1);
         }
         scene->lights = newLights;
@@ -242,6 +242,9 @@ void readSceneSetup(
         } else if (strcmp(inputFileWordsByLine[*line][0], "hfov") == 0) {
             checkValues(inputFileWordsByLine[*line], 1, "hfov");
             scene->fov.h = convertStringToFloat(inputFileWordsByLine[*line][1]) * (float) M_PI / 180.0f; // convert to radians
+        } else if (strcmp(inputFileWordsByLine[*line][0], "vfov") == 0) {
+            checkValues(inputFileWordsByLine[*line], 1, "vfov");
+            scene->fov.v = convertStringToFloat(inputFileWordsByLine[*line][1]) * (float) M_PI / 180.0f; // convert to radians
         } else if (strcmp(inputFileWordsByLine[*line][0], "imsize") == 0) {
             checkValues(inputFileWordsByLine[*line], 2, "imsize");
             scene->imSize.width = convertStringToInt(inputFileWordsByLine[*line][1]);

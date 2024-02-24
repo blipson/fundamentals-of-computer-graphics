@@ -10,8 +10,9 @@ if [ -d "$directory" ]; then
         if [ -f "$file" ]; then
             echo "Rendering $file..."
             if [[ "$file" == "./tests/softshadows.txt" ]]; then
-              ./raytracer1c -s "$file"
-            else
+              echo "Skipping softshadows.txt..."
+#              ./raytracer1c -s "$file"
+            elif [[ "$file" != "./tests/showcase.txt" ]]; then
               ./raytracer1c "$file"
             fi
         else
