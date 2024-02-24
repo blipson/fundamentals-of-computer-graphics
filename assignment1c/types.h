@@ -139,10 +139,18 @@ enum ObjectType {
 };
 
 typedef struct {
+    int faceIdx;
+    Vector3 n;
+    float alpha;
+    float beta;
+    float gamma;
+} FaceIntersection;
+
+typedef struct {
     float closestIntersection;
     int closestSphereIdx;
     int closestEllipsoidIdx;
-    int closestFaceIdx;
+    FaceIntersection closestFaceIntersection;
     enum ObjectType closestObject;
 } Intersection;
 

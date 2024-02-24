@@ -268,7 +268,7 @@ void checkEllipsoidIntersections(int excludeIdx, Ray* ray, Scene* scene, float* 
     }
 }
 
-int checkFaceIntersection(const Ray* ray, const Scene* scene, float* closestIntersection, enum ObjectType* closestObject, int* closestFaceIdx, int faceIdx) {
+int checkFaceIntersection(const Ray* ray, const Scene* scene, float* closestIntersection, enum ObjectType* closestObject, FaceIntersection* closestFaceIntersection, int faceIdx) {
     Vector3 p0 = (*scene).vertexes[(*scene).faces[faceIdx].v1 - 1];
     Vector3 p1 = (*scene).vertexes[(*scene).faces[faceIdx].v2 - 1];
     Vector3 p2 = (*scene).vertexes[(*scene).faces[faceIdx].v3 - 1];
@@ -317,16 +317,23 @@ int checkFaceIntersection(const Ray* ray, const Scene* scene, float* closestInte
     if ((fabsf(alpha) + fabsf(beta) + fabsf(gamma)) < 1.0f + EPSILON) {
         if (t > 0.0f && t < (*closestIntersection)) {
             (*closestIntersection) = t;
-            (*closestFaceIdx) = faceIdx;
+            (*closestFaceIntersection) = (FaceIntersection) {
+                .faceIdx = faceIdx,
+                .n = n,
+                .alpha = alpha,
+                .beta = beta,
+                .gamma = gamma,
+            };
             (*closestObject) = TRIANGLE;
         }
     }
     return 0;
 }
 
-void checkFaceIntersections(Ray* ray, Scene* scene, float* closestIntersection, enum ObjectType* closestObject, int* closestFaceIdx) {
+void checkFaceIntersections(Ray* ray, Scene* scene, float* closestIntersection, enum ObjectType* closestObject, FaceIntersection* closestFaceIntersection) {
     for (int faceIdx = 0; faceIdx < (*scene).faceCount; faceIdx++) {
-        if (checkFaceIntersection(ray, scene, closestIntersection, closestObject, closestFaceIdx, faceIdx) == -1) {
+        int earlyReturn = checkFaceIntersection(ray, scene, closestIntersection, closestObject, closestFaceIntersection, faceIdx);
+        if (earlyReturn == -1) {
             continue;
         }
     }
@@ -337,19 +344,29 @@ Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
     enum ObjectType closestObject;
     int closestSphereIdx = -1;
     int closestEllipsoidIdx = -1;
-    int closestFaceIdx = -1;
+    FaceIntersection closestFaceIntersection = (FaceIntersection) {
+        .faceIdx = -1,
+        .n = (Vector3) {
+                .x = 0.0f,
+                .y = 0.0f,
+                .z = 0.0f,
+        },
+        .alpha = 0.0f,
+        .beta = 0.0f,
+        .gamma = 0.0f,
+    };
 
     checkSphereIntersections(excludeIdx, &ray, &scene, &closestIntersection, &closestObject, &closestSphereIdx);
 
     checkEllipsoidIntersections(excludeIdx, &ray, &scene, &closestIntersection, &closestObject, &closestEllipsoidIdx);
 
-    checkFaceIntersections(&ray, &scene, &closestIntersection, &closestObject, &closestFaceIdx);
+    checkFaceIntersections(&ray, &scene, &closestIntersection, &closestObject, &closestFaceIntersection);
 
     return (Intersection) {
             .closestIntersection = closestIntersection,
             .closestSphereIdx = closestSphereIdx,
             .closestEllipsoidIdx = closestEllipsoidIdx,
-            .closestFaceIdx = closestFaceIdx,
+            .closestFaceIntersection = closestFaceIntersection,
             .closestObject = closestObject
     };
 }
@@ -391,17 +408,21 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
         mtlColor = scene.mtlColors[ellipsoid.mtlColorIdx];
         // todo: Calculate the surface normal for the ellipsoid
         surfaceNormal = normalize(divide(subtract(intersectionPoint, ellipsoid.center), ellipsoid.radius.x));
-    } else if (intersection.closestFaceIdx != -1 && intersection.closestObject == TRIANGLE) {
-        Face face = scene.faces[intersection.closestFaceIdx];
+    } else if (intersection.closestFaceIntersection.faceIdx != -1 && intersection.closestObject == TRIANGLE) {
+        Face face = scene.faces[intersection.closestFaceIntersection.faceIdx];
         mtlColor = scene.mtlColors[face.mtlColorIdx];
 
-        Vector3 p0 = scene.vertexes[scene.faces[intersection.closestFaceIdx].v1 - 1];
-        Vector3 p1 = scene.vertexes[scene.faces[intersection.closestFaceIdx].v2 - 1];
-        Vector3 p2 = scene.vertexes[scene.faces[intersection.closestFaceIdx].v3 - 1];
-
-        Vector3 e1 = subtract(p1, p0);
-        Vector3 e2 = subtract(p2, p0);
-        surfaceNormal = normalize(cross(e1, e2));
+        if (scene.vertexNormals == NULL) {
+            surfaceNormal = normalize(intersection.closestFaceIntersection.n);
+        } else {
+            Vector3 n0 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn1 - 1]);
+            Vector3 n1 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn2 - 1]);
+            Vector3 n2 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn3 - 1]);
+            Vector3 alphaComponent = multiply(n0, intersection.closestFaceIntersection.alpha);
+            Vector3 betaComponent = multiply(n1, intersection.closestFaceIntersection.beta);
+            Vector3 gammaComponent = multiply(n2, intersection.closestFaceIntersection.gamma);
+            surfaceNormal = normalize(add(alphaComponent, add(betaComponent, gammaComponent)));
+        }
     } else {
         return convertColorToRGBColor(scene.bkgColor);
     }

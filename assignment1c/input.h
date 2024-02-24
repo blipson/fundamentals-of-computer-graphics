@@ -296,7 +296,10 @@ void readVertex(char** const* inputFileWordsByLine, Scene* scene, int objectLine
 }
 
 void readVertexNormal(char** const* inputFileWordsByLine, Scene* scene, int objectLine, int* vertexNormalAllocationCount) {
-    if (scene->vertexNormalCount >= INITIAL_VERTEX_NORMAL_COUNT * (*vertexNormalAllocationCount)) {
+    if (scene->vertexNormalCount == 0) {
+        (*vertexNormalAllocationCount) = 1;
+        scene->vertexNormals = (Vector3*) malloc(INITIAL_VERTEX_NORMAL_COUNT * sizeof(Vector3));
+    } else if (scene->vertexNormalCount >= INITIAL_VERTEX_NORMAL_COUNT * (*vertexNormalAllocationCount)) {
         (*vertexNormalAllocationCount)++;
         Vector3* newVertexNormals = (Vector3*) realloc(scene->vertexNormals, (INITIAL_VERTEX_NORMAL_COUNT * (*vertexNormalAllocationCount)) * sizeof(Vector3));
         if (newVertexNormals == NULL) {
@@ -354,7 +357,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     int mtlColorAllocationCount = 1;
     int sphereAllocationCount = 1;
     int vertexAllocationCount = 1;
-    int vertexNormalAllocationCount = 1;
+    int vertexNormalAllocationCount = 0;
     int faceAllocationCount = 1;
     int ellipsoidAllocationCount = 1;
     while (inputFileWordsByLine[*line][0] != NULL) {
