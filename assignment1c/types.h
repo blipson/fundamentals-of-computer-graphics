@@ -76,6 +76,12 @@ typedef struct {
     int v1;
     int v2;
     int v3;
+    int vt1;
+    int vt2;
+    int vt3;
+    int vn1;
+    int vn2;
+    int vn3;
     int mtlColorIdx;
 } Face;
 
@@ -99,6 +105,8 @@ typedef struct {
     bool softShadows;
     Vector3* vertexes;
     int vertexCount;
+    Vector3* vertexNormals;
+    int vertexNormalCount;
     Face* faces;
     int faceCount;
 } Scene;

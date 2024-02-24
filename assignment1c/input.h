@@ -12,12 +12,13 @@
 #define MAX_LINE_COUNT 50000
 #define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
 #define MAX_LINE_LENGTH 50
-#define KEYWORD_COUNT 15
+#define KEYWORD_COUNT 16
 #define INITIAL_LIGHT_COUNT 10
 #define INITIAL_MTLCOLOR_COUNT 10
 #define INITIAL_SPHERE_COUNT 10
 #define INITIAL_ELLIPSOID_COUNT 10
 #define INITIAL_VERTEX_COUNT 1000
+#define INITIAL_VERTEX_NORMAL_COUNT 1000
 #define INITIAL_FACE_COUNT 1000
 
 void checkArgs(int argc, char* argv[]) {
@@ -68,7 +69,7 @@ char** readLine(char* line, char** wordsInLine) {
 }
 
 bool isKeyword(const char* target) {
-    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light", "depthcueing", "attlight", "v", "f"};
+    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light", "depthcueing", "attlight", "v", "vn", "f"};
     for (size_t i = 0; i < KEYWORD_COUNT; i++) {
         if (strcmp(target, keywords[i]) == 0) {
             return true;
@@ -275,10 +276,10 @@ void readSceneSetup(
     }
 }
 
-void readVertex(char** const* inputFileWordsByLine, Scene* scene, int vertexAllocationCount, int objectLine) {
-    if (scene->vertexCount >= INITIAL_VERTEX_COUNT * vertexAllocationCount) {
-        vertexAllocationCount++;
-        Vector3* newVertexes = (Vector3*) realloc(scene->vertexes, (INITIAL_VERTEX_COUNT * vertexAllocationCount) * sizeof(Vector3));
+void readVertex(char** const* inputFileWordsByLine, Scene* scene, int objectLine, int* vertexAllocationCount) {
+    if (scene->vertexCount >= INITIAL_VERTEX_COUNT * (*vertexAllocationCount)) {
+        (*vertexAllocationCount)++;
+        Vector3* newVertexes = (Vector3*) realloc(scene->vertexes, (INITIAL_VERTEX_COUNT * (*vertexAllocationCount)) * sizeof(Vector3));
         if (newVertexes == NULL) {
             fprintf(stderr, "Memory allocation failed for vertexes.");
             exit(-1);
@@ -294,10 +295,66 @@ void readVertex(char** const* inputFileWordsByLine, Scene* scene, int vertexAllo
     scene->vertexCount++;
 }
 
+void readVertexNormal(char** const* inputFileWordsByLine, Scene* scene, int objectLine, int* vertexNormalAllocationCount) {
+    if (scene->vertexNormalCount >= INITIAL_VERTEX_NORMAL_COUNT * (*vertexNormalAllocationCount)) {
+        (*vertexNormalAllocationCount)++;
+        Vector3* newVertexNormals = (Vector3*) realloc(scene->vertexNormals, (INITIAL_VERTEX_NORMAL_COUNT * (*vertexNormalAllocationCount)) * sizeof(Vector3));
+        if (newVertexNormals == NULL) {
+            fprintf(stderr, "Memory allocation failed for vertex normals.");
+            exit(-1);
+        }
+        scene->vertexNormals = newVertexNormals;
+    }
+    checkValues(inputFileWordsByLine[objectLine], 3, "vn");
+    scene->vertexNormals[scene->vertexNormalCount] = (Vector3) {
+            .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
+            .y = convertStringToFloat(inputFileWordsByLine[objectLine][2]),
+            .z = convertStringToFloat(inputFileWordsByLine[objectLine][3])
+    };
+    scene->vertexNormalCount++;
+}
+
+void parseFaceValues(char** objectLine, int faceIdx, const Scene* scene, int objectLineIdx) {
+    int faceValueIdx = 0;
+    char* faceToken = strsep(&objectLine[faceIdx], "/");
+    while (faceToken != NULL) {
+        if (faceValueIdx == 0) {
+            if (faceIdx == 1) {
+                scene->faces[scene->faceCount].v1 = convertStringToInt(faceToken);
+            } else if (faceIdx == 2) {
+                scene->faces[scene->faceCount].v2 = convertStringToInt(faceToken);
+            } else if (faceIdx == 3) {
+                scene->faces[scene->faceCount].v3 = convertStringToInt(faceToken);
+            }
+        } else if (faceValueIdx == 1) {
+            if (faceIdx == 1) {
+                scene->faces[scene->faceCount].vt1 = convertStringToInt(faceToken);
+            } else if (faceIdx == 2) {
+                scene->faces[scene->faceCount].vt2 = convertStringToInt(faceToken);
+            } else if (faceIdx == 3) {
+                scene->faces[scene->faceCount].vt3 = convertStringToInt(faceToken);
+            }
+        } else if (faceValueIdx == 2) {
+            if (faceIdx == 1) {
+                scene->faces[scene->faceCount].vn1 = convertStringToInt(faceToken);
+            } else if (faceIdx == 2) {
+                scene->faces[scene->faceCount].vn2 = convertStringToInt(faceToken);
+            } else if (faceIdx == 3) {
+                scene->faces[scene->faceCount].vn3 = convertStringToInt(faceToken);
+            }
+        } else {
+            fprintf(stderr, "Too many values for the vertices of the face at %d.\n", objectLineIdx);
+        }
+        faceToken = strsep(&objectLine[faceIdx], "/");
+        faceValueIdx++;
+    }
+}
+
 void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     int mtlColorAllocationCount = 1;
     int sphereAllocationCount = 1;
     int vertexAllocationCount = 1;
+    int vertexNormalAllocationCount = 1;
     int faceAllocationCount = 1;
     int ellipsoidAllocationCount = 1;
     while (inputFileWordsByLine[*line][0] != NULL) {
@@ -376,7 +433,9 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                     scene->ellipsoids[scene->ellipsoidCount].mtlColorIdx = scene->mtlColorCount;
                     scene->ellipsoidCount++;
                 } else if (strcmp(inputFileWordsByLine[objectLine][0], "v") == 0) {
-                    readVertex(inputFileWordsByLine, scene, vertexAllocationCount, objectLine);
+                    readVertex(inputFileWordsByLine, scene, objectLine, &vertexAllocationCount);
+                } else if (strcmp(inputFileWordsByLine[objectLine][0], "vn") == 0) {
+                    readVertexNormal(inputFileWordsByLine, scene, objectLine, &vertexNormalAllocationCount);
                 } else if (strcmp(inputFileWordsByLine[objectLine][0], "f") == 0) {
                     if (scene->faceCount >= INITIAL_FACE_COUNT * faceAllocationCount) {
                         faceAllocationCount++;
@@ -389,11 +448,20 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                     }
                     checkValues(inputFileWordsByLine[objectLine], 3, "f");
                     scene->faces[scene->faceCount] = (Face) {
-                            .v1 = convertStringToInt(inputFileWordsByLine[objectLine][1]),
-                            .v2 = convertStringToInt(inputFileWordsByLine[objectLine][2]),
-                            .v3 = convertStringToInt(inputFileWordsByLine[objectLine][3]),
+                            .v1 = 0,
+                            .v2 = 0,
+                            .v3 = 0,
+                            .vt1 = 0,
+                            .vt2 = 0,
+                            .vt3 = 0,
+                            .vn1 = 0,
+                            .vn2 = 0,
+                            .vn3 = 0,
                             .mtlColorIdx = scene->mtlColorCount
                     };
+                    parseFaceValues(inputFileWordsByLine[objectLine], 1, scene, objectLine);
+                    parseFaceValues(inputFileWordsByLine[objectLine], 2, scene, objectLine);
+                    parseFaceValues(inputFileWordsByLine[objectLine], 3, scene, objectLine);
                     scene->faceCount++;
                 }
                 objectLine++;
@@ -401,9 +469,11 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
             scene->mtlColorCount++;
             *line = objectLine;
         } else if (strcmp(inputFileWordsByLine[*line][0], "v") == 0) {
-            readVertex(inputFileWordsByLine, scene, vertexAllocationCount, *line);
+            readVertex(inputFileWordsByLine, scene, *line, &vertexAllocationCount);
             (*line)++;
-        } else  {
+        } else if (strcmp(inputFileWordsByLine[*line][0], "vn") == 0) {
+            readVertexNormal(inputFileWordsByLine, scene, *line, &vertexNormalAllocationCount);
+        } else {
             (*line)++;
         }
     }
@@ -461,6 +531,11 @@ void printScene(Scene scene) {
             printf("vertex: %f %f %f\n", scene.vertexes[vertexIdx].x, scene.vertexes[vertexIdx].y, scene.vertexes[vertexIdx].z);
         }
     }
+    if (scene.vertexNormals != NULL) {
+        for (int vertexNormalIdx = 0; vertexNormalIdx < scene.vertexNormalCount; vertexNormalIdx++) {
+            printf("vertex normal: %f %f %f\n", scene.vertexNormals[vertexNormalIdx].x, scene.vertexNormals[vertexNormalIdx].y, scene.vertexNormals[vertexNormalIdx].z);
+        }
+    }
     if (scene.faces != NULL) {
         for (int faceIdx = 0; faceIdx < scene.faceCount; faceIdx++) {
             printf("face: %d %d %d\n", scene.faces[faceIdx].v1, scene.faces[faceIdx].v2, scene.faces[faceIdx].v3);
@@ -484,6 +559,9 @@ void freeInput(Scene scene) {
     }
     if (scene.vertexes != NULL) {
         free(scene.vertexes);
+    }
+    if (scene.vertexNormals != NULL) {
+        free(scene.vertexNormals);
     }
     if (scene.faces != NULL) {
         free(scene.faces);

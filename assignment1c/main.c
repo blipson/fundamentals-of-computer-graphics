@@ -9,9 +9,10 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
             Ray viewingRay = traceRay(scene, viewingWindowLocation, parallel);
             writePixel(outputFilePtr, shadeRay(viewingRay, scene), x, scene.imSize.width);
         }
-        printf("y: %d\n", y);
+        printf("%d\n", y);
     }
 }
+
 
 int main(int argc, char* argv[]) {
     checkArgs(argc, argv);
@@ -38,6 +39,8 @@ int main(int argc, char* argv[]) {
             .softShadows = false,
             .vertexes = (Vector3*) malloc(INITIAL_VERTEX_COUNT * sizeof(Vector3)),
             .vertexCount = 0,
+            .vertexNormals = (Vector3*) malloc(INITIAL_VERTEX_NORMAL_COUNT * sizeof(Vector3)),
+            .vertexNormalCount = 0,
             .faces = (Face*) malloc(INITIAL_FACE_COUNT * sizeof(Face)),
             .faceCount = 0,
     };
