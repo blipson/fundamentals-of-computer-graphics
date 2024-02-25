@@ -13,6 +13,7 @@
 #define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
 #define MAX_INPUT_LINE_LENGTH 50
 #define MAX_TEXTURE_LINE_LENGTH 50000
+#define MAX_TEXTURE_WORDS_PER_LINE 10000
 #define KEYWORD_COUNT 18
 #define INITIAL_LIGHT_COUNT 10
 #define INITIAL_MTLCOLOR_COUNT 10
@@ -34,12 +35,12 @@ void checkArgs(int argc, char* argv[]) {
 //    }
 }
 
-char** readLine(char* line, char** wordsInLine) {
+char** readLine(char* line, char** wordsInLine, int maxWordsPerLine) {
     char* delimiters = " \t\n\r";
     char* token = strtok(line, delimiters);
     int wordIdx = 0;
 
-    while (token != NULL && wordIdx < MAX_WORDS_PER_LINE - 1) {
+    while (token != NULL && wordIdx < maxWordsPerLine - 1) {
         // Remove trailing whitespace
         size_t length = strlen(token);
         while (length > 0 && isspace(token[length - 1])) {
@@ -116,7 +117,7 @@ char*** readInputFile(char* argv[], bool softShadows) {
                 fprintf(stderr, "Invalid file format. Too many lines.\n");
                 exit(-1);
             }
-            readLine(currentLine, inputFileWordsByLine[line]);
+            readLine(currentLine, inputFileWordsByLine[line], MAX_WORDS_PER_LINE);
             if (!isKeyword(inputFileWordsByLine[line][0])) {
                 fprintf(stderr, "Invalid keyword in input file: %s\n", inputFileWordsByLine[line][0]);
                 exit(-1);
@@ -379,8 +380,8 @@ PPMImage readPPM(const char *filename) {
 
     char headerLine[MAX_INPUT_LINE_LENGTH];
     fgets(headerLine, MAX_INPUT_LINE_LENGTH, filePtr);
-    char* wordsInHeaderLine[MAX_WORDS_PER_LINE];
-    readLine(headerLine, wordsInHeaderLine);
+    char* wordsInHeaderLine[MAX_TEXTURE_WORDS_PER_LINE];
+    readLine(headerLine, wordsInHeaderLine, MAX_WORDS_PER_LINE);
     if (strcmp(wordsInHeaderLine[0], "P3") != 0) {
         fprintf(stderr, "Invalid PPM file format.\n");
         exit(1);
@@ -389,26 +390,41 @@ PPMImage readPPM(const char *filename) {
     image.width = convertStringToInt(wordsInHeaderLine[1]);
     image.height = convertStringToInt(wordsInHeaderLine[2]);
     image.maxColor = convertStringToInt(wordsInHeaderLine[3]);
-    image.data = (RGBColor*) malloc(image.width * image.height * sizeof(RGBColor));
-    if (!image.data) {
-        fprintf(stderr, "Memory allocation error\n");
+    image.data = (RGBColor**) malloc(image.height * sizeof(RGBColor*));
+    if (image.data == NULL) {
+        fprintf(stderr, "Memory allocation error while reading PPM data.\n");
         exit(1);
     }
 
-    int line = 0;
+    int y = 0;
     char currentLine[MAX_TEXTURE_LINE_LENGTH];
     while (fgets(currentLine, MAX_TEXTURE_LINE_LENGTH, filePtr) != NULL) {
-        char* wordsInLine[MAX_WORDS_PER_LINE];
-        readLine(currentLine, wordsInLine);
-        image.data[line] = (RGBColor) {
-                .red = convertStringToInt(wordsInLine[0]),
-                .green = convertStringToInt(wordsInLine[1]),
-                .blue = convertStringToInt(wordsInLine[2]),
-        };
-        line++;
-    }
+        char* wordsInLine[MAX_TEXTURE_WORDS_PER_LINE];
+        readLine(currentLine, wordsInLine, MAX_TEXTURE_WORDS_PER_LINE);
+        image.data[y] = (RGBColor*) malloc(image.width * sizeof(RGBColor));
+        if (image.data[y] == NULL) {
+            fprintf(stderr, "Memory allocation error while reading PPM data.\n");
+            exit(1);
+        }
 
-    fread(image.data, sizeof(RGBColor), image.width * image.height, filePtr);
+        int x = 0;
+        int wordIdx = 0;
+        while (wordsInLine[wordIdx] != NULL) {
+            unsigned char red = convertStringToInt(wordsInLine[wordIdx]);
+            wordIdx++;
+            unsigned char green = convertStringToInt(wordsInLine[wordIdx]);
+            wordIdx++;
+            unsigned char blue = convertStringToInt(wordsInLine[wordIdx]);
+            image.data[y][x] = (RGBColor) {
+                    .red = red,
+                    .green = green,
+                    .blue = blue,
+            };
+            wordIdx++;
+            x++;
+        }
+        y++;
+    }
 
     fclose(filePtr);
     return image;

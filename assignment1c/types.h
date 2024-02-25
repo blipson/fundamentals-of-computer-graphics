@@ -92,7 +92,7 @@ typedef struct {
     int width;
     int height;
     int maxColor;
-    RGBColor* data;
+    RGBColor** data;
 } PPMImage;
 
 typedef struct {
