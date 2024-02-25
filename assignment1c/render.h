@@ -397,11 +397,13 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
     );
 
     MaterialColor mtlColor;
+    PPMImage texture;
     Vector3 surfaceNormal;
 
     if (intersection.closestSphereIdx != -1 && intersection.closestObject == SPHERE) {
         Sphere sphere = scene.spheres[intersection.closestSphereIdx];
         mtlColor = scene.mtlColors[sphere.mtlColorIdx];
+        texture = scene.textures[sphere.textureIdx];
         surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
     } else if (intersection.closestEllipsoidIdx != -1 && intersection.closestObject == ELLIPSOID) {
         Ellipsoid ellipsoid = scene.ellipsoids[intersection.closestEllipsoidIdx];

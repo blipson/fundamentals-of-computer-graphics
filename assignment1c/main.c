@@ -12,7 +12,6 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
     }
 }
 
-
 int main(int argc, char* argv[]) {
     checkArgs(argc, argv);
     bool softShadows = strcmp(argv[1], "-s") == 0;
@@ -42,7 +41,12 @@ int main(int argc, char* argv[]) {
             .vertexNormalCount = 0,
             .faces = (Face*) malloc(INITIAL_FACE_COUNT * sizeof(Face)),
             .faceCount = 0,
+            .textures = (PPMImage*) malloc(INITIAL_TEXTURE_COUNT * sizeof (PPMImage)),
+            .textureCount = 0,
+            .textureAllocationCount = 1,
     };
+
+    // todo: check if mallocs were successful
 
     int line = 0;
     readSceneSetup(inputFileWordsByLine, &line, &scene, softShadows);
@@ -76,6 +80,7 @@ int main(int argc, char* argv[]) {
 
     FILE* outputFilePtr = openOutputFile(softShadows ? argv[2] : argv[1]);
     writeHeader(outputFilePtr, scene.imSize.width, scene.imSize.height);
+
     render(outputFilePtr, scene, viewParameters, parallel);
 
     freeInput(scene);

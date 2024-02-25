@@ -47,12 +47,14 @@ typedef struct {
     Vector3 center;
     float radius;
     int mtlColorIdx;
+    int textureIdx;
 } Sphere;
 
 typedef struct {
     Vector3 center;
     Vector3 radius;
     int mtlColorIdx;
+    int textureIdx;
 } Ellipsoid;
 
 typedef struct {
@@ -83,7 +85,15 @@ typedef struct {
     int vn2;
     int vn3;
     int mtlColorIdx;
+    int textureIdx;
 } Face;
+
+typedef struct {
+    int width;
+    int height;
+    int maxColor;
+    RGBColor* data;
+} PPMImage;
 
 typedef struct {
     Vector3 eye;
@@ -109,6 +119,9 @@ typedef struct {
     int vertexNormalCount;
     Face* faces;
     int faceCount;
+    PPMImage* textures;
+    int textureCount;
+    int textureAllocationCount;
 } Scene;
 
 typedef struct {

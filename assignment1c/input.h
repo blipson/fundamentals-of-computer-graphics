@@ -11,10 +11,12 @@
 
 #define MAX_LINE_COUNT 50000
 #define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
-#define MAX_LINE_LENGTH 50
-#define KEYWORD_COUNT 17
+#define MAX_INPUT_LINE_LENGTH 50
+#define MAX_TEXTURE_LINE_LENGTH 50000
+#define KEYWORD_COUNT 18
 #define INITIAL_LIGHT_COUNT 10
 #define INITIAL_MTLCOLOR_COUNT 10
+#define INITIAL_TEXTURE_COUNT 10
 #define INITIAL_SPHERE_COUNT 10
 #define INITIAL_ELLIPSOID_COUNT 10
 #define INITIAL_VERTEX_COUNT 1000
@@ -37,7 +39,7 @@ char** readLine(char* line, char** wordsInLine) {
     char* token = strtok(line, delimiters);
     int wordIdx = 0;
 
-    while (token != NULL && wordIdx < MAX_WORDS_PER_LINE) {
+    while (token != NULL && wordIdx < MAX_WORDS_PER_LINE - 1) {
         // Remove trailing whitespace
         size_t length = strlen(token);
         while (length > 0 && isspace(token[length - 1])) {
@@ -69,7 +71,12 @@ char** readLine(char* line, char** wordsInLine) {
 }
 
 bool isKeyword(const char* target) {
-    char* keywords[KEYWORD_COUNT] = {"eye", "viewdir", "updir", "hfov", "vfov", "imsize", "bkgcolor", "mtlcolor", "sphere", "parallel", "ellipse", "light", "depthcueing", "attlight", "v", "vn", "f"};
+    char* keywords[KEYWORD_COUNT] = {
+            "eye", "viewdir", "updir", "hfov", "vfov",
+            "imsize", "bkgcolor", "mtlcolor", "sphere",
+            "parallel", "ellipse", "light", "depthcueing",
+            "attlight", "v", "vn", "f", "texture",
+    };
     for (size_t i = 0; i < KEYWORD_COUNT; i++) {
         if (target == NULL || strcmp(target, keywords[i]) == 0) {
             return true;
@@ -98,10 +105,10 @@ char*** readInputFile(char* argv[], bool softShadows) {
             exit(-1);
         }
 
-        char currentLine[MAX_LINE_LENGTH];
+        char currentLine[MAX_INPUT_LINE_LENGTH];
         int line = 0;
         while ((inputFileWordsByLine[line] = malloc(MAX_WORDS_PER_LINE * sizeof(char*))) != NULL &&
-               fgets(currentLine, MAX_LINE_LENGTH, inputFilePtr) != NULL) {
+               fgets(currentLine, MAX_INPUT_LINE_LENGTH, inputFilePtr) != NULL) {
             if (currentLine[0] == '\n' || currentLine[0] == '\0' || currentLine[0] == '\r') {
                 continue;
             }
@@ -223,7 +230,11 @@ void readSceneSetup(
         bool softShadows
 ) {
     int lightAllocationCount = 1;
-    while (inputFileWordsByLine[*line][0] != NULL && strcmp(inputFileWordsByLine[*line][0], "mtlcolor") != 0 && strcmp(inputFileWordsByLine[*line][0], "v") != 0) {
+    while (inputFileWordsByLine[*line][0] != NULL &&
+        strcmp(inputFileWordsByLine[*line][0], "mtlcolor") != 0 &&
+        strcmp(inputFileWordsByLine[*line][0], "v") != 0 &&
+        strcmp(inputFileWordsByLine[*line][0], "texture") != 0
+    ) {
         if (strcmp(inputFileWordsByLine[*line][0], "eye") == 0) {
             checkValues(inputFileWordsByLine[*line], 3, "eye");
             scene->eye.x = convertStringToFloat(inputFileWordsByLine[*line][1]);
@@ -298,7 +309,7 @@ void readVertex(char** const* inputFileWordsByLine, Scene* scene, int objectLine
     scene->vertexCount++;
 }
 
-void readVertexNormal(char** const* inputFileWordsByLine, Scene* scene, int objectLine, int* vertexNormalAllocationCount) {
+void readVertexNormal(char** const* inputFileWordsByLine, Scene* scene, int line, int* vertexNormalAllocationCount) {
     if (scene->vertexNormalCount == 0) {
         (*vertexNormalAllocationCount) = 1;
         scene->vertexNormals = (Vector3*) malloc(INITIAL_VERTEX_NORMAL_COUNT * sizeof(Vector3));
@@ -311,11 +322,11 @@ void readVertexNormal(char** const* inputFileWordsByLine, Scene* scene, int obje
         }
         scene->vertexNormals = newVertexNormals;
     }
-    checkValues(inputFileWordsByLine[objectLine], 3, "vn");
+    checkValues(inputFileWordsByLine[line], 3, "vn");
     scene->vertexNormals[scene->vertexNormalCount] = (Vector3) {
-            .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
-            .y = convertStringToFloat(inputFileWordsByLine[objectLine][2]),
-            .z = convertStringToFloat(inputFileWordsByLine[objectLine][3])
+            .x = convertStringToFloat(inputFileWordsByLine[line][1]),
+            .y = convertStringToFloat(inputFileWordsByLine[line][2]),
+            .z = convertStringToFloat(inputFileWordsByLine[line][3])
     };
     scene->vertexNormalCount++;
 }
@@ -356,20 +367,70 @@ void parseFaceValues(char** objectLine, int faceIdx, const Scene* scene, int obj
     }
 }
 
+PPMImage readPPM(const char *filename) {
+    FILE *filePtr = fopen(filename, "rb");
+    if (filePtr == NULL) {
+        fprintf(stderr, "Error opening file: %s.\n", filename);
+        exit(1);
+    }
+
+    // todo: default
+    PPMImage image;
+
+    char headerLine[MAX_INPUT_LINE_LENGTH];
+    fgets(headerLine, MAX_INPUT_LINE_LENGTH, filePtr);
+    char* wordsInHeaderLine[MAX_WORDS_PER_LINE];
+    readLine(headerLine, wordsInHeaderLine);
+    if (strcmp(wordsInHeaderLine[0], "P3") != 0) {
+        fprintf(stderr, "Invalid PPM file format.\n");
+        exit(1);
+    }
+    // todo: check header function to check 3 values are there
+    image.width = convertStringToInt(wordsInHeaderLine[1]);
+    image.height = convertStringToInt(wordsInHeaderLine[2]);
+    image.maxColor = convertStringToInt(wordsInHeaderLine[3]);
+    image.data = (RGBColor*) malloc(image.width * image.height * sizeof(RGBColor));
+    if (!image.data) {
+        fprintf(stderr, "Memory allocation error\n");
+        exit(1);
+    }
+
+    int line = 0;
+    char currentLine[MAX_TEXTURE_LINE_LENGTH];
+    while (fgets(currentLine, MAX_TEXTURE_LINE_LENGTH, filePtr) != NULL) {
+        char* wordsInLine[MAX_WORDS_PER_LINE];
+        readLine(currentLine, wordsInLine);
+        image.data[line] = (RGBColor) {
+                .red = convertStringToInt(wordsInLine[0]),
+                .green = convertStringToInt(wordsInLine[1]),
+                .blue = convertStringToInt(wordsInLine[2]),
+        };
+        line++;
+    }
+
+    fread(image.data, sizeof(RGBColor), image.width * image.height, filePtr);
+
+    fclose(filePtr);
+    return image;
+}
+
 void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
+    // Q: is this the best way to keep track of the allocations?
     int mtlColorAllocationCount = 1;
     int sphereAllocationCount = 1;
     int vertexAllocationCount = 1;
     int vertexNormalAllocationCount = 0;
     int faceAllocationCount = 1;
     int ellipsoidAllocationCount = 1;
+
+    // todo: break each of these out into a method.
     while (inputFileWordsByLine[*line][0] != NULL) {
         if (strcmp(inputFileWordsByLine[*line][0], "mtlcolor") == 0) {
             if (scene->mtlColorCount >= INITIAL_MTLCOLOR_COUNT * mtlColorAllocationCount) {
                 mtlColorAllocationCount++;
                 MaterialColor* newMtlColors = (MaterialColor*) realloc(scene->mtlColors, (INITIAL_MTLCOLOR_COUNT * mtlColorAllocationCount) * sizeof(MaterialColor));
                 if (newMtlColors == NULL) {
-                    fprintf(stderr, "Memory allocation failed for material color.");
+                    fprintf(stderr, "Memory allocation failed for material colors.");
                     exit(-1);
                 }
                 scene->mtlColors = newMtlColors;
@@ -389,99 +450,101 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
             scene->mtlColors[scene->mtlColorCount].diffuseCoefficient = convertStringToFloat(inputFileWordsByLine[*line][8]);
             scene->mtlColors[scene->mtlColorCount].specularCoefficient = convertStringToFloat(inputFileWordsByLine[*line][9]);
             scene->mtlColors[scene->mtlColorCount].specularExponent = convertStringToFloat(inputFileWordsByLine[*line][10]);
-
-            int objectLine = (*line) + 1;
-            while (inputFileWordsByLine[objectLine][0] != NULL &&
-                   strcmp(inputFileWordsByLine[objectLine][0], "mtlcolor") != 0) {
-                if (strcmp(inputFileWordsByLine[objectLine][0], "sphere") == 0) {
-                    if (scene->sphereCount >= INITIAL_SPHERE_COUNT * sphereAllocationCount) {
-                        sphereAllocationCount++;
-                        Sphere* newSpheres = (Sphere*) realloc(scene->spheres, (INITIAL_SPHERE_COUNT * sphereAllocationCount) * sizeof(Sphere));
-                        if (newSpheres == NULL) {
-                            fprintf(stderr, "Memory allocation failed for spheres.");
-                            exit(-1);
-                        }
-                        scene->spheres = newSpheres;
-                    }
-                    checkValues(inputFileWordsByLine[objectLine], 4, "sphere");
-                    Vector3 spherePosition = {
-                            .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
-                            .y = convertStringToFloat(inputFileWordsByLine[objectLine][2]),
-                            .z = convertStringToFloat(inputFileWordsByLine[objectLine][3])
-                    };
-                    scene->spheres[scene->sphereCount].center = spherePosition;
-                    scene->spheres[scene->sphereCount].radius = convertStringToFloat(inputFileWordsByLine[objectLine][4]);
-                    scene->spheres[scene->sphereCount].mtlColorIdx = scene->mtlColorCount;
-                    scene->sphereCount++;
-                } else if (strcmp(inputFileWordsByLine[objectLine][0], "ellipse") == 0) {
-                    if (scene->ellipsoidCount >= INITIAL_ELLIPSOID_COUNT * ellipsoidAllocationCount) {
-                        ellipsoidAllocationCount++;
-                        Ellipsoid* newEllipsoids = (Ellipsoid*) realloc(scene->ellipsoids, (INITIAL_ELLIPSOID_COUNT * ellipsoidAllocationCount) * sizeof(Ellipsoid));
-                        if (newEllipsoids == NULL) {
-                            fprintf(stderr, "Memory allocation failed for ellipsoids.");
-                            exit(-1);
-                        }
-                        scene->ellipsoids = newEllipsoids;
-                    }
-                    checkValues(inputFileWordsByLine[objectLine], 6, "ellipse");
-                    Vector3 ellipsoidCenter = {
-                            .x = convertStringToFloat(inputFileWordsByLine[objectLine][1]),
-                            .y = convertStringToFloat(inputFileWordsByLine[objectLine][2]),
-                            .z = convertStringToFloat(inputFileWordsByLine[objectLine][3])
-                    };
-                    Vector3 ellipsoidRadius = {
-                            .x = convertStringToFloat(inputFileWordsByLine[objectLine][4]),
-                            .y = convertStringToFloat(inputFileWordsByLine[objectLine][5]),
-                            .z = convertStringToFloat(inputFileWordsByLine[objectLine][6])
-                    };
-                    scene->ellipsoids[scene->ellipsoidCount].center = ellipsoidCenter;
-                    scene->ellipsoids[scene->ellipsoidCount].radius = ellipsoidRadius;
-                    scene->ellipsoids[scene->ellipsoidCount].mtlColorIdx = scene->mtlColorCount;
-                    scene->ellipsoidCount++;
-                } else if (strcmp(inputFileWordsByLine[objectLine][0], "v") == 0) {
-                    readVertex(inputFileWordsByLine, scene, objectLine, &vertexAllocationCount);
-                } else if (strcmp(inputFileWordsByLine[objectLine][0], "vn") == 0) {
-                    readVertexNormal(inputFileWordsByLine, scene, objectLine, &vertexNormalAllocationCount);
-                } else if (strcmp(inputFileWordsByLine[objectLine][0], "f") == 0) {
-                    if (scene->faceCount >= INITIAL_FACE_COUNT * faceAllocationCount) {
-                        faceAllocationCount++;
-                        Face * newFaces = (Face *) realloc(scene->faces, (INITIAL_FACE_COUNT * faceAllocationCount) * sizeof(Face));
-                        if (newFaces == NULL) {
-                            fprintf(stderr, "Memory allocation failed for faces.");
-                            exit(-1);
-                        }
-                        scene->faces = newFaces;
-                    }
-                    checkValues(inputFileWordsByLine[objectLine], 3, "f");
-                    scene->faces[scene->faceCount] = (Face) {
-                            .v1 = 0,
-                            .v2 = 0,
-                            .v3 = 0,
-                            .vt1 = 0,
-                            .vt2 = 0,
-                            .vt3 = 0,
-                            .vn1 = 0,
-                            .vn2 = 0,
-                            .vn3 = 0,
-                            .mtlColorIdx = scene->mtlColorCount
-                    };
-                    parseFaceValues(inputFileWordsByLine[objectLine], 1, scene, objectLine);
-                    parseFaceValues(inputFileWordsByLine[objectLine], 2, scene, objectLine);
-                    parseFaceValues(inputFileWordsByLine[objectLine], 3, scene, objectLine);
-                    scene->faceCount++;
-                }
-                objectLine++;
-            }
             scene->mtlColorCount++;
-            *line = objectLine;
+        } else if (strcmp(inputFileWordsByLine[*line][0], "texture") == 0) {
+            if (scene->textureCount >= INITIAL_TEXTURE_COUNT * scene->textureAllocationCount) {
+                scene->textureAllocationCount++;
+                PPMImage* newTextures = (PPMImage*) realloc(scene->textures, (INITIAL_TEXTURE_COUNT * scene->textureAllocationCount) * sizeof(PPMImage));
+                if (newTextures == NULL) {
+                    fprintf(stderr, "Memory allocation failed for textures.");
+                    exit(-1);
+                }
+                scene->textures = newTextures;
+            }
+            checkValues(inputFileWordsByLine[*line], 1, "texture");
+            scene->textures[scene->textureCount] = readPPM(inputFileWordsByLine[*line][1]);
+            scene->textureCount++;
+        } else if (strcmp(inputFileWordsByLine[*line][0], "sphere") == 0) {
+            if (scene->sphereCount >= INITIAL_SPHERE_COUNT * sphereAllocationCount) {
+                sphereAllocationCount++;
+                Sphere* newSpheres = (Sphere*) realloc(scene->spheres, (INITIAL_SPHERE_COUNT * sphereAllocationCount) * sizeof(Sphere));
+                if (newSpheres == NULL) {
+                    fprintf(stderr, "Memory allocation failed for spheres.");
+                    exit(-1);
+                }
+                scene->spheres = newSpheres;
+            }
+            checkValues(inputFileWordsByLine[*line], 4, "sphere");
+            Vector3 spherePosition = {
+                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
+                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
+                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
+            };
+            scene->spheres[scene->sphereCount].center = spherePosition;
+            scene->spheres[scene->sphereCount].radius = convertStringToFloat(inputFileWordsByLine[*line][4]);
+            scene->spheres[scene->sphereCount].mtlColorIdx = scene->mtlColorCount - 1;
+            scene->spheres[scene->sphereCount].textureIdx = scene->textureCount - 1;
+            scene->sphereCount++;
+        } else if (strcmp(inputFileWordsByLine[*line][0], "ellipse") == 0) {
+            if (scene->ellipsoidCount >= INITIAL_ELLIPSOID_COUNT * ellipsoidAllocationCount) {
+                ellipsoidAllocationCount++;
+                Ellipsoid* newEllipsoids = (Ellipsoid*) realloc(scene->ellipsoids, (INITIAL_ELLIPSOID_COUNT * ellipsoidAllocationCount) * sizeof(Ellipsoid));
+                if (newEllipsoids == NULL) {
+                    fprintf(stderr, "Memory allocation failed for ellipsoids.");
+                    exit(-1);
+                }
+                scene->ellipsoids = newEllipsoids;
+            }
+            checkValues(inputFileWordsByLine[*line], 6, "ellipse");
+            Vector3 ellipsoidCenter = {
+                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
+                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
+                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
+            };
+            Vector3 ellipsoidRadius = {
+                    .x = convertStringToFloat(inputFileWordsByLine[*line][4]),
+                    .y = convertStringToFloat(inputFileWordsByLine[*line][5]),
+                    .z = convertStringToFloat(inputFileWordsByLine[*line][6])
+            };
+            scene->ellipsoids[scene->ellipsoidCount].center = ellipsoidCenter;
+            scene->ellipsoids[scene->ellipsoidCount].radius = ellipsoidRadius;
+            scene->ellipsoids[scene->ellipsoidCount].mtlColorIdx = scene->mtlColorCount - 1;
+            scene->ellipsoids[scene->ellipsoidCount].textureIdx = scene->textureCount - 1;
+            scene->ellipsoidCount++;
         } else if (strcmp(inputFileWordsByLine[*line][0], "v") == 0) {
             readVertex(inputFileWordsByLine, scene, *line, &vertexAllocationCount);
-            (*line)++;
         } else if (strcmp(inputFileWordsByLine[*line][0], "vn") == 0) {
             readVertexNormal(inputFileWordsByLine, scene, *line, &vertexNormalAllocationCount);
-        } else {
-            (*line)++;
+        } else if (strcmp(inputFileWordsByLine[*line][0], "f") == 0) {
+            if (scene->faceCount >= INITIAL_FACE_COUNT * faceAllocationCount) {
+                faceAllocationCount++;
+                Face * newFaces = (Face *) realloc(scene->faces, (INITIAL_FACE_COUNT * faceAllocationCount) * sizeof(Face));
+                if (newFaces == NULL) {
+                    fprintf(stderr, "Memory allocation failed for faces.");
+                    exit(-1);
+                }
+                scene->faces = newFaces;
+            }
+            checkValues(inputFileWordsByLine[*line], 3, "f");
+            scene->faces[scene->faceCount] = (Face) {
+                    .v1 = 0,
+                    .v2 = 0,
+                    .v3 = 0,
+                    .vt1 = 0,
+                    .vt2 = 0,
+                    .vt3 = 0,
+                    .vn1 = 0,
+                    .vn2 = 0,
+                    .vn3 = 0,
+                    .mtlColorIdx = scene->mtlColorCount - 1,
+                    .textureIdx = scene->textureCount - 1,
+            };
+            parseFaceValues(inputFileWordsByLine[*line], 1, scene, *line);
+            parseFaceValues(inputFileWordsByLine[*line], 2, scene, *line);
+            parseFaceValues(inputFileWordsByLine[*line], 3, scene, *line);
+            scene->faceCount++;
         }
+        (*line)++;
     }
 }
 
@@ -508,28 +571,29 @@ void printScene(Scene scene) {
                    scene.mtlColors[mtlColorIdx].specularCoefficient,
                    scene.mtlColors[mtlColorIdx].specularExponent
             );
-            if (scene.spheres != NULL) {
-                for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
-                    if (scene.spheres[sphereIdx].mtlColorIdx == mtlColorIdx) {
-                        printf("sphere: %f %f %f %f\n", scene.spheres[sphereIdx].center.x, scene.spheres[sphereIdx].center.y, scene.spheres[sphereIdx].center.z, scene.spheres[sphereIdx].radius);
-                    }
-                }
-            }
-            if (scene.ellipsoids != NULL) {
-                for (int ellipsoidIdx = 0; ellipsoidIdx < scene.ellipsoidCount; ellipsoidIdx++) {
-                    if (scene.ellipsoids[ellipsoidIdx].mtlColorIdx == mtlColorIdx) {
-                        printf(
-                                "ellipse: %f %f %f %f %f %f\n",
-                                scene.ellipsoids[ellipsoidIdx].center.x,
-                                scene.ellipsoids[ellipsoidIdx].center.y,
-                                scene.ellipsoids[ellipsoidIdx].center.z,
-                                scene.ellipsoids[ellipsoidIdx].radius.x,
-                                scene.ellipsoids[ellipsoidIdx].radius.y,
-                                scene.ellipsoids[ellipsoidIdx].radius.z
-                        );
-                    }
-                }
-            }
+        }
+    }
+    if (scene.textures != NULL) {
+        for (int textureIdx = 0; textureIdx < scene.textureCount; textureIdx++) {
+            printf("texture: %d %d %d", scene.textures[scene.textureCount].width, scene.textures[scene.textureCount].height, scene.textures[scene.textureCount].maxColor);
+        }
+    }
+    if (scene.spheres != NULL) {
+        for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
+            printf("sphere: %f %f %f %f\n", scene.spheres[sphereIdx].center.x, scene.spheres[sphereIdx].center.y, scene.spheres[sphereIdx].center.z, scene.spheres[sphereIdx].radius);
+        }
+    }
+    if (scene.ellipsoids != NULL) {
+        for (int ellipsoidIdx = 0; ellipsoidIdx < scene.ellipsoidCount; ellipsoidIdx++) {
+            printf(
+                    "ellipse: %f %f %f %f %f %f\n",
+                    scene.ellipsoids[ellipsoidIdx].center.x,
+                    scene.ellipsoids[ellipsoidIdx].center.y,
+                    scene.ellipsoids[ellipsoidIdx].center.z,
+                    scene.ellipsoids[ellipsoidIdx].radius.x,
+                    scene.ellipsoids[ellipsoidIdx].radius.y,
+                    scene.ellipsoids[ellipsoidIdx].radius.z
+            );
         }
     }
     if (scene.vertexes != NULL) {
@@ -556,6 +620,9 @@ void freeInput(Scene scene) {
     }
     if (scene.mtlColors != NULL) {
         free(scene.mtlColors);
+    }
+    if (scene.textures != NULL) {
+        free(scene.textures);
     }
     if (scene.spheres != NULL) {
         free(scene.spheres);

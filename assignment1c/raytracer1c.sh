@@ -2,17 +2,19 @@
 
 make
 
-directory="./tests/"
+testDirectory="./tests/"
+textureDirectory="./textures/"
 
-if [ -d "$directory" ]; then
-    rm -f "$directory"*.ppm
-    for file in "$directory"*.txt; do
+if [ -d "$testDirectory" ]; then
+    rm -f "$testDirectory"*.ppm
+    cp "$textureDirectory"*.ppm "$testDirectory"
+    for file in "$testDirectory"*.txt; do
         if [ -f "$file" ]; then
             echo "Rendering $file..."
             if [[ "$file" == "./tests/softshadows.txt" ]]; then
               echo "Skipping softshadows.txt..."
 #              ./raytracer1c -s "$file"
-            elif [[ "$file" != "./tests/showcase.txt" ]]; then
+            elif [[ "$file" != "./tests/teapot.txt" && "$file" != "./tests/cow.txt" && "$file" != "./tests/showcase.txt" ]]; then
               ./raytracer1c "$file"
             fi
         else
@@ -20,5 +22,5 @@ if [ -d "$directory" ]; then
         fi
     done
 else
-    echo "Directory $directory does not exist."
+    echo "Directory $testDirectory does not exist."
 fi
