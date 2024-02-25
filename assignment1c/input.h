@@ -174,8 +174,11 @@ unsigned char convertFloatToUnsignedChar(float normalizedValue) {
     } else if (normalizedValue > 1.0f) {
         normalizedValue = 1.0f;
     }
-    unsigned char result = (unsigned char) (normalizedValue * 255.0f);
-    return result;
+    return (unsigned char) (normalizedValue * 255.0f);;
+}
+
+float convertUnsignedCharToFloat(unsigned char value) {
+    return (float) value;
 }
 
 void checkValues(char** line, int expectedNumber, char* type) {
@@ -415,6 +418,9 @@ PPMImage readPPM(const char *filename) {
             unsigned char green = convertStringToInt(wordsInLine[wordIdx]);
             wordIdx++;
             unsigned char blue = convertStringToInt(wordsInLine[wordIdx]);
+            if (x > 1540 && x < 1550 && y > 370 && y < 380) {
+                int t = 29384;
+            }
             image.data[y][x] = (RGBColor) {
                     .red = red,
                     .green = green,
@@ -591,7 +597,7 @@ void printScene(Scene scene) {
     }
     if (scene.textures != NULL) {
         for (int textureIdx = 0; textureIdx < scene.textureCount; textureIdx++) {
-            printf("texture: %d %d %d", scene.textures[scene.textureCount].width, scene.textures[scene.textureCount].height, scene.textures[scene.textureCount].maxColor);
+            printf("texture: %d %d %d\n", scene.textures[textureIdx].width, scene.textures[textureIdx].height, scene.textures[textureIdx].maxColor);
         }
     }
     if (scene.spheres != NULL) {

@@ -183,6 +183,14 @@ RGBColor convertColorToRGBColor(Vector3 color) {
     };
 }
 
+Vector3 convertRGBColorToColor(RGBColor rgbColor) {
+    return (Vector3) {
+            .x = convertUnsignedCharToFloat(rgbColor.red) / 255.0f,
+            .y = convertUnsignedCharToFloat(rgbColor.green) / 255.0f,
+            .z = convertUnsignedCharToFloat(rgbColor.blue) / 255.0f,
+    };
+}
+
 void checkSphereIntersection(Ray* ray, Scene* scene, int excludeIdx, int sphereIdx, float* closestIntersection, enum ObjectType* closestObject, int* closestSphereIdx) {
     if (sphereIdx != excludeIdx) {
         Sphere sphere = (*scene).spheres[sphereIdx];
@@ -386,7 +394,7 @@ Vector3 randomUnitVector() {
     return (Vector3) {x, y, z};
 }
 
-RGBColor shadeRay(Ray viewingRay, Scene scene) {
+RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
     Intersection intersection = castRay(viewingRay, scene, -1);
     Vector3 intersectionPoint = add(
             viewingRay.origin,
@@ -405,6 +413,13 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
         mtlColor = scene.mtlColors[sphere.mtlColorIdx];
         texture = scene.textures[sphere.textureIdx];
         surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
+        if (texture.data != NULL) {
+            float phi = acosf(surfaceNormal.z);
+            float theta = atan2f(surfaceNormal.y, surfaceNormal.x);
+            float v = phi / (float) M_PI;
+            float u = max(theta/(2 * (float) M_PI), (theta + 2 * (float) M_PI) / (2 * (float) M_PI));
+            mtlColor.diffuseColor = convertRGBColorToColor(texture.data[(int) (v * (float) texture.height)][(int) (u * (float) texture.width)]);
+        }
     } else if (intersection.closestEllipsoidIdx != -1 && intersection.closestObject == ELLIPSOID) {
         Ellipsoid ellipsoid = scene.ellipsoids[intersection.closestEllipsoidIdx];
         mtlColor = scene.mtlColors[ellipsoid.mtlColorIdx];
