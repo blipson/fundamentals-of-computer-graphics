@@ -381,8 +381,12 @@ PPMImage readPPM(const char *filename) {
         exit(1);
     }
 
-    // todo: default
-    PPMImage image;
+    PPMImage image = (PPMImage) {
+        .width = 0,
+        .height = 0,
+        .maxColor = 0,
+        .data = NULL,
+    };
 
     char headerLine[MAX_INPUT_LINE_LENGTH];
     fgets(headerLine, MAX_INPUT_LINE_LENGTH, filePtr);
@@ -392,7 +396,10 @@ PPMImage readPPM(const char *filename) {
         fprintf(stderr, "Invalid PPM file format.\n");
         exit(1);
     }
-    // todo: check header function to check 3 values are there
+    if (wordsInHeaderLine[1] == NULL || wordsInHeaderLine[2] == NULL || wordsInHeaderLine[3] == NULL) {
+        fprintf(stderr, "Invalid PPM file header format.\n");
+        exit(-1);
+    }
     image.width = convertStringToInt(wordsInHeaderLine[1]);
     image.height = convertStringToInt(wordsInHeaderLine[2]);
     image.maxColor = convertStringToInt(wordsInHeaderLine[3]);
@@ -401,7 +408,6 @@ PPMImage readPPM(const char *filename) {
         fprintf(stderr, "Memory allocation error while reading PPM data.\n");
         exit(1);
     }
-    // todo: handle single value on line. Line breaks inside pixels.
     int y = 0;
     char currentLine[MAX_TEXTURE_LINE_LENGTH];
     while (fgets(currentLine, MAX_TEXTURE_LINE_LENGTH, filePtr) != NULL) {
@@ -416,6 +422,7 @@ PPMImage readPPM(const char *filename) {
         int x = 0;
         int wordIdx = 0;
         while (wordsInLine[wordIdx] != NULL) {
+            // todo: handle single value on line. Line breaks inside pixels.
             unsigned char red = convertStringToInt(wordsInLine[wordIdx]);
             wordIdx++;
             if (wordsInLine[wordIdx] == NULL) {

@@ -14,7 +14,7 @@ if [ -d "$testDirectory" ]; then
             if [[ "$file" == "./tests/softshadows.txt" ]]; then
               echo "Skipping softshadows.txt..."
 #              ./raytracer1c -s "$file"
-            elif [[ "$file" != "./tests/teapot.txt" && "$file" != "./tests/cow.txt" && "$file" != "./tests/showcase.txt" ]]; then
+            elif [[ "$file" != "./tests/cow.txt" && "$file" != "./tests/showcase.txt" ]]; then
               ./raytracer1c "$file"
             fi
         else

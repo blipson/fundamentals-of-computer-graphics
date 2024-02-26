@@ -432,8 +432,8 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
             float theta = atan2f(surfaceNormal.y, surfaceNormal.x);
             float v = phi / (float) M_PI;
             float u = max(theta/(2.0f * (float) M_PI), (theta + 2.0f * (float) M_PI) / (2.0f * (float) M_PI));
-            int x = (int) (u * (float) texture.width);
-            int y = (int) (v * (float) texture.height);
+            int x = (int) roundf(u * (float) (texture.width-1));
+            int y = (int) roundf(v * (float) (texture.height-1));
 
             mtlColor.diffuseColor = convertRGBColorToColor(texture.data[y][x]);
             if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
@@ -476,13 +476,13 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
         if (scene.vertexNormals == NULL) {
             surfaceNormal = normalize(intersection.closestFaceIntersection.n);
         } else {
-                Vector3 n0 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn1 - 1]);
-                Vector3 n1 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn2 - 1]);
-                Vector3 n2 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn3 - 1]);
-                Vector3 alphaComponent = multiply(n0, intersection.closestFaceIntersection.alpha);
-                Vector3 betaComponent = multiply(n1, intersection.closestFaceIntersection.beta);
-                Vector3 gammaComponent = multiply(n2, intersection.closestFaceIntersection.gamma);
-                surfaceNormal = normalize(add(alphaComponent, add(betaComponent, gammaComponent)));
+            Vector3 n0 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn1 - 1]);
+            Vector3 n1 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn2 - 1]);
+            Vector3 n2 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn3 - 1]);
+            Vector3 alphaComponent = multiply(n0, intersection.closestFaceIntersection.alpha);
+            Vector3 betaComponent = multiply(n1, intersection.closestFaceIntersection.beta);
+            Vector3 gammaComponent = multiply(n2, intersection.closestFaceIntersection.gamma);
+            surfaceNormal = normalize(add(alphaComponent, add(betaComponent, gammaComponent)));
         }
 
         if (scene.vertexTextures != NULL && texture.height > 0 && texture.width > 0 && texture.maxColor == 255 && texture.data != NULL) {
@@ -506,6 +506,8 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
             int x = (int) roundf(uFractional * ((float) texture.height - 2.0f));
             int y = (int) roundf(vFractional * ((float) texture.height - 2.0f));
 
+            // todo: check vn1 vn2 vn3 for 0 as well
+
             if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
                 Vector3 m = convertNormalToVector(normal.data[y][x]);
                 Vector3 p0 = scene.vertexes[scene.faces[intersection.closestFaceIntersection.faceIdx].v1 - 1];
@@ -514,11 +516,16 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
 
                 Vector3 e1 = subtract(p1, p0);
                 Vector3 e2 = subtract(p2, p0);
-                float denominator = (((-1.0f * u1) * v2) + (u2 * v1));
-                float d = denominator > 0.0f ? 1.0f/denominator : 2.0f;
-                Vector3 T = multiply(add(multiply(e1, (-1.0f * v2)), multiply(e2, v1)), d);
-                Vector3 B = multiply(add(multiply(e1, (1.0f * u2)), multiply(e2, u1)), d);
-                if (isnan(dot(T, B))) {
+
+                float deltaU1 = u1 - u0;
+                float deltaU2 = u2 - u0;
+                float deltaV1 = v1 - v0;
+                float deltaV2 = v2 - v0;
+
+                float d = 1.0f/(((-1.0f * deltaU1) * deltaV2) + (deltaU2 * deltaV1));
+                Vector3 T = normalize(multiply(add(multiply(e1, (-1.0f * v2)), multiply(e2, v1)), d));
+                Vector3 B = normalize(multiply(add(multiply(e1, (-1.0f * u2)), multiply(e2, u1)), d));
+                if (dot(T, B) != 0.0f) {
                     printf("%f\n", dot(T, B));
                 }
                 // check dot(T, B) = 0
