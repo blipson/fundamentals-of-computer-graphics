@@ -7,7 +7,7 @@ bkgcolor 0.2 0.2 0.2
 light 0 -30 35 1 1
 
 mtlcolor 0 0 1 1 1 1 0.1 0.2 0.5 30
-texture tests/tiles.ppm
+texture tests/pavingstones.ppm
 v 7.000000 0.000001 12.000000
 v 6.909840 -1.148559 11.999999
 v 6.840370 -1.137012 12.177186

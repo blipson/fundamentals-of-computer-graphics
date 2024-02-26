@@ -18,7 +18,7 @@ void progressBar(int total, int current) {
     printf("] %.2f%%\r", progress * 100);
     fflush(stdout);
 }
-
+// todo: seg fault when texture is there but normal isnt
 void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, bool parallel) {
     int i = 0;
     for (int y = 0; y < scene.imSize.height; y++) {
@@ -26,7 +26,7 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
             Ray viewingRay = traceRay(scene, viewingWindowLocation, parallel);
             writePixel(outputFilePtr, shadeRay(viewingRay, scene, x, y), x, scene.imSize.width);
-//             progressBar(scene.imSize.width * scene.imSize.height, i);
+            // progressBar(scene.imSize.width * scene.imSize.height, i);
             i++;
         }
     }
