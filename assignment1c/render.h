@@ -427,7 +427,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
         PPMImage texture = scene.textures[sphere.textureIdx];
         PPMImage normal = scene.normals[sphere.normalIdx];
         surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
-        if (texture.data != NULL) {
+        if (texture.height > 0 && texture.width > 0 && texture.maxColor == 255 && texture.data != NULL) {
             float phi = acosf(surfaceNormal.z);
             float theta = atan2f(surfaceNormal.y, surfaceNormal.x);
             float v = phi / (float) M_PI;
@@ -436,7 +436,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
             int y = (int) (v * (float) texture.height);
 
             mtlColor.diffuseColor = convertRGBColorToColor(texture.data[y][x]);
-            if (normal.data != NULL) {
+            if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
                 Vector3 m = convertNormalToVector(normal.data[y][x]);
                 Vector3 N = (Vector3) {
                     .x = -1.0f * sinf(theta),
@@ -485,7 +485,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
                 surfaceNormal = normalize(add(alphaComponent, add(betaComponent, gammaComponent)));
         }
 
-        if (scene.vertexTextures != NULL && texture.data != NULL) {
+        if (scene.vertexTextures != NULL && texture.height > 0 && texture.width > 0 && texture.maxColor == 255 && texture.data != NULL) {
             // todo: DRY this with checkFaceIntersection()???
             float u0 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt1 - 1].u;
             float v0 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt1 - 1].v;
@@ -506,7 +506,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
             int x = (int) roundf(uFractional * ((float) texture.height - 2.0f));
             int y = (int) roundf(vFractional * ((float) texture.height - 2.0f));
 
-            if (normal.data != NULL) {
+            if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
                 Vector3 m = convertNormalToVector(normal.data[y][x]);
                 Vector3 p0 = scene.vertexes[scene.faces[intersection.closestFaceIntersection.faceIdx].v1 - 1];
                 Vector3 p1 = scene.vertexes[scene.faces[intersection.closestFaceIntersection.faceIdx].v2 - 1];
