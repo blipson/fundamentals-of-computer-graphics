@@ -438,8 +438,6 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
             mtlColor.diffuseColor = convertRGBColorToColor(texture.data[y][x]);
             if (normal.data != NULL) {
                 Vector3 m = convertNormalToVector(normal.data[y][x]);
-                // Calculate the TBN matrix
-                // todo: try taking out normalize here...
                 Vector3 N = (Vector3) {
                     .x = -1.0f * sinf(theta),
                     .y = cosf(theta),
@@ -516,35 +514,21 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
 
                 Vector3 e1 = subtract(p1, p0);
                 Vector3 e2 = subtract(p2, p0);
-
-                float d = 1.0f/(((-1.0f * u1) * v2) * (u2 * v1));
+                float denominator = (((-1.0f * u1) * v2) + (u2 * v1));
+                float d = denominator > 0.0f ? 1.0f/denominator : 2.0f;
                 Vector3 T = multiply(add(multiply(e1, (-1.0f * v2)), multiply(e2, v1)), d);
                 Vector3 B = multiply(add(multiply(e1, (1.0f * u2)), multiply(e2, u1)), d);
-                if (dot(T, B) != 0.0f) {
+                if (isnan(dot(T, B))) {
                     printf("%f\n", dot(T, B));
                 }
                 // check dot(T, B) = 0
 
                 // check cross(T, B) = N
 
-                float matrix[3][3] = {
-                        {T.x, B.x, surfaceNormal.x},
-                        {T.y, B.y, surfaceNormal.y},
-                        {T.z, B.z, surfaceNormal.z}
-                };
-
-                float vector[3] = {m.x, m.y, m.z};
-
-                // Resultant vector
-                float result[3];
-
-                // Perform matrix-vector multiplication
-                matrixVectorMultiply(matrix, vector, result);
-
                 surfaceNormal = (Vector3) {
-                        .x = result[0],
-                        .y = result[1],
-                        .z = result[2],
+                        .x = (m.x * T.x) + (m.x * B.x) + (m.x * surfaceNormal.x),
+                        .y = (m.y * T.y) + (m.y * B.y) + (m.y * surfaceNormal.y),
+                        .z = (m.z * T.z) + (m.z * B.z) + (m.z * surfaceNormal.z),
                 };
             }
 

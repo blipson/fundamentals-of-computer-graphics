@@ -6,6 +6,6 @@ hfov 45
 bkgcolor 0.5 0.7 0.9
 light 0 1 -1 0 0.5
 mtlcolor 0 1 0 1 1 1 0.2 0.8 0.1 2
-texture assignment1c/textures/stonewall.ppm
-bump assignment1c/textures/stonewallbump.ppm
+texture tests/stonewall.ppm
+bump tests/stonewallbump.ppm
 sphere 0 0 0 2

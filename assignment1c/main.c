@@ -26,7 +26,7 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
             Ray viewingRay = traceRay(scene, viewingWindowLocation, parallel);
             writePixel(outputFilePtr, shadeRay(viewingRay, scene, x, y), x, scene.imSize.width);
-             progressBar(scene.imSize.width * scene.imSize.height, i);
+//             progressBar(scene.imSize.width * scene.imSize.height, i);
             i++;
         }
     }
