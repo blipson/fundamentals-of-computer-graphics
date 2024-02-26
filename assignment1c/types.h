@@ -96,6 +96,11 @@ typedef struct {
 } PPMImage;
 
 typedef struct {
+    float u;
+    float v;
+} TextureCoordinate;
+
+typedef struct {
     Vector3 eye;
     Vector3 viewDir;
     Vector3 upDir;
@@ -117,11 +122,12 @@ typedef struct {
     int vertexCount;
     Vector3* vertexNormals;
     int vertexNormalCount;
+    TextureCoordinate* vertexTextures;
+    int vertexTextureCount;
     Face* faces;
     int faceCount;
     PPMImage* textures;
     int textureCount;
-    int textureAllocationCount;
 } Scene;
 
 typedef struct {

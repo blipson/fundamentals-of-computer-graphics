@@ -14,7 +14,7 @@
 #define MAX_INPUT_LINE_LENGTH 50
 #define MAX_TEXTURE_LINE_LENGTH 50000
 #define MAX_TEXTURE_WORDS_PER_LINE 10000
-#define KEYWORD_COUNT 18
+#define KEYWORD_COUNT 19
 #define INITIAL_LIGHT_COUNT 10
 #define INITIAL_MTLCOLOR_COUNT 10
 #define INITIAL_TEXTURE_COUNT 10
@@ -22,6 +22,7 @@
 #define INITIAL_ELLIPSOID_COUNT 10
 #define INITIAL_VERTEX_COUNT 1000
 #define INITIAL_VERTEX_NORMAL_COUNT 1000
+#define INITIAL_VERTEX_TEXTURE_COUNT 1000
 #define INITIAL_FACE_COUNT 1000
 
 void checkArgs(int argc, char* argv[]) {
@@ -76,7 +77,7 @@ bool isKeyword(const char* target) {
             "eye", "viewdir", "updir", "hfov", "vfov",
             "imsize", "bkgcolor", "mtlcolor", "sphere",
             "parallel", "ellipse", "light", "depthcueing",
-            "attlight", "v", "vn", "f", "texture",
+            "attlight", "v", "vn", "f", "texture", "vt",
     };
     for (size_t i = 0; i < KEYWORD_COUNT; i++) {
         if (target == NULL || strcmp(target, keywords[i]) == 0) {
@@ -439,9 +440,11 @@ PPMImage readPPM(const char *filename) {
 void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     // Q: is this the best way to keep track of the allocations?
     int mtlColorAllocationCount = 1;
+    int textureAllocationCount = 1;
     int sphereAllocationCount = 1;
     int vertexAllocationCount = 1;
     int vertexNormalAllocationCount = 0;
+    int vertexTextureAllocationCount = 0;
     int faceAllocationCount = 1;
     int ellipsoidAllocationCount = 1;
 
@@ -474,9 +477,9 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
             scene->mtlColors[scene->mtlColorCount].specularExponent = convertStringToFloat(inputFileWordsByLine[*line][10]);
             scene->mtlColorCount++;
         } else if (strcmp(inputFileWordsByLine[*line][0], "texture") == 0) {
-            if (scene->textureCount >= INITIAL_TEXTURE_COUNT * scene->textureAllocationCount) {
-                scene->textureAllocationCount++;
-                PPMImage* newTextures = (PPMImage*) realloc(scene->textures, (INITIAL_TEXTURE_COUNT * scene->textureAllocationCount) * sizeof(PPMImage));
+            if (scene->textureCount >= INITIAL_TEXTURE_COUNT * textureAllocationCount) {
+                textureAllocationCount++;
+                PPMImage* newTextures = (PPMImage*) realloc(scene->textures, (INITIAL_TEXTURE_COUNT * textureAllocationCount) * sizeof(PPMImage));
                 if (newTextures == NULL) {
                     fprintf(stderr, "Memory allocation failed for textures.");
                     exit(-1);
@@ -537,6 +540,25 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
             readVertex(inputFileWordsByLine, scene, *line, &vertexAllocationCount);
         } else if (strcmp(inputFileWordsByLine[*line][0], "vn") == 0) {
             readVertexNormal(inputFileWordsByLine, scene, *line, &vertexNormalAllocationCount);
+        } else if (strcmp(inputFileWordsByLine[*line][0], "vt") == 0) {
+            if (scene->vertexTextureCount == 0) {
+                vertexTextureAllocationCount = 1;
+                scene->vertexTextures = (TextureCoordinate*) malloc(INITIAL_VERTEX_TEXTURE_COUNT * sizeof(TextureCoordinate));
+            } else if (scene->vertexTextureCount >= INITIAL_VERTEX_TEXTURE_COUNT * vertexTextureAllocationCount) {
+                vertexTextureAllocationCount++;
+                TextureCoordinate* newVertexTextures = (TextureCoordinate*) realloc(scene->vertexTextures, (INITIAL_VERTEX_TEXTURE_COUNT * vertexTextureAllocationCount) * sizeof(TextureCoordinate));
+                if (newVertexTextures == NULL) {
+                    fprintf(stderr, "Memory allocation failed for vertex textures.");
+                    exit(-1);
+                }
+                scene->vertexTextures = newVertexTextures;
+            }
+            checkValues(inputFileWordsByLine[*line], 2, "vt");
+            scene->vertexTextures[scene->vertexTextureCount] = (TextureCoordinate) {
+                    .u = convertStringToFloat(inputFileWordsByLine[*line][1]),
+                    .v = convertStringToFloat(inputFileWordsByLine[*line][2]),
+            };
+            scene->vertexTextureCount++;
         } else if (strcmp(inputFileWordsByLine[*line][0], "f") == 0) {
             if (scene->faceCount >= INITIAL_FACE_COUNT * faceAllocationCount) {
                 faceAllocationCount++;
@@ -579,6 +601,11 @@ void printScene(Scene scene) {
     printf("imsize: %d %d\n", scene.imSize.width, scene.imSize.height);
     printf("bkgcolor: %f %f %f\n", scene.bkgColor.x, scene.bkgColor.y, scene.bkgColor.z);
     printf("parallel: %f\n", scene.parallel.frustumWidth);
+    if (scene.lights != NULL) {
+        for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++) {
+            printf("light: %f %f %f %f %f %f %f %f\n", scene.lights[lightIdx].position.x, scene.lights[lightIdx].position.y, scene.lights[lightIdx].position.z, scene.lights[lightIdx].w, scene.lights[lightIdx].i, scene.lights[lightIdx].constantAttenuation, scene.lights[lightIdx].linearAttenuation, scene.lights[lightIdx].quadraticAttenuation);
+        }
+    }
     if (scene.mtlColors != NULL) {
         for (int mtlColorIdx = 0; mtlColorIdx < scene.mtlColorCount; mtlColorIdx++) {
             printf("mtlcolor: %f %f %f %f %f %f %f %f %f %f\n",
@@ -626,6 +653,11 @@ void printScene(Scene scene) {
     if (scene.vertexNormals != NULL) {
         for (int vertexNormalIdx = 0; vertexNormalIdx < scene.vertexNormalCount; vertexNormalIdx++) {
             printf("vertex normal: %f %f %f\n", scene.vertexNormals[vertexNormalIdx].x, scene.vertexNormals[vertexNormalIdx].y, scene.vertexNormals[vertexNormalIdx].z);
+        }
+    }
+    if (scene.vertexTextures != NULL) {
+        for (int vertexTextureIdx = 0; vertexTextureIdx < scene.vertexTextureCount; vertexTextureIdx++) {
+            printf("vertex texture: %f %f\n", scene.vertexTextures[vertexTextureIdx].u, scene.vertexTextures[vertexTextureIdx].v);
         }
     }
     if (scene.faces != NULL) {

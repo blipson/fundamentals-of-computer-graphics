@@ -39,11 +39,12 @@ int main(int argc, char* argv[]) {
             .vertexCount = 0,
             .vertexNormals = NULL,
             .vertexNormalCount = 0,
+            .vertexTextures = NULL,
+            .vertexTextureCount = 0,
             .faces = (Face*) malloc(INITIAL_FACE_COUNT * sizeof(Face)),
             .faceCount = 0,
             .textures = (PPMImage*) malloc(INITIAL_TEXTURE_COUNT * sizeof (PPMImage)),
             .textureCount = 0,
-            .textureAllocationCount = 1,
     };
 
     // todo: check if mallocs were successful

@@ -338,16 +338,18 @@ int checkFaceIntersection(const Ray* ray, const Scene* scene, float* closestInte
     return 0;
 }
 
-void checkFaceIntersections(Ray* ray, Scene* scene, float* closestIntersection, enum ObjectType* closestObject, FaceIntersection* closestFaceIntersection) {
+void checkFaceIntersections(int excludeIdx, Ray* ray, Scene* scene, float* closestIntersection, enum ObjectType* closestObject, FaceIntersection* closestFaceIntersection) {
     for (int faceIdx = 0; faceIdx < (*scene).faceCount; faceIdx++) {
-        int earlyReturn = checkFaceIntersection(ray, scene, closestIntersection, closestObject, closestFaceIntersection, faceIdx);
-        if (earlyReturn == -1) {
-            continue;
+        if (faceIdx != excludeIdx) {
+            int earlyReturn = checkFaceIntersection(ray, scene, closestIntersection, closestObject, closestFaceIntersection, faceIdx);
+            if (earlyReturn == -1) {
+                continue;
+            }
         }
     }
 }
 
-Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
+Intersection castRay(Ray ray, Scene scene, int excludeSphereIdx, int excludeEllipsoidIdx, int excludeFaceIdx) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     enum ObjectType closestObject;
     int closestSphereIdx = -1;
@@ -364,11 +366,11 @@ Intersection castRay(Ray ray, Scene scene, int excludeIdx) {
         .gamma = 0.0f,
     };
 
-    checkSphereIntersections(excludeIdx, &ray, &scene, &closestIntersection, &closestObject, &closestSphereIdx);
+    checkSphereIntersections(excludeSphereIdx, &ray, &scene, &closestIntersection, &closestObject, &closestSphereIdx);
 
-    checkEllipsoidIntersections(excludeIdx, &ray, &scene, &closestIntersection, &closestObject, &closestEllipsoidIdx);
+    checkEllipsoidIntersections(excludeEllipsoidIdx, &ray, &scene, &closestIntersection, &closestObject, &closestEllipsoidIdx);
 
-    checkFaceIntersections(&ray, &scene, &closestIntersection, &closestObject, &closestFaceIntersection);
+    checkFaceIntersections(excludeFaceIdx, &ray, &scene, &closestIntersection, &closestObject, &closestFaceIntersection);
 
     return (Intersection) {
             .closestIntersection = closestIntersection,
@@ -394,8 +396,8 @@ Vector3 randomUnitVector() {
     return (Vector3) {x, y, z};
 }
 
-RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
-    Intersection intersection = castRay(viewingRay, scene, -1);
+RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
+    Intersection intersection = castRay(viewingRay, scene, -1, -1, -1);
     Vector3 intersectionPoint = add(
             viewingRay.origin,
             multiply(
@@ -405,19 +407,18 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
     );
 
     MaterialColor mtlColor;
-    PPMImage texture;
     Vector3 surfaceNormal;
 
     if (intersection.closestSphereIdx != -1 && intersection.closestObject == SPHERE) {
         Sphere sphere = scene.spheres[intersection.closestSphereIdx];
         mtlColor = scene.mtlColors[sphere.mtlColorIdx];
-        texture = scene.textures[sphere.textureIdx];
+        PPMImage texture = scene.textures[sphere.textureIdx];
         surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
         if (texture.data != NULL) {
             float phi = acosf(surfaceNormal.z);
             float theta = atan2f(surfaceNormal.y, surfaceNormal.x);
             float v = phi / (float) M_PI;
-            float u = max(theta/(2 * (float) M_PI), (theta + 2 * (float) M_PI) / (2 * (float) M_PI));
+            float u = max(theta/(2.0f * (float) M_PI), (theta + 2.0f * (float) M_PI) / (2.0f * (float) M_PI));
             mtlColor.diffuseColor = convertRGBColorToColor(texture.data[(int) (v * (float) texture.height)][(int) (u * (float) texture.width)]);
         }
     } else if (intersection.closestEllipsoidIdx != -1 && intersection.closestObject == ELLIPSOID) {
@@ -427,6 +428,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
         surfaceNormal = normalize(divide(subtract(intersectionPoint, ellipsoid.center), ellipsoid.radius.x));
     } else if (intersection.closestFaceIntersection.faceIdx != -1 && intersection.closestObject == TRIANGLE) {
         Face face = scene.faces[intersection.closestFaceIntersection.faceIdx];
+        PPMImage texture = scene.textures[face.textureIdx];
         mtlColor = scene.mtlColors[face.mtlColorIdx];
 
         if (scene.vertexNormals == NULL) {
@@ -439,6 +441,63 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
             Vector3 betaComponent = multiply(n1, intersection.closestFaceIntersection.beta);
             Vector3 gammaComponent = multiply(n2, intersection.closestFaceIntersection.gamma);
             surfaceNormal = normalize(add(alphaComponent, add(betaComponent, gammaComponent)));
+        }
+
+        if (scene.vertexTextures != NULL && texture.data != NULL) {
+            // todo: DRY this with checkFaceIntersection()???
+            float u0 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt1 - 1].u;
+            float v0 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt1 - 1].v;
+            float u1 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt2 - 1].u;
+            float v1 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt2 - 1].v;
+            float u2 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt3 - 1].u;
+            float v2 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt3 - 1].v;
+
+            float u = intersection.closestFaceIntersection.alpha * u0 + intersection.closestFaceIntersection.beta * u1 + intersection.closestFaceIntersection.gamma * u2;
+            float v = intersection.closestFaceIntersection.alpha * v0 + intersection.closestFaceIntersection.beta * v1 + intersection.closestFaceIntersection.gamma * v2;
+
+            float uInt;
+            float uFractional = modff(u, &uInt);
+
+            float vInt;
+            float vFractional = modff(v, &vInt);
+
+            int x = (int) roundf(uFractional * ((float) texture.height - 2.0f));
+            int y = (int) roundf(vFractional * ((float) texture.height - 2.0f));
+            mtlColor.diffuseColor =
+                add(
+                    add(
+                        add(
+                            multiply(
+                                multiply(
+                                    convertRGBColorToColor(texture.data[y][x]),
+                                    (1 - intersection.closestFaceIntersection.alpha)
+                                ),
+                                (1 - intersection.closestFaceIntersection.beta)
+                            ),
+                            multiply(
+                                multiply(
+                                    convertRGBColorToColor(texture.data[y][x + 1]),
+                                    (intersection.closestFaceIntersection.alpha)
+                                ),
+                                (1 - intersection.closestFaceIntersection.beta)
+                            )
+                        ),
+                        multiply(
+                            multiply(
+                                convertRGBColorToColor(texture.data[y + 1][x]),
+                                (1 - intersection.closestFaceIntersection.alpha)
+                            ),
+                            (intersection.closestFaceIntersection.beta)
+                        )
+                    ),
+                    multiply(
+                        multiply(
+                            convertRGBColorToColor(texture.data[y + 1][x + 1]),
+                            (intersection.closestFaceIntersection.alpha)
+                        ),
+                        (intersection.closestFaceIntersection.beta)
+                    )
+                );
         }
     } else {
         return convertColorToRGBColor(scene.bkgColor);
@@ -507,9 +566,9 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
                     Intersection shadowRay = castRay((Ray) {
                             .origin = intersectionPoint,
                             .direction = normalize(jitteredLightDirection)
-                    }, scene, intersection.closestSphereIdx);
+                    }, scene, intersection.closestSphereIdx, intersection.closestEllipsoidIdx, intersection.closestFaceIntersection.faceIdx);
 
-                    if (shadowRay.closestSphereIdx != -1) {
+                    if (shadowRay.closestSphereIdx != -1 || shadowRay.closestEllipsoidIdx != -1 || shadowRay.closestFaceIntersection.faceIdx != -1) {
                         if ((light.w == 1.0f && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) ||
                             (light.w == 0.0f && shadowRay.closestIntersection > 0.0f)) {
                             softShadow += 1.0f / (float) numShadowRays;
@@ -521,8 +580,8 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int x, int y) {
                 Intersection shadowRay = castRay((Ray) {
                         .origin = intersectionPoint,
                         .direction = lightDirection
-                }, scene, intersection.closestSphereIdx);
-                if (shadowRay.closestSphereIdx != -1) {
+                }, scene, intersection.closestSphereIdx, intersection.closestEllipsoidIdx, intersection.closestFaceIntersection.faceIdx);
+                if (shadowRay.closestSphereIdx != -1 || shadowRay.closestEllipsoidIdx != -1 || shadowRay.closestFaceIntersection.faceIdx != -1) {
                     if (light.w == 1.0f && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) {
                         shadow = 0.0f;
                     }
