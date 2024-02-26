@@ -191,6 +191,14 @@ Vector3 convertRGBColorToColor(RGBColor rgbColor) {
     };
 }
 
+Vector3 convertNormalToVector(RGBColor rgbColor) {
+    return (Vector3) {
+        .x = ((float) rgbColor.red - 127.5f) / 127.5f,
+        .y = ((float) rgbColor.red - 127.5f) / 127.5f,
+        .z = ((float) rgbColor.blue - 128.0f) / 128.0f,
+    };
+}
+
 void checkSphereIntersection(Ray* ray, Scene* scene, int excludeIdx, int sphereIdx, float* closestIntersection, enum ObjectType* closestObject, int* closestSphereIdx) {
     if (sphereIdx != excludeIdx) {
         Sphere sphere = (*scene).spheres[sphereIdx];
@@ -396,6 +404,10 @@ Vector3 randomUnitVector() {
     return (Vector3) {x, y, z};
 }
 
+void matrixVectorMultiply(float matrix[3][3], float vector[3], float result[3]) {
+
+}
+
 RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
     Intersection intersection = castRay(viewingRay, scene, -1, -1, -1);
     Vector3 intersectionPoint = add(
@@ -413,13 +425,44 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
         Sphere sphere = scene.spheres[intersection.closestSphereIdx];
         mtlColor = scene.mtlColors[sphere.mtlColorIdx];
         PPMImage texture = scene.textures[sphere.textureIdx];
+        PPMImage normal = scene.normals[sphere.normalIdx];
         surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
         if (texture.data != NULL) {
             float phi = acosf(surfaceNormal.z);
             float theta = atan2f(surfaceNormal.y, surfaceNormal.x);
             float v = phi / (float) M_PI;
             float u = max(theta/(2.0f * (float) M_PI), (theta + 2.0f * (float) M_PI) / (2.0f * (float) M_PI));
-            mtlColor.diffuseColor = convertRGBColorToColor(texture.data[(int) (v * (float) texture.height)][(int) (u * (float) texture.width)]);
+            int x = (int) (u * (float) texture.width);
+            int y = (int) (v * (float) texture.height);
+
+            mtlColor.diffuseColor = convertRGBColorToColor(texture.data[y][x]);
+            if (normal.data != NULL) {
+                Vector3 m = convertNormalToVector(normal.data[y][x]);
+                // Calculate the TBN matrix
+                // todo: try taking out normalize here...
+                Vector3 N = (Vector3) {
+                    .x = -1.0f * sinf(theta),
+                    .y = cosf(theta),
+                    .z = 0.0f,
+                };
+                Vector3 T = (Vector3) {
+                    .x = (-1.0f * N.y) / (sqrtf((N.x * N.x) + (N.y * N.y))),
+                    .y = (N.x) / (sqrtf((N.x * N.x) + (N.y * N.y))),
+                    .z = 0.0f,
+                };
+                Vector3 B = (Vector3) {
+                    .x = (-1.0f * N.z) * T.y,
+                    .y = N.z * T.x,
+                    .z = sqrtf((N.x * N.x) + (N.y * N.y)),
+                };
+
+                surfaceNormal = (Vector3) {
+                    .x = (m.x * T.x) + (m.x * B.x) + (m.x * N.x),
+                    .y = (m.y * T.y) + (m.y * B.y) + (m.y * N.y),
+                    .z = (m.z * T.z) + (m.z * B.z) + (m.z * N.z),
+                };
+            }
+
         }
     } else if (intersection.closestEllipsoidIdx != -1 && intersection.closestObject == ELLIPSOID) {
         Ellipsoid ellipsoid = scene.ellipsoids[intersection.closestEllipsoidIdx];
@@ -429,18 +472,19 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
     } else if (intersection.closestFaceIntersection.faceIdx != -1 && intersection.closestObject == TRIANGLE) {
         Face face = scene.faces[intersection.closestFaceIntersection.faceIdx];
         PPMImage texture = scene.textures[face.textureIdx];
+        PPMImage normal = scene.normals[face.normalIdx];
         mtlColor = scene.mtlColors[face.mtlColorIdx];
 
         if (scene.vertexNormals == NULL) {
             surfaceNormal = normalize(intersection.closestFaceIntersection.n);
         } else {
-            Vector3 n0 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn1 - 1]);
-            Vector3 n1 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn2 - 1]);
-            Vector3 n2 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn3 - 1]);
-            Vector3 alphaComponent = multiply(n0, intersection.closestFaceIntersection.alpha);
-            Vector3 betaComponent = multiply(n1, intersection.closestFaceIntersection.beta);
-            Vector3 gammaComponent = multiply(n2, intersection.closestFaceIntersection.gamma);
-            surfaceNormal = normalize(add(alphaComponent, add(betaComponent, gammaComponent)));
+                Vector3 n0 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn1 - 1]);
+                Vector3 n1 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn2 - 1]);
+                Vector3 n2 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn3 - 1]);
+                Vector3 alphaComponent = multiply(n0, intersection.closestFaceIntersection.alpha);
+                Vector3 betaComponent = multiply(n1, intersection.closestFaceIntersection.beta);
+                Vector3 gammaComponent = multiply(n2, intersection.closestFaceIntersection.gamma);
+                surfaceNormal = normalize(add(alphaComponent, add(betaComponent, gammaComponent)));
         }
 
         if (scene.vertexTextures != NULL && texture.data != NULL) {
@@ -463,6 +507,47 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
 
             int x = (int) roundf(uFractional * ((float) texture.height - 2.0f));
             int y = (int) roundf(vFractional * ((float) texture.height - 2.0f));
+
+            if (normal.data != NULL) {
+                Vector3 m = convertNormalToVector(normal.data[y][x]);
+                Vector3 p0 = scene.vertexes[scene.faces[intersection.closestFaceIntersection.faceIdx].v1 - 1];
+                Vector3 p1 = scene.vertexes[scene.faces[intersection.closestFaceIntersection.faceIdx].v2 - 1];
+                Vector3 p2 = scene.vertexes[scene.faces[intersection.closestFaceIntersection.faceIdx].v3 - 1];
+
+                Vector3 e1 = subtract(p1, p0);
+                Vector3 e2 = subtract(p2, p0);
+
+                float d = 1.0f/(((-1.0f * u1) * v2) * (u2 * v1));
+                Vector3 T = multiply(add(multiply(e1, (-1.0f * v2)), multiply(e2, v1)), d);
+                Vector3 B = multiply(add(multiply(e1, (1.0f * u2)), multiply(e2, u1)), d);
+                if (dot(T, B) != 0.0f) {
+                    printf("%f\n", dot(T, B));
+                }
+                // check dot(T, B) = 0
+
+                // check cross(T, B) = N
+
+                float matrix[3][3] = {
+                        {T.x, B.x, surfaceNormal.x},
+                        {T.y, B.y, surfaceNormal.y},
+                        {T.z, B.z, surfaceNormal.z}
+                };
+
+                float vector[3] = {m.x, m.y, m.z};
+
+                // Resultant vector
+                float result[3];
+
+                // Perform matrix-vector multiplication
+                matrixVectorMultiply(matrix, vector, result);
+
+                surfaceNormal = (Vector3) {
+                        .x = result[0],
+                        .y = result[1],
+                        .z = result[2],
+                };
+            }
+
             mtlColor.diffuseColor =
                 add(
                     add(

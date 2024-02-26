@@ -9,21 +9,22 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-#define MAX_LINE_COUNT 50000
-#define MAX_WORDS_PER_LINE 50 // This will wrap if they have more than this many words in a line and cause weird behavior
-#define MAX_INPUT_LINE_LENGTH 50
+#define MAX_LINE_COUNT 500000
+#define MAX_WORDS_PER_LINE 500 // This will wrap if they have more than this many words in a line and cause weird behavior
+#define MAX_INPUT_LINE_LENGTH 5000
 #define MAX_TEXTURE_LINE_LENGTH 50000
 #define MAX_TEXTURE_WORDS_PER_LINE 10000
-#define KEYWORD_COUNT 19
+#define KEYWORD_COUNT 20
 #define INITIAL_LIGHT_COUNT 10
 #define INITIAL_MTLCOLOR_COUNT 10
 #define INITIAL_TEXTURE_COUNT 10
+#define INITIAL_NORMAL_COUNT 10
 #define INITIAL_SPHERE_COUNT 10
 #define INITIAL_ELLIPSOID_COUNT 10
-#define INITIAL_VERTEX_COUNT 1000
-#define INITIAL_VERTEX_NORMAL_COUNT 1000
-#define INITIAL_VERTEX_TEXTURE_COUNT 1000
-#define INITIAL_FACE_COUNT 1000
+#define INITIAL_VERTEX_COUNT 10000
+#define INITIAL_VERTEX_NORMAL_COUNT 10000
+#define INITIAL_VERTEX_TEXTURE_COUNT 10000
+#define INITIAL_FACE_COUNT 10000
 
 void checkArgs(int argc, char* argv[]) {
     if (argc > 3 || argc < 2) {
@@ -77,7 +78,8 @@ bool isKeyword(const char* target) {
             "eye", "viewdir", "updir", "hfov", "vfov",
             "imsize", "bkgcolor", "mtlcolor", "sphere",
             "parallel", "ellipse", "light", "depthcueing",
-            "attlight", "v", "vn", "f", "texture", "vt",
+            "attlight", "v", "vn", "f", "texture",
+            "vt", "bump",
     };
     for (size_t i = 0; i < KEYWORD_COUNT; i++) {
         if (target == NULL || strcmp(target, keywords[i]) == 0) {
@@ -399,7 +401,7 @@ PPMImage readPPM(const char *filename) {
         fprintf(stderr, "Memory allocation error while reading PPM data.\n");
         exit(1);
     }
-
+    // todo: handle single value on line. Line breaks inside pixels.
     int y = 0;
     char currentLine[MAX_TEXTURE_LINE_LENGTH];
     while (fgets(currentLine, MAX_TEXTURE_LINE_LENGTH, filePtr) != NULL) {
@@ -416,12 +418,15 @@ PPMImage readPPM(const char *filename) {
         while (wordsInLine[wordIdx] != NULL) {
             unsigned char red = convertStringToInt(wordsInLine[wordIdx]);
             wordIdx++;
+            if (wordsInLine[wordIdx] == NULL) {
+                continue;
+            }
             unsigned char green = convertStringToInt(wordsInLine[wordIdx]);
             wordIdx++;
-            unsigned char blue = convertStringToInt(wordsInLine[wordIdx]);
-            if (x > 1540 && x < 1550 && y > 370 && y < 380) {
-                int t = 29384;
+            if (wordsInLine[wordIdx] == NULL) {
+                continue;
             }
+            unsigned char blue = convertStringToInt(wordsInLine[wordIdx]);
             image.data[y][x] = (RGBColor) {
                     .red = red,
                     .green = green,
@@ -441,6 +446,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     // Q: is this the best way to keep track of the allocations?
     int mtlColorAllocationCount = 1;
     int textureAllocationCount = 1;
+    int normalAllocationCount = 1;
     int sphereAllocationCount = 1;
     int vertexAllocationCount = 1;
     int vertexNormalAllocationCount = 0;
@@ -489,8 +495,22 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
             checkValues(inputFileWordsByLine[*line], 1, "texture");
             scene->textures[scene->textureCount] = readPPM(inputFileWordsByLine[*line][1]);
             scene->textureCount++;
+        } else if (strcmp(inputFileWordsByLine[*line][0], "bump") == 0) {
+            if (scene->normalCount >= INITIAL_NORMAL_COUNT * normalAllocationCount) {
+                normalAllocationCount++;
+                PPMImage* newNormals = (PPMImage*) realloc(scene->normals, (INITIAL_NORMAL_COUNT * normalAllocationCount) * sizeof(PPMImage));
+                if (newNormals == NULL) {
+                    fprintf(stderr, "Memory allocation failed for normals.");
+                    exit(-1);
+                }
+                scene->normals = newNormals;
+            }
+            checkValues(inputFileWordsByLine[*line], 1, "bump");
+            scene->normals[scene->normalCount] = readPPM(inputFileWordsByLine[*line][1]);
+            scene->normalCount++;
         } else if (strcmp(inputFileWordsByLine[*line][0], "sphere") == 0) {
             if (scene->sphereCount >= INITIAL_SPHERE_COUNT * sphereAllocationCount) {
+                // todo, bumps apply to other textures below it...
                 sphereAllocationCount++;
                 Sphere* newSpheres = (Sphere*) realloc(scene->spheres, (INITIAL_SPHERE_COUNT * sphereAllocationCount) * sizeof(Sphere));
                 if (newSpheres == NULL) {
@@ -509,6 +529,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
             scene->spheres[scene->sphereCount].radius = convertStringToFloat(inputFileWordsByLine[*line][4]);
             scene->spheres[scene->sphereCount].mtlColorIdx = scene->mtlColorCount - 1;
             scene->spheres[scene->sphereCount].textureIdx = scene->textureCount - 1;
+            scene->spheres[scene->sphereCount].normalIdx = scene->normalCount - 1;
             scene->sphereCount++;
         } else if (strcmp(inputFileWordsByLine[*line][0], "ellipse") == 0) {
             if (scene->ellipsoidCount >= INITIAL_ELLIPSOID_COUNT * ellipsoidAllocationCount) {
@@ -535,6 +556,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
             scene->ellipsoids[scene->ellipsoidCount].radius = ellipsoidRadius;
             scene->ellipsoids[scene->ellipsoidCount].mtlColorIdx = scene->mtlColorCount - 1;
             scene->ellipsoids[scene->ellipsoidCount].textureIdx = scene->textureCount - 1;
+            scene->ellipsoids[scene->ellipsoidCount].normalIdx = scene->normalCount - 1;
             scene->ellipsoidCount++;
         } else if (strcmp(inputFileWordsByLine[*line][0], "v") == 0) {
             readVertex(inputFileWordsByLine, scene, *line, &vertexAllocationCount);
@@ -582,6 +604,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
                     .vn3 = 0,
                     .mtlColorIdx = scene->mtlColorCount - 1,
                     .textureIdx = scene->textureCount - 1,
+                    .normalIdx = scene->normalCount - 1,
             };
             parseFaceValues(inputFileWordsByLine[*line], 1, scene, *line);
             parseFaceValues(inputFileWordsByLine[*line], 2, scene, *line);

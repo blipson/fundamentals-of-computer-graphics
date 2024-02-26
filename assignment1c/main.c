@@ -2,12 +2,32 @@
 #include "output.h"
 #include "render.h"
 
+void progressBar(int total, int current) {
+    const int barLength = 50;
+    float progress = (float) current / (float) total;
+    int barProgress = (int) (progress * (float) barLength);
+
+    printf("[");
+    for (int i = 0; i < barLength; ++i) {
+        if (i < barProgress) {
+            printf("=");
+        } else {
+            printf(" ");
+        }
+    }
+    printf("] %.2f%%\r", progress * 100);
+    fflush(stdout);
+}
+
 void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, bool parallel) {
+    int i = 0;
     for (int y = 0; y < scene.imSize.height; y++) {
         for (int x = 0; x < scene.imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
             Ray viewingRay = traceRay(scene, viewingWindowLocation, parallel);
             writePixel(outputFilePtr, shadeRay(viewingRay, scene, x, y), x, scene.imSize.width);
+             progressBar(scene.imSize.width * scene.imSize.height, i);
+            i++;
         }
     }
 }
@@ -45,6 +65,8 @@ int main(int argc, char* argv[]) {
             .faceCount = 0,
             .textures = (PPMImage*) malloc(INITIAL_TEXTURE_COUNT * sizeof (PPMImage)),
             .textureCount = 0,
+            .normals = (PPMImage*) malloc(INITIAL_TEXTURE_COUNT * sizeof (PPMImage)),
+            .normalCount = 0,
     };
 
     // todo: check if mallocs were successful
