@@ -432,8 +432,8 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
             float theta = atan2f(surfaceNormal.y, surfaceNormal.x);
             float v = phi / (float) M_PI;
             float u = max(theta/(2.0f * (float) M_PI), (theta + 2.0f * (float) M_PI) / (2.0f * (float) M_PI));
-            int x = (int) roundf(u * (float) (texture.width-1));
-            int y = (int) roundf(v * (float) (texture.height-1));
+            int x = (int) roundf(u * (float) (texture.width-1)) % (texture.width-1);
+            int y = (int) roundf(v * (float) (texture.height-1)) % (texture.height-1);
 
             mtlColor.diffuseColor = convertRGBColorToColor(texture.data[y][x]);
             if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
@@ -460,7 +460,6 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
                     .z = (m.z * T.z) + (m.z * B.z) + (m.z * N.z),
                 };
             }
-
         }
     } else if (intersection.closestEllipsoidIdx != -1 && intersection.closestObject == ELLIPSOID) {
         Ellipsoid ellipsoid = scene.ellipsoids[intersection.closestEllipsoidIdx];
@@ -503,8 +502,8 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
             float vInt;
             float vFractional = modff(v, &vInt);
 
-            int x = (int) roundf(uFractional * ((float) texture.height - 2.0f));
-            int y = (int) roundf(vFractional * ((float) texture.height - 2.0f));
+            int x = (int) roundf(uFractional * ((float) texture.width - 1.0f)) % (texture.width - 1);
+            int y = (int) roundf(vFractional * ((float) texture.height - 1.0f)) % (texture.height - 1);
 
             // todo: check vn1 vn2 vn3 for 0 as well
 
@@ -526,7 +525,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
                 Vector3 T = normalize(multiply(add(multiply(e1, (-1.0f * v2)), multiply(e2, v1)), d));
                 Vector3 B = normalize(multiply(add(multiply(e1, (-1.0f * u2)), multiply(e2, u1)), d));
                 if (dot(T, B) != 0.0f) {
-                    printf("%f\n", dot(T, B));
+//                    printf("%f\n", dot(T, B));
                 }
                 // check dot(T, B) = 0
 
