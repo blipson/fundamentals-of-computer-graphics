@@ -10,11 +10,11 @@ if [ -d "$testDirectory" ]; then
     cp "$textureDirectory"*.ppm "$testDirectory"
     for file in "$testDirectory"*.txt; do
         if [ -f "$file" ]; then
-            echo "Rendering $file..."
-            if [[ "$file" == "./tests/softshadows.txt" ]]; then
-              echo "Skipping softshadows.txt..."
+            if [[ "$file" == "./tests/teapot.txt" || "$file" == "./tests/softshadows.txt" || "$file" == "./tests/showcase.txt" ]]; then
+              echo "Skipping $file."
 #              ./raytracer1c -s "$file"
-            elif [[ "$file" != "./tests/cow.txt" && "$file" != "./tests/showcase.txt" ]]; then
+            else
+              echo "Rendering $file..."
               ./raytracer1c "$file"
             fi
         else

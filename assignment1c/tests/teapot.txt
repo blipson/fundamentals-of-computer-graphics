@@ -1,14 +1,14 @@
-imsize 128 128
+imsize 1920 1080
 eye 0 -40 15
 viewdir 0 0.5 -0.1
 hfov 60
 updir 0 1 0
 bkgcolor 0.2 0.2 0.2
-light 0 -30 35 1 1
+light 0 -40 15 1 1
 
 mtlcolor 0 1 0 1 1 1 0.2 0.8 0 20
-texture tests/stonewall.ppm
-bump tests/stonewallbump.ppm
+texture tests/pavingstones.ppm
+bump tests/pavingstonesnormal.ppm
 v 7.000000 0.000001 12.000000
 v 6.909840 -1.148559 11.999999
 v 6.840370 -1.137012 12.177186

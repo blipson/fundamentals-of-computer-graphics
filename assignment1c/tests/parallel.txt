@@ -1,5 +1,5 @@
 imsize 512 512
-eye -0.1 0 0
+eye 0 0 0
 viewdir 0 0 -1
 hfov 45
 updir 0 1 0

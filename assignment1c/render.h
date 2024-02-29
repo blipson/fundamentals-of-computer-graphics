@@ -193,8 +193,8 @@ Vector3 convertRGBColorToColor(RGBColor rgbColor) {
 
 Vector3 convertNormalToVector(RGBColor rgbColor) {
     return (Vector3) {
-        .x = ((float) rgbColor.red - 127.5f) / 127.5f,
-        .y = ((float) rgbColor.red - 127.5f) / 127.5f,
+        .x = ((float) rgbColor.red - 128.0f) / 128.0f,
+        .y = ((float) rgbColor.green - 128.0f) / 128.0f,
         .z = ((float) rgbColor.blue - 128.0f) / 128.0f,
     };
 }
@@ -291,16 +291,16 @@ int checkFaceIntersection(const Ray* ray, const Scene* scene, float* closestInte
 
     Vector3 e1 = subtract(p1, p0);
     Vector3 e2 = subtract(p2, p0);
-    Vector3 n = cross(e1, e2);
+    Vector3 N = cross(e1, e2);
 
-    float D = -1.0f * dot(n, p0);
+    float D = -1.0f * dot(N, p0);
 
-    float denominator = dot(n, (*ray).direction);
+    float denominator = dot(N, (*ray).direction);
     if (fabsf(denominator) < EPSILON) {
         return -1;
     }
 
-    float t = (-1.0f * (dot(n, (*ray).origin) + D)) / denominator;
+    float t = (-1.0f * (dot(N, (*ray).origin) + D)) / denominator;
 
     Vector3 planeIntersectionPoint = add((*ray).origin, multiply((*ray).direction, t));
 
@@ -322,23 +322,43 @@ int checkFaceIntersection(const Ray* ray, const Scene* scene, float* closestInte
     float alpha = 1.0f - beta - gamma;
 
     // Alternative method, what is this?
-    float A = magnitude(n);
-    float alternativeAlpha = magnitude(divide(cross(subtract(p1, planeIntersectionPoint), subtract(p2, planeIntersectionPoint)), A));
-    float alternativeBeta = magnitude(divide(cross(ep, e2), A));
+    // float A = magnitude(N);
+    // float alternativeAlpha = magnitude(divide(cross(subtract(p1, planeIntersectionPoint), subtract(p2, planeIntersectionPoint)), A));
+    // float alternativeBeta = magnitude(divide(cross(ep, e2), A));
     // you can use p0 instead of p1 in the second subtract, doesn't matter
-    float alternativeGamma = magnitude(divide(cross(e1, subtract(planeIntersectionPoint, p1)), A));
+    // float alternativeGamma = magnitude(divide(cross(e1, subtract(planeIntersectionPoint, p1)), A));
 
 
-    // Q: why do I have to do fabsf here? it's not in the slides but it's the only way it works
-    if ((fabsf(alpha) + fabsf(beta) + fabsf(gamma)) < 1.0f + EPSILON) {
+    if ((alpha > 0 && alpha < 1) && (beta > 0 && beta < 1) && (gamma > 0 && gamma < 1)) {
         if (t > 0.0f && t < (*closestIntersection)) {
             (*closestIntersection) = t;
+
+            Vector3 T = (Vector3) { 0.0f, 0.0f, 0.0f };
+            Vector3 B = (Vector3) { 0.0f, 0.0f, 0.0f };
+            if ((*scene).vertexTextures != NULL) {
+                float u0 = (*scene).vertexTextures[(*scene).faces[faceIdx].vt1 - 1].u;
+                float v0 = (*scene).vertexTextures[(*scene).faces[faceIdx].vt1 - 1].v;
+                float u1 = (*scene).vertexTextures[(*scene).faces[faceIdx].vt2 - 1].u;
+                float v1 = (*scene).vertexTextures[(*scene).faces[faceIdx].vt2 - 1].v;
+                float u2 = (*scene).vertexTextures[(*scene).faces[faceIdx].vt3 - 1].u;
+                float v2 = (*scene).vertexTextures[(*scene).faces[faceIdx].vt3 - 1].v;
+
+                float deltaU1 = u1 - u0;
+                float deltaU2 = u2 - u0;
+                float deltaV1 = v1 - v0;
+                float deltaV2 = v2 - v0;
+                float d = 1.0f / (((-1.0f * deltaU1) * deltaV2) + (deltaU2 * deltaV1));
+                T = normalize(multiply(add(multiply(e1, (-1.0f * deltaV2)), multiply(e2, deltaV1)), d));
+                B = normalize(multiply(add(multiply(e1, (-1.0f * deltaU2)), multiply(e2, deltaU1)), d));
+            }
             (*closestFaceIntersection) = (FaceIntersection) {
                 .faceIdx = faceIdx,
-                .n = n,
+                .N = N,
                 .alpha = alpha,
                 .beta = beta,
                 .gamma = gamma,
+                .T = T,
+                .B = B,
             };
             (*closestObject) = TRIANGLE;
         }
@@ -364,7 +384,7 @@ Intersection castRay(Ray ray, Scene scene, int excludeSphereIdx, int excludeElli
     int closestEllipsoidIdx = -1;
     FaceIntersection closestFaceIntersection = (FaceIntersection) {
         .faceIdx = -1,
-        .n = (Vector3) {
+        .N = (Vector3) {
                 .x = 0.0f,
                 .y = 0.0f,
                 .z = 0.0f,
@@ -435,19 +455,18 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
             int x = (int) roundf(u * (float) (texture.width-1)) % (texture.width-1);
             int y = (int) roundf(v * (float) (texture.height-1)) % (texture.height-1);
 
-            mtlColor.diffuseColor = convertRGBColorToColor(texture.data[y][x]);
             if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
-                Vector3 m = convertNormalToVector(normal.data[y][x]);
-                Vector3 N = (Vector3) {
-                    .x = -1.0f * sinf(theta),
-                    .y = cosf(theta),
-                    .z = 0.0f,
-                };
-                Vector3 T = (Vector3) {
+                Vector3 m = normalize(convertNormalToVector(normal.data[y][x]));
+                Vector3 N = normalize((Vector3) {
+                    .x = cosf(theta) * sinf(phi),
+                    .y = sinf(theta) * sinf(phi),
+                    .z = cosf(phi),
+                });
+                Vector3 T = normalize((Vector3) {
                     .x = (-1.0f * N.y) / (sqrtf((N.x * N.x) + (N.y * N.y))),
                     .y = (N.x) / (sqrtf((N.x * N.x) + (N.y * N.y))),
                     .z = 0.0f,
-                };
+                });
                 Vector3 B = (Vector3) {
                     .x = (-1.0f * N.z) * T.y,
                     .y = N.z * T.x,
@@ -455,11 +474,12 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
                 };
 
                 surfaceNormal = (Vector3) {
-                    .x = (m.x * T.x) + (m.x * B.x) + (m.x * N.x),
-                    .y = (m.y * T.y) + (m.y * B.y) + (m.y * N.y),
-                    .z = (m.z * T.z) + (m.z * B.z) + (m.z * N.z),
+                    .x = (T.x * m.x) + (B.x * m.y) + (N.x * m.z),
+                    .y = (T.y * m.x) + (B.y * m.y) + (N.y * m.z),
+                    .z = (T.z * m.x) + (B.z * m.y) + (N.z * m.z),
                 };
             }
+            mtlColor.diffuseColor = convertRGBColorToColor(texture.data[y][x]);
         }
     } else if (intersection.closestEllipsoidIdx != -1 && intersection.closestObject == ELLIPSOID) {
         Ellipsoid ellipsoid = scene.ellipsoids[intersection.closestEllipsoidIdx];
@@ -473,7 +493,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
         mtlColor = scene.mtlColors[face.mtlColorIdx];
 
         if (scene.vertexNormals == NULL) {
-            surfaceNormal = normalize(intersection.closestFaceIntersection.n);
+            surfaceNormal = normalize(intersection.closestFaceIntersection.N);
         } else {
             Vector3 n0 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn1 - 1]);
             Vector3 n1 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn2 - 1]);
@@ -508,33 +528,11 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
             // todo: check vn1 vn2 vn3 for 0 as well
 
             if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
-                Vector3 m = convertNormalToVector(normal.data[y][x]);
-                Vector3 p0 = scene.vertexes[scene.faces[intersection.closestFaceIntersection.faceIdx].v1 - 1];
-                Vector3 p1 = scene.vertexes[scene.faces[intersection.closestFaceIntersection.faceIdx].v2 - 1];
-                Vector3 p2 = scene.vertexes[scene.faces[intersection.closestFaceIntersection.faceIdx].v3 - 1];
-
-                Vector3 e1 = subtract(p1, p0);
-                Vector3 e2 = subtract(p2, p0);
-
-                float deltaU1 = u1 - u0;
-                float deltaU2 = u2 - u0;
-                float deltaV1 = v1 - v0;
-                float deltaV2 = v2 - v0;
-
-                float d = 1.0f/(((-1.0f * deltaU1) * deltaV2) + (deltaU2 * deltaV1));
-                Vector3 T = normalize(multiply(add(multiply(e1, (-1.0f * v2)), multiply(e2, v1)), d));
-                Vector3 B = normalize(multiply(add(multiply(e1, (-1.0f * u2)), multiply(e2, u1)), d));
-                if (dot(T, B) != 0.0f) {
-//                    printf("%f\n", dot(T, B));
-                }
-                // check dot(T, B) = 0
-
-                // check cross(T, B) = N
-
+                Vector3 m = normalize(convertNormalToVector(normal.data[y][x]));
                 surfaceNormal = (Vector3) {
-                        .x = (m.x * T.x) + (m.x * B.x) + (m.x * surfaceNormal.x),
-                        .y = (m.y * T.y) + (m.y * B.y) + (m.y * surfaceNormal.y),
-                        .z = (m.z * T.z) + (m.z * B.z) + (m.z * surfaceNormal.z),
+                        .x = (intersection.closestFaceIntersection.T.x * m.x) + (intersection.closestFaceIntersection.B.x * m.y) + (surfaceNormal.x * m.z),
+                        .y = (intersection.closestFaceIntersection.T.y * m.x) + (intersection.closestFaceIntersection.B.y * m.y) + (surfaceNormal.y * m.z),
+                        .z = (intersection.closestFaceIntersection.T.z * m.x) + (intersection.closestFaceIntersection.B.z * m.y) + (surfaceNormal.z * m.z),
                 };
             }
 
@@ -600,7 +598,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
                                      ? normalize(subtract(light.position, intersectionPoint))
                                      : normalize(multiply(light.position, -1.0f));
             Vector3 intersectionToOrigin = normalize(subtract(scene.eye, intersectionPoint));
-            Vector3 halfwayLightDirection = normalize(divide(add(lightDirection, intersectionToOrigin), 2.0f));
+            Vector3 halfwayLightDirection = normalize(add(lightDirection, intersectionToOrigin));
             float lightIntensity = light.i;
             Vector3 diffuse = (Vector3) {
                     .x = diffuseColor.x * mtlColor.diffuseCoefficient * max(dot(surfaceNormal, lightDirection), 0.0f),
