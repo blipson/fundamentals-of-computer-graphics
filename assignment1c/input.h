@@ -28,13 +28,13 @@
 
 void checkArgs(int argc, char* argv[]) {
     if (argc > 3 || argc < 2) {
-        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1c [-s:soft shadows] <path/to/input_file>`");
+        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1c [-s:soft shadows] <path/to/input_file>`\n");
         exit(-1);
     }
-//    if (strcmp(argv[0], "./raytracer1c") != 0) {
-//        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1c <path/to/input_file>`");
-//        exit(-1);
-//    }
+    if (strcmp(argv[0], "./raytracer1c") != 0 && strcmp(argv[0], "/home/ben/github.com/fundamentals-of-computer-graphics/assignment1c/main") != 0) {
+        fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1c <path/to/input_file>`\n");
+        exit(-1);
+    }
 }
 
 char** readLine(char* line, char** wordsInLine, int maxWordsPerLine) {
@@ -52,7 +52,7 @@ char** readLine(char* line, char** wordsInLine, int maxWordsPerLine) {
         if (length > 0) {
             wordsInLine[wordIdx] = (char*) malloc(strlen(token) + 1);
             if (wordsInLine[wordIdx] == NULL) {
-                fprintf(stderr, "Memory allocation error for word in line.");
+                fprintf(stderr, "Memory allocation error for word in line.\n");
                 exit(-1);
             }
         }
@@ -91,19 +91,12 @@ bool isKeyword(const char* target) {
 
 char*** readInputFile(char* argv[], bool softShadows) {
     char*** inputFileWordsByLine = NULL;
-    char* inputFileName = NULL;
-    if (softShadows) {
-        inputFileName = argv[2];
-    } else {
-        inputFileName = argv[1];
-    }
+    char* inputFileName = (softShadows) ? argv[2] : argv[1];
 
-    FILE* inputFilePtr;
-    inputFilePtr = fopen(inputFileName, "r");
+    FILE* inputFilePtr = fopen(inputFileName, "r");
 
     if (inputFilePtr != NULL) {
         inputFileWordsByLine = malloc(MAX_LINE_COUNT * sizeof(char**));
-
         if (inputFileWordsByLine == NULL) {
             fprintf(stderr, "Memory allocation error with reading the input file lines.\n");
             exit(-1);
