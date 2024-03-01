@@ -452,8 +452,8 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
             float theta = atan2f(surfaceNormal.y, surfaceNormal.x);
             float v = phi / (float) M_PI;
             float u = max(theta/(2.0f * (float) M_PI), (theta + 2.0f * (float) M_PI) / (2.0f * (float) M_PI));
-            int x = (int) roundf(u * (float) (texture.width-1));
-            int y = (int) roundf(v * (float) (texture.height-1));
+            int x = (int) roundf(u * (float) (texture.width-1)) % (texture.width - 1);
+            int y = (int) roundf(v * (float) (texture.height-1)) % (texture.height - 1);
 
             if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
                 Vector3 m = normalize(convertNormalToVector(normal.data[y][x]));
