@@ -20,3 +20,6 @@ assignment1c/*.ppm
 assignment1c/tests/*.ppm
 assignment1c/longtests/*.ppm
 assignment1c/*.swp
+assignment1c/textures/keurig*
+assignment1c/tests/keurig*
+assignment1c/textures/table*
