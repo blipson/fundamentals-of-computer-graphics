@@ -164,12 +164,12 @@ enum ObjectType {
 
 typedef struct {
     int faceIdx;
-    Vector3 N;
+    Vector3 normalDirection;
     float alpha;
     float beta;
     float gamma;
-    Vector3 T;
-    Vector3 B;
+    Vector3 tangentDirection;
+    Vector3 bitangentDirection;
 } FaceIntersection;
 
 typedef struct {

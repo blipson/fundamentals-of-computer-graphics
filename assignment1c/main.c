@@ -25,7 +25,7 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
         for (int x = 0; x < scene.imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
             Ray viewingRay = traceRay(scene, viewingWindowLocation, parallel);
-            writePixel(outputFilePtr, shadeRay(viewingRay, scene, x, y), x, scene.imSize.width);
+            writePixel(outputFilePtr, shadeRay(viewingRay, scene), x, scene.imSize.width);
             progressBar(scene.imSize.width * scene.imSize.height, i);
             i++;
         }
@@ -92,13 +92,13 @@ int main(int argc, char* argv[]) {
                     .width = parallel ?
                              (scene.parallel.frustumWidth) :
                              horizontalFov ?
-                             (2 * viewParameters.d * tanf(scene.fov.h / 2)) :
-                             (2 * viewParameters.d * tanf(scene.fov.v / 2)) * viewParameters.aspectRatio,
+                             (2 * viewParameters.d * tanf(scene.fov.h / 2.0f)) :
+                             (2 * viewParameters.d * tanf(scene.fov.v / 2.0f)) * viewParameters.aspectRatio,
                     .height = parallel ?
                               ((scene.parallel.frustumWidth / viewParameters.aspectRatio)) :
                               horizontalFov ?
-                              (2 * viewParameters.d * (tanf(scene.fov.h / 2) / viewParameters.aspectRatio)) :
-                              (2 * viewParameters.d * (tanf(scene.fov.v / 2))),
+                              (2 * viewParameters.d * (tanf(scene.fov.h / 2.0f) / viewParameters.aspectRatio)) :
+                              (2 * viewParameters.d * (tanf(scene.fov.v / 2.0f))),
             }
     };
 

@@ -192,10 +192,13 @@ Vector3 convertRGBColorToColor(RGBColor rgbColor) {
 }
 
 Vector3 convertNormalToVector(RGBColor rgbColor) {
+    if (rgbColor.blue < 128) {
+        rgbColor.blue = 120;
+    }
     return (Vector3) {
-        .x = ((float) rgbColor.red - 128.0f) / 128.0f,
-        .y = ((float) rgbColor.green - 128.0f) / 128.0f,
-        .z = ((float) rgbColor.blue - 128.0f) / 128.0f,
+        .x = ((float) rgbColor.red - 127.5f) / 127.5f,
+        .y = ((float) rgbColor.green - 127.5f) / 127.5f,
+        .z = (float) rgbColor.blue / 127.5f,
     };
 }
 
@@ -353,12 +356,12 @@ int checkFaceIntersection(const Ray* ray, const Scene* scene, float* closestInte
             }
             (*closestFaceIntersection) = (FaceIntersection) {
                 .faceIdx = faceIdx,
-                .N = N,
+                .normalDirection = N,
                 .alpha = alpha,
                 .beta = beta,
                 .gamma = gamma,
-                .T = T,
-                .B = B,
+                .tangentDirection = T,
+                .bitangentDirection = B,
             };
             (*closestObject) = TRIANGLE;
         }
@@ -384,7 +387,7 @@ Intersection castRay(Ray ray, Scene scene, int excludeSphereIdx, int excludeElli
     int closestEllipsoidIdx = -1;
     FaceIntersection closestFaceIntersection = (FaceIntersection) {
         .faceIdx = -1,
-        .N = (Vector3) {
+        .normalDirection = (Vector3) {
                 .x = 0.0f,
                 .y = 0.0f,
                 .z = 0.0f,
@@ -428,7 +431,7 @@ void matrixVectorMultiply(float matrix[3][3], float vector[3], float result[3]) 
 
 }
 
-RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
+RGBColor shadeRay(Ray viewingRay, Scene scene) {
     Intersection intersection = castRay(viewingRay, scene, -1, -1, -1);
     Vector3 intersectionPoint = add(
             viewingRay.origin,
@@ -457,26 +460,26 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
 
             if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
                 Vector3 m = normalize(convertNormalToVector(normal.data[y][x]));
-                Vector3 N = normalize((Vector3) {
+                Vector3 normalDirection = normalize((Vector3) {
                     .x = cosf(theta) * sinf(phi),
                     .y = sinf(theta) * sinf(phi),
                     .z = cosf(phi),
                 });
-                Vector3 T = normalize((Vector3) {
-                    .x = (-1.0f * N.y) / (sqrtf((N.x * N.x) + (N.y * N.y))),
-                    .y = (N.x) / (sqrtf((N.x * N.x) + (N.y * N.y))),
+                Vector3 tangentDirection = normalize((Vector3) {
+                    .x = (-1.0f * normalDirection.y) / (sqrtf((normalDirection.x * normalDirection.x) + (normalDirection.y * normalDirection.y))),
+                    .y = (normalDirection.x) / (sqrtf((normalDirection.x * normalDirection.x) + (normalDirection.y * normalDirection.y))),
                     .z = 0.0f,
                 });
-                Vector3 B = (Vector3) {
-                    .x = (-1.0f * N.z) * T.y,
-                    .y = N.z * T.x,
-                    .z = sqrtf((N.x * N.x) + (N.y * N.y)),
+                Vector3 bitangentDirection = (Vector3) {
+                    .x = (-1.0f * normalDirection.z) * tangentDirection.y,
+                    .y = normalDirection.z * tangentDirection.x,
+                    .z = sqrtf((normalDirection.x * normalDirection.x) + (normalDirection.y * normalDirection.y)),
                 };
 
                 surfaceNormal = (Vector3) {
-                    .x = (T.x * m.x) + (B.x * m.y) + (N.x * m.z),
-                    .y = (T.y * m.x) + (B.y * m.y) + (N.y * m.z),
-                    .z = (T.z * m.x) + (B.z * m.y) + (N.z * m.z),
+                    .x = (tangentDirection.x * m.x) + (bitangentDirection.x * m.y) + (normalDirection.x * m.z),
+                    .y = (tangentDirection.y * m.x) + (bitangentDirection.y * m.y) + (normalDirection.y * m.z),
+                    .z = (tangentDirection.z * m.x) + (bitangentDirection.z * m.y) + (normalDirection.z * m.z),
                 };
             }
             mtlColor.diffuseColor = convertRGBColorToColor(texture.data[y][x]);
@@ -493,7 +496,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
         mtlColor = scene.mtlColors[face.mtlColorIdx];
 
         if (scene.vertexNormals == NULL) {
-            surfaceNormal = normalize(intersection.closestFaceIntersection.N);
+            surfaceNormal = normalize(intersection.closestFaceIntersection.normalDirection);
         } else {
             Vector3 n0 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn1 - 1]);
             Vector3 n1 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn2 - 1]);
@@ -530,9 +533,9 @@ RGBColor shadeRay(Ray viewingRay, Scene scene, int testx, int testy) {
             if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
                 Vector3 m = normalize(convertNormalToVector(normal.data[y][x]));
                 surfaceNormal = (Vector3) {
-                        .x = (intersection.closestFaceIntersection.T.x * m.x) + (intersection.closestFaceIntersection.B.x * m.y) + (surfaceNormal.x * m.z),
-                        .y = (intersection.closestFaceIntersection.T.y * m.x) + (intersection.closestFaceIntersection.B.y * m.y) + (surfaceNormal.y * m.z),
-                        .z = (intersection.closestFaceIntersection.T.z * m.x) + (intersection.closestFaceIntersection.B.z * m.y) + (surfaceNormal.z * m.z),
+                        .x = (intersection.closestFaceIntersection.tangentDirection.x * m.x) + (intersection.closestFaceIntersection.bitangentDirection.x * m.y) + (surfaceNormal.x * m.z),
+                        .y = (intersection.closestFaceIntersection.tangentDirection.y * m.x) + (intersection.closestFaceIntersection.bitangentDirection.y * m.y) + (surfaceNormal.y * m.z),
+                        .z = (intersection.closestFaceIntersection.tangentDirection.z * m.x) + (intersection.closestFaceIntersection.bitangentDirection.z * m.y) + (surfaceNormal.z * m.z),
                 };
             }
 

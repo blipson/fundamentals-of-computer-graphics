@@ -31,7 +31,7 @@ void checkArgs(int argc, char* argv[]) {
         fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1c [-s:soft shadows] <path/to/input_file>`\n");
         exit(-1);
     }
-    if (strcmp(argv[0], "./raytracer1c") != 0 && strcmp(argv[0], "/home/ben/github.com/fundamentals-of-computer-graphics/assignment1c/main") != 0) {
+    if (strcmp(argv[0], "./raytracer1c") != 0 && strcmp(argv[0], "/home/ben/github.com/fundamentals-of-computer-graphics/assignment1c/main") != 0  && strcmp(argv[0], "/Users/Z003YW4/github.com/fundamentals-of-computer-graphics/assignment1c/main") != 0) {
         fprintf(stderr, "Incorrect usage. Correct usage is `$ ./raytracer1c <path/to/input_file>`\n");
         exit(-1);
     }
