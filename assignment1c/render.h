@@ -281,9 +281,44 @@ void checkEllipsoidIntersection(Ray* ray, Scene* scene, int excludeIdx, int elli
     }
 }
 
+
+void checkCylinderIntersection(Ray* ray, Scene* scene, int excludeIdx, int cylinderIdx, float* closestIntersection, enum ObjectType* closestObject, int* closestCylinderIdx) {
+    if (cylinderIdx != excludeIdx) {
+        Cylinder cylinder = (*scene).cylinders[cylinderIdx];
+        float A = dot((*ray).direction, (*ray).direction);
+        float B = 2.0f * (dot((*ray).origin, (*ray).direction));
+        float C = dot(((*ray).origin), ((*ray).origin));
+
+        float discriminant = B * B - 4.0f * A * C;
+
+        if (discriminant >= 0.0f) {
+            float sqrtDiscriminant = sqrtf(discriminant);
+            float t1 = (-B + sqrtDiscriminant) / (2.0f * A);
+            float t2 = (-B - sqrtDiscriminant) / (2.0f * A);
+
+            if (t1 >= 0.0f && t1 < (*closestIntersection)) {
+                (*closestIntersection) = t1;
+                (*closestCylinderIdx) = cylinderIdx;
+                (*closestObject) = CYLINDER;
+            }
+            if (t2 >= 0.0f && t2 < (*closestIntersection)) {
+                (*closestIntersection) = t2;
+                (*closestCylinderIdx) = cylinderIdx;
+                (*closestObject) = CYLINDER;
+            }
+        }
+    }
+}
+
 void checkEllipsoidIntersections(int excludeIdx, Ray* ray, Scene* scene, float* closestIntersection, enum ObjectType* closestObject, int* closestEllipsoidIdx) {
     for (int ellipsoidIdx = 0; ellipsoidIdx < (*scene).ellipsoidCount; ellipsoidIdx++) {
         checkEllipsoidIntersection(ray, scene, excludeIdx, ellipsoidIdx, closestIntersection, closestObject, closestEllipsoidIdx);
+    }
+}
+
+void checkCylinderIntersections(int excludeIdx, Ray* ray, Scene* scene, float* closestIntersection, enum ObjectType* closestObject, int* closestCylinderIdx) {
+    for (int cylinderIdx = 0; cylinderIdx < (*scene).cylinderCount; cylinderIdx++) {
+        checkCylinderIntersection(ray, scene, excludeIdx, cylinderIdx, closestIntersection, closestObject, closestCylinderIdx);
     }
 }
 
@@ -380,11 +415,12 @@ void checkFaceIntersections(int excludeIdx, Ray* ray, Scene* scene, float* close
     }
 }
 
-Intersection castRay(Ray ray, Scene scene, int excludeSphereIdx, int excludeEllipsoidIdx, int excludeFaceIdx) {
+Intersection castRay(Ray ray, Scene scene, int excludeSphereIdx, int excludeEllipsoidIdx, int excludeCylinderIdx, int excludeFaceIdx) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     enum ObjectType closestObject;
     int closestSphereIdx = -1;
     int closestEllipsoidIdx = -1;
+    int closestCylinderIdx = -1;
     FaceIntersection closestFaceIntersection = (FaceIntersection) {
         .faceIdx = -1,
         .normalDirection = (Vector3) {
@@ -401,12 +437,15 @@ Intersection castRay(Ray ray, Scene scene, int excludeSphereIdx, int excludeElli
 
     checkEllipsoidIntersections(excludeEllipsoidIdx, &ray, &scene, &closestIntersection, &closestObject, &closestEllipsoidIdx);
 
+    checkCylinderIntersections(excludeCylinderIdx, &ray, &scene, &closestIntersection, &closestObject, &closestCylinderIdx);
+
     checkFaceIntersections(excludeFaceIdx, &ray, &scene, &closestIntersection, &closestObject, &closestFaceIntersection);
 
     return (Intersection) {
             .closestIntersection = closestIntersection,
             .closestSphereIdx = closestSphereIdx,
             .closestEllipsoidIdx = closestEllipsoidIdx,
+            .closestCylinderIdx = closestCylinderIdx,
             .closestFaceIntersection = closestFaceIntersection,
             .closestObject = closestObject
     };
@@ -432,7 +471,7 @@ void matrixVectorMultiply(float matrix[3][3], float vector[3], float result[3]) 
 }
 
 RGBColor shadeRay(Ray viewingRay, Scene scene) {
-    Intersection intersection = castRay(viewingRay, scene, -1, -1, -1);
+    Intersection intersection = castRay(viewingRay, scene, -1, -1, -1, -1);
     Vector3 intersectionPoint = add(
             viewingRay.origin,
             multiply(
@@ -529,7 +568,6 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
             int y = (int) roundf(vFractional * ((float) texture.height - 1.0f)) % (texture.height - 1);
 
             // todo: check vn1 vn2 vn3 for 0 as well
-
             if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
                 Vector3 m = normalize(convertNormalToVector(normal.data[y][x]));
                 surfaceNormal = (Vector3) {
@@ -642,7 +680,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
                     Intersection shadowRay = castRay((Ray) {
                             .origin = intersectionPoint,
                             .direction = normalize(jitteredLightDirection)
-                    }, scene, intersection.closestSphereIdx, intersection.closestEllipsoidIdx, intersection.closestFaceIntersection.faceIdx);
+                    }, scene, intersection.closestSphereIdx, intersection.closestEllipsoidIdx, intersection.closestCylinderIdx, intersection.closestFaceIntersection.faceIdx);
 
                     if (shadowRay.closestSphereIdx != -1 || shadowRay.closestEllipsoidIdx != -1 || shadowRay.closestFaceIntersection.faceIdx != -1) {
                         if ((light.w == 1.0f && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) ||
@@ -656,7 +694,7 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
                 Intersection shadowRay = castRay((Ray) {
                         .origin = intersectionPoint,
                         .direction = lightDirection
-                }, scene, intersection.closestSphereIdx, intersection.closestEllipsoidIdx, intersection.closestFaceIntersection.faceIdx);
+                }, scene, intersection.closestSphereIdx, intersection.closestEllipsoidIdx, intersection.closestCylinderIdx, intersection.closestFaceIntersection.faceIdx);
                 if (shadowRay.closestSphereIdx != -1 || shadowRay.closestEllipsoidIdx != -1 || shadowRay.closestFaceIntersection.faceIdx != -1) {
                     if (light.w == 1.0f && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) {
                         shadow = 0.0f;

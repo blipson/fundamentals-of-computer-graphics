@@ -60,6 +60,11 @@ typedef struct {
 } Ellipsoid;
 
 typedef struct {
+    Vector3 axis;
+    float radius;
+} Cylinder;
+
+typedef struct {
     Vector3 position;
     float w;
     float i;
@@ -117,6 +122,8 @@ typedef struct {
     int sphereCount;
     Ellipsoid* ellipsoids;
     int ellipsoidCount;
+    Cylinder* cylinders;
+    int cylinderCount;
     Light* lights;
     int lightCount;
     DepthCueing depthCueing;
@@ -159,6 +166,7 @@ typedef struct {
 enum ObjectType {
     SPHERE,
     ELLIPSOID,
+    CYLINDER,
     TRIANGLE
 };
 
@@ -176,6 +184,7 @@ typedef struct {
     float closestIntersection;
     int closestSphereIdx;
     int closestEllipsoidIdx;
+    int closestCylinderIdx;
     FaceIntersection closestFaceIntersection;
     enum ObjectType closestObject;
 } Intersection;
