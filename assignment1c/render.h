@@ -427,158 +427,148 @@ Vector3 randomUnitVector() {
     return (Vector3) {x, y, z};
 }
 
-void matrixVectorMultiply(float matrix[3][3], float vector[3], float result[3]) {
-
+Vector3 tangentSpaceToWorldSpace(Vector3 transformationMatrix, Vector3 tangentDirection, Vector3 bitangentDirection, Vector3 surfaceNormal) {
+    return (Vector3) {
+            .x = (tangentDirection.x * transformationMatrix.x) + (bitangentDirection.x * transformationMatrix.y) + (surfaceNormal.x * transformationMatrix.z),
+            .y = (tangentDirection.y * transformationMatrix.x) + (bitangentDirection.y * transformationMatrix.y) + (surfaceNormal.y * transformationMatrix.z),
+            .z = (tangentDirection.z * transformationMatrix.x) + (bitangentDirection.z * transformationMatrix.y) + (surfaceNormal.z * transformationMatrix.z),
+    };
 }
 
-RGBColor shadeRay(Ray viewingRay, Scene scene) {
-    Intersection intersection = castRay(viewingRay, scene, -1, -1, -1);
-    Vector3 intersectionPoint = add(
-            viewingRay.origin,
-            multiply(
-                    viewingRay.direction,
-                    intersection.closestIntersection
-            )
-    );
+bool hasTextureData(PPMImage texture) { return texture.height > 0 && texture.width > 0 && texture.maxColor == 255 && texture.data != NULL; }
 
-    MaterialColor mtlColor;
-    Vector3 surfaceNormal;
+void handleSphereIntersection(Scene scene, Intersection intersection, Vector3 intersectionPoint, MaterialColor* mtlColor, Vector3* surfaceNormal) {
+    Sphere sphere = scene.spheres[intersection.closestSphereIdx];
+    (*mtlColor) = scene.mtlColors[sphere.mtlColorIdx];
+    PPMImage texture = scene.textures[sphere.textureIdx];
+    PPMImage normal = scene.normals[sphere.normalIdx];
+    (*surfaceNormal) = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
+    if (hasTextureData(texture)) {
+        float phi = acosf((*surfaceNormal).z);
+        float theta = atan2f((*surfaceNormal).y, (*surfaceNormal).x);
+        float v = phi / (float) M_PI;
+        float u = max(theta/(2.0f * (float) M_PI), (theta + 2.0f * (float) M_PI) / (2.0f * (float) M_PI));
+        int x = (int) roundf(u * (float) (texture.width-1)) % (texture.width - 1);
+        int y = (int) roundf(v * (float) (texture.height-1)) % (texture.height - 1);
 
-    if (intersection.closestSphereIdx != -1 && intersection.closestObject == SPHERE) {
-        Sphere sphere = scene.spheres[intersection.closestSphereIdx];
-        mtlColor = scene.mtlColors[sphere.mtlColorIdx];
-        PPMImage texture = scene.textures[sphere.textureIdx];
-        PPMImage normal = scene.normals[sphere.normalIdx];
-        surfaceNormal = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
-        if (texture.height > 0 && texture.width > 0 && texture.maxColor == 255 && texture.data != NULL) {
-            float phi = acosf(surfaceNormal.z);
-            float theta = atan2f(surfaceNormal.y, surfaceNormal.x);
-            float v = phi / (float) M_PI;
-            float u = max(theta/(2.0f * (float) M_PI), (theta + 2.0f * (float) M_PI) / (2.0f * (float) M_PI));
-            int x = (int) roundf(u * (float) (texture.width-1)) % (texture.width - 1);
-            int y = (int) roundf(v * (float) (texture.height-1)) % (texture.height - 1);
-
-            if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
-                Vector3 m = normalize(convertNormalToVector(normal.data[y][x]));
-                Vector3 normalDirection = normalize((Vector3) {
+        if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
+            Vector3 normalMatrix = normalize(convertNormalToVector(normal.data[y][x]));
+            Vector3 normalDirection = normalize((Vector3) {
                     .x = cosf(theta) * sinf(phi),
                     .y = sinf(theta) * sinf(phi),
                     .z = cosf(phi),
-                });
-                Vector3 tangentDirection = normalize((Vector3) {
+            });
+            Vector3 tangentDirection = normalize((Vector3) {
                     .x = (-1.0f * normalDirection.y) / (sqrtf((normalDirection.x * normalDirection.x) + (normalDirection.y * normalDirection.y))),
                     .y = (normalDirection.x) / (sqrtf((normalDirection.x * normalDirection.x) + (normalDirection.y * normalDirection.y))),
                     .z = 0.0f,
-                });
-                Vector3 bitangentDirection = (Vector3) {
+            });
+            Vector3 bitangentDirection = (Vector3) {
                     .x = (-1.0f * normalDirection.z) * tangentDirection.y,
                     .y = normalDirection.z * tangentDirection.x,
                     .z = sqrtf((normalDirection.x * normalDirection.x) + (normalDirection.y * normalDirection.y)),
-                };
+            };
 
-                surfaceNormal = (Vector3) {
-                    .x = (tangentDirection.x * m.x) + (bitangentDirection.x * m.y) + (normalDirection.x * m.z),
-                    .y = (tangentDirection.y * m.x) + (bitangentDirection.y * m.y) + (normalDirection.y * m.z),
-                    .z = (tangentDirection.z * m.x) + (bitangentDirection.z * m.y) + (normalDirection.z * m.z),
-                };
-            }
-            mtlColor.diffuseColor = convertRGBColorToColor(texture.data[y][x]);
+            (*surfaceNormal) = tangentSpaceToWorldSpace(normalMatrix, tangentDirection, bitangentDirection, (*surfaceNormal));
         }
-    } else if (intersection.closestEllipsoidIdx != -1 && intersection.closestObject == ELLIPSOID) {
-        Ellipsoid ellipsoid = scene.ellipsoids[intersection.closestEllipsoidIdx];
-        mtlColor = scene.mtlColors[ellipsoid.mtlColorIdx];
-        // todo: Calculate the surface normal for the ellipsoid
-        surfaceNormal = normalize(divide(subtract(intersectionPoint, ellipsoid.center), ellipsoid.radius.x));
-    } else if (intersection.closestFaceIntersection.faceIdx != -1 && intersection.closestObject == TRIANGLE) {
-        Face face = scene.faces[intersection.closestFaceIntersection.faceIdx];
-        PPMImage texture = scene.textures[face.textureIdx];
-        PPMImage normal = scene.normals[face.normalIdx];
-        mtlColor = scene.mtlColors[face.mtlColorIdx];
+        (*mtlColor).diffuseColor = convertRGBColorToColor(texture.data[y][x]);
+    }
+}
 
-        if (scene.vertexNormals == NULL) {
-            surfaceNormal = normalize(intersection.closestFaceIntersection.normalDirection);
-        } else {
-            Vector3 n0 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn1 - 1]);
-            Vector3 n1 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn2 - 1]);
-            Vector3 n2 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn3 - 1]);
-            Vector3 alphaComponent = multiply(n0, intersection.closestFaceIntersection.alpha);
-            Vector3 betaComponent = multiply(n1, intersection.closestFaceIntersection.beta);
-            Vector3 gammaComponent = multiply(n2, intersection.closestFaceIntersection.gamma);
-            surfaceNormal = normalize(add(alphaComponent, add(betaComponent, gammaComponent)));
-        }
+void handleEllipsoidIntersection(Scene scene, Intersection intersection, Vector3 intersectionPoint, MaterialColor* mtlColor, Vector3* surfaceNormal) {
+    Ellipsoid ellipsoid = scene.ellipsoids[intersection.closestEllipsoidIdx];
+    (*mtlColor) = scene.mtlColors[ellipsoid.mtlColorIdx];
+    // todo: Calculate the surface normal for the ellipsoid
+    (*surfaceNormal) = normalize(divide(subtract(intersectionPoint, ellipsoid.center), ellipsoid.radius.x));
+}
 
-        if (scene.vertexTextures != NULL && texture.height > 0 && texture.width > 0 && texture.maxColor == 255 && texture.data != NULL) {
-            // todo: DRY this with checkFaceIntersection()???
-            float u0 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt1 - 1].u;
-            float v0 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt1 - 1].v;
-            float u1 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt2 - 1].u;
-            float v1 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt2 - 1].v;
-            float u2 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt3 - 1].u;
-            float v2 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt3 - 1].v;
-
-            float u = intersection.closestFaceIntersection.alpha * u0 + intersection.closestFaceIntersection.beta * u1 + intersection.closestFaceIntersection.gamma * u2;
-            float v = intersection.closestFaceIntersection.alpha * v0 + intersection.closestFaceIntersection.beta * v1 + intersection.closestFaceIntersection.gamma * v2;
-
-            float uInt;
-            float uFractional = modff(u, &uInt);
-
-            float vInt;
-            float vFractional = modff(v, &vInt);
-
-            int x = (int) roundf(uFractional * ((float) texture.width - 1.0f)) % (texture.width - 1);
-            int y = (int) roundf(vFractional * ((float) texture.height - 1.0f)) % (texture.height - 1);
-
-            // todo: check vn1 vn2 vn3 for 0 as well
-
-            if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
-                Vector3 m = normalize(convertNormalToVector(normal.data[y][x]));
-                surfaceNormal = (Vector3) {
-                        .x = (intersection.closestFaceIntersection.tangentDirection.x * m.x) + (intersection.closestFaceIntersection.bitangentDirection.x * m.y) + (surfaceNormal.x * m.z),
-                        .y = (intersection.closestFaceIntersection.tangentDirection.y * m.x) + (intersection.closestFaceIntersection.bitangentDirection.y * m.y) + (surfaceNormal.y * m.z),
-                        .z = (intersection.closestFaceIntersection.tangentDirection.z * m.x) + (intersection.closestFaceIntersection.bitangentDirection.z * m.y) + (surfaceNormal.z * m.z),
-                };
-            }
-
-            mtlColor.diffuseColor =
-                add(
+Vector3 applyBilinearInterpolation(FaceIntersection intersection, RGBColor** textureData, int x, int y) {
+    return add(
+            add(
                     add(
-                        add(
                             multiply(
-                                multiply(
-                                    convertRGBColorToColor(texture.data[y][x]),
-                                    (1 - intersection.closestFaceIntersection.alpha)
-                                ),
-                                (1 - intersection.closestFaceIntersection.beta)
+                                    multiply(
+                                            convertRGBColorToColor(textureData[y][x]),
+                                            (1 - intersection.alpha)
+                                    ),
+                                    (1 - intersection.beta)
                             ),
                             multiply(
-                                multiply(
-                                    convertRGBColorToColor(texture.data[y][x + 1]),
-                                    (intersection.closestFaceIntersection.alpha)
-                                ),
-                                (1 - intersection.closestFaceIntersection.beta)
+                                    multiply(
+                                            convertRGBColorToColor(textureData[y][x + 1]),
+                                            (intersection.alpha)
+                                    ),
+                                    (1 - intersection.beta)
                             )
-                        ),
-                        multiply(
-                            multiply(
-                                convertRGBColorToColor(texture.data[y + 1][x]),
-                                (1 - intersection.closestFaceIntersection.alpha)
-                            ),
-                            (intersection.closestFaceIntersection.beta)
-                        )
                     ),
                     multiply(
-                        multiply(
-                            convertRGBColorToColor(texture.data[y + 1][x + 1]),
-                            (intersection.closestFaceIntersection.alpha)
-                        ),
-                        (intersection.closestFaceIntersection.beta)
+                            multiply(
+                                    convertRGBColorToColor(textureData[y + 1][x]),
+                                    (1 - intersection.alpha)
+                            ),
+                            (intersection.beta)
                     )
-                );
-        }
+            ),
+            multiply(
+                    multiply(
+                            convertRGBColorToColor(textureData[y + 1][x + 1]),
+                            (intersection.alpha)
+                    ),
+                    (intersection.beta)
+            )
+    );
+}
+
+void handleFaceIntersection(Scene scene, Intersection intersection, MaterialColor* mtlColor, Vector3* surfaceNormal) {
+    Face face = scene.faces[intersection.closestFaceIntersection.faceIdx];
+    PPMImage texture = scene.textures[face.textureIdx];
+    PPMImage normal = scene.normals[face.normalIdx];
+    (*mtlColor) = scene.mtlColors[face.mtlColorIdx];
+
+    if (scene.vertexNormals == NULL) {
+        (*surfaceNormal) = normalize(intersection.closestFaceIntersection.normalDirection);
     } else {
-        return convertColorToRGBColor(scene.bkgColor);
+        Vector3 n0 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn1 - 1]);
+        Vector3 n1 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn2 - 1]);
+        Vector3 n2 = normalize(scene.vertexNormals[scene.faces[intersection.closestFaceIntersection.faceIdx].vn3 - 1]);
+        Vector3 alphaComponent = multiply(n0, intersection.closestFaceIntersection.alpha);
+        Vector3 betaComponent = multiply(n1, intersection.closestFaceIntersection.beta);
+        Vector3 gammaComponent = multiply(n2, intersection.closestFaceIntersection.gamma);
+        (*surfaceNormal) = normalize(add(alphaComponent, add(betaComponent, gammaComponent)));
     }
 
+    if (scene.vertexTextures != NULL && hasTextureData(texture)) {
+        float u0 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt1 - 1].u;
+        float v0 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt1 - 1].v;
+        float u1 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt2 - 1].u;
+        float v1 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt2 - 1].v;
+        float u2 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt3 - 1].u;
+        float v2 = scene.vertexTextures[scene.faces[intersection.closestFaceIntersection.faceIdx].vt3 - 1].v;
+
+        float u = intersection.closestFaceIntersection.alpha * u0 + intersection.closestFaceIntersection.beta * u1 + intersection.closestFaceIntersection.gamma * u2;
+        float v = intersection.closestFaceIntersection.alpha * v0 + intersection.closestFaceIntersection.beta * v1 + intersection.closestFaceIntersection.gamma * v2;
+
+        float uInt;
+        float uFractional = modff(u, &uInt);
+
+        float vInt;
+        float vFractional = modff(v, &vInt);
+
+        int x = (int) roundf(uFractional * ((float) texture.width - 1.0f)) % (texture.width - 1);
+        int y = (int) roundf(vFractional * ((float) texture.height - 1.0f)) % (texture.height - 1);
+
+        if (normal.height > 0 && normal.width > 0 && normal.maxColor == 255 && normal.data != NULL) {
+            Vector3 normalMatrix = normalize(convertNormalToVector(normal.data[y][x]));
+            (*surfaceNormal) = tangentSpaceToWorldSpace(normalMatrix, intersection.closestFaceIntersection.tangentDirection, intersection.closestFaceIntersection.bitangentDirection, (*surfaceNormal));
+
+        }
+
+        (*mtlColor).diffuseColor = applyBilinearInterpolation(intersection.closestFaceIntersection, texture.data, x, y);
+    }
+}
+
+
+Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vector3 intersectionPoint, MaterialColor mtlColor, Vector3 surfaceNormal) {
     Vector3 diffuseColor = mtlColor.diffuseColor;
     Vector3 specularColor = mtlColor.specularColor;
     Vector3 ambient = (Vector3) {
@@ -679,7 +669,8 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
             }
             float attenuationFactor = 1.0f;
             if (light.constantAttenuation > 0.0f || light.linearAttenuation > 0.0f || light.quadraticAttenuation > 0.0f) {
-                attenuationFactor = 1.0f / (light.constantAttenuation + light.linearAttenuation * distance(intersectionPoint, light.position) + light.quadraticAttenuation * powf(distance(intersectionPoint, light.position), 2.0f));
+                attenuationFactor = 1.0f / (light.constantAttenuation + light.linearAttenuation * distance(intersectionPoint, light.position) + light.quadraticAttenuation * powf(distance(
+                        intersectionPoint, light.position), 2.0f));
             }
             Vector3 lightSourceAttenuationApplied = multiply(multiply(add(diffuse, specular), lightIntensity), attenuationFactor);
             Vector3 shadowsApplied = multiply(lightSourceAttenuationApplied, shadow);
@@ -690,7 +681,33 @@ RGBColor shadeRay(Ray viewingRay, Scene scene) {
     }
     Vector3 ambientApplied = add(ambient, lightsApplied);
     Vector3 depthCueingAmbientApplied = add(depthCueingAmbient, depthCueingLightsApplied);
-    return convertColorToRGBColor(add(ambientApplied, depthCueingAmbientApplied));
+    return add(ambientApplied, depthCueingAmbientApplied);
+}
+
+
+RGBColor shadeRay(Ray viewingRay, Scene scene) {
+    Intersection intersection = castRay(viewingRay, scene, -1, -1, -1);
+    Vector3 intersectionPoint = add(
+            viewingRay.origin,
+            multiply(
+                    viewingRay.direction,
+                    intersection.closestIntersection
+            )
+    );
+
+    MaterialColor mtlColor;
+    Vector3 surfaceNormal;
+
+    if (intersection.closestSphereIdx != -1 && intersection.closestObject == SPHERE) {
+        handleSphereIntersection(scene, intersection, intersectionPoint, &mtlColor, &surfaceNormal);
+    } else if (intersection.closestEllipsoidIdx != -1 && intersection.closestObject == ELLIPSOID) {
+        handleEllipsoidIntersection(scene, intersection, intersectionPoint, &mtlColor, &surfaceNormal);
+    } else if (intersection.closestFaceIntersection.faceIdx != -1 && intersection.closestObject == TRIANGLE) {
+        handleFaceIntersection(scene, intersection, &mtlColor, &surfaceNormal);
+    } else {
+        return convertColorToRGBColor(scene.bkgColor);
+    }
+    return convertColorToRGBColor(applyBlinnPhongIllumination(scene, intersection, intersectionPoint, mtlColor, surfaceNormal));
 }
 
 #endif

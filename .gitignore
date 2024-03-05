@@ -22,4 +22,6 @@ assignment1c/longtests/*.ppm
 assignment1c/*.swp
 assignment1c/textures/keurig*
 assignment1c/tests/keurig*
+assignment1c/tests/showcase.txt
 assignment1c/textures/table*
+assignment1c/textures/chair*
