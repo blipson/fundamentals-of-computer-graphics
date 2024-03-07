@@ -43,15 +43,33 @@ attlight x y z w i c1 c2 c3
 depthcueing dcr dcg dcb αmin αmax distmin distmax
 ```
 ### Body
-This section defines the objects within the scene and their colors. `mtlcolor` must come first followed by the objects that are that color in any order. This section must come last.
+This section defines the objects within the scene and their colors. `mtlcolor` must come first followed by the objects that are that color in any order. If you'd like you can also add textures or normal maps via the `texture` and `bump` keywords. This section must come last. Spheres and ellipsoids are defines with center position and radius size, while more complex shapes are defined with a list of vertices, vertex normals, and faces that map to them, similar to the .obj file format.
 ```
 mtlcolor Dr Dg Db Sr Sg Sb ka kd ks n
 sphere x y z r
 ellipse x y z rx ry rz
 
 mtlcolor Dr Dg Db Sr Sg Sb ka kd ks n
+texture mytexture.ppm
+bump mynormalmap.ppm
 sphere x y z r
 ellipse x y z rx ry rz
+v -1 1 -4
+v -1 -1 -4
+v 1 -1 -4
+v 1 1 -4
 
+vn -1 1 1
+vn -1 -1 1
+vn 1 -1 1
+vn 1 1 1
+
+vt 0 0
+vt 0 1
+vt 1 1
+vt 1 0
+
+f 1/1/1 2/2/2 3/3/3
+f 1/1/1 3/3/3 4/4/4
 ...
 ```
