@@ -4,7 +4,7 @@
 
 #include <float.h>
 
-RGBColor shadeRay(Ray ray, Scene scene, int reflectionDepth, int excludeSphereIdx);
+RGBColor shadeRay(Ray ray, Scene scene, int reflectionDepth, int excludeSphereIdx, int excludeEllipsoidIdx, int excludeFaceIdx);
 
 float distance(Vector3 v1, Vector3 v2) {
     return sqrtf(powf(v2.x - v1.x, 2.0f) + powf(v2.y - v1.y, 2.0f) + powf(v2.z - v1.z, 2.0f));
@@ -696,23 +696,12 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
     }
 
 
-//    Vector3 reflectedColor = {0.0f, 0.0f, 0.0f};
-//    if (reflectionDepth > 0) {
-//        Vector3 reflectionDirection = reflect(normalize(multiply(incidentDirection, -1.0f)), surfaceNormal);
-//        Ray reflectionRay = (Ray) {
-//                .origin = intersectionPoint,
-//                .direction = reflectionDirection
-//        };
-//        reflectedColor = convertRGBColorToColor(shadeRay(reflectionRay, scene, reflectionDepth - 1));
-//    }
-//
-//    // Apply reflections with appropriate weight
     Vector3 ambientApplied = add(ambient, lightsApplied);
     Vector3 depthCueingAmbientApplied = add(depthCueingAmbient, depthCueingLightsApplied);
 
     Vector3 I = multiply(incidentDirection, -1.0f);
     Ray R = reflectRay(intersectionPoint, I, surfaceNormal);
-    RGBColor reflectionColor = shadeRay(R, scene, reflectionDepth - 1, intersection.closestSphereIdx);
+    RGBColor reflectionColor = shadeRay(R, scene, reflectionDepth - 1, intersection.closestSphereIdx, intersection.closestEllipsoidIdx, intersection.closestFaceIntersection.faceIdx);
 
     float F0 = powf(((mtlColor.refractionIndex - 1.0f) / (mtlColor.refractionIndex + 1.0f)), 2);
 
@@ -728,25 +717,14 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
     ambientApplied = multiply(ambientApplied, 1.0f - Fr);
     depthCueingAmbientApplied = multiply(depthCueingAmbientApplied, 1.0f - Fr);
     return add(add(ambientApplied, depthCueingAmbientApplied), reflectionComponent);
-//    return add(ambientApplied, depthCueingAmbientApplied);
-//    Vector3 finalColor = add(ambientApplied, multiply(reflectedColor, mtlColor.refractionIndex));
-//    Vector3 depthCueingFinalColor = add(depthCueingAmbientApplied, multiply(reflectedColor, mtlColor.refractionIndex));
-//
-//    // Return the final color
-//    if (reflectedColor.x > 0.0f || reflectedColor.y > 0.0f || reflectedColor.z > 0.0f) {
-//        printVector(reflectedColor);
-//    }
-//    return add(finalColor, depthCueingFinalColor);
-
-    // Reflections
 }
 
 
-RGBColor shadeRay(Ray ray, Scene scene, int reflectionDepth, int excludeSphereIdx) {
+RGBColor shadeRay(Ray ray, Scene scene, int reflectionDepth, int excludeSphereIdx, int excludeEllipsoidIdx, int excludeFaceIdx) {
     if (reflectionDepth < 0) {
         return convertColorToRGBColor(scene.bkgColor);
     }
-    Intersection intersection = castRay(ray, scene, excludeSphereIdx, -1, -1);
+    Intersection intersection = castRay(ray, scene, excludeSphereIdx, excludeEllipsoidIdx, excludeFaceIdx);
     Vector3 intersectionPoint = add(
             ray.origin,
             multiply(
