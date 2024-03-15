@@ -6,7 +6,7 @@ updir 0 1 0
 bkgcolor 0 0 0
 attlight 0 0 0 1 1 0 0 1
 
-mtlcolor 1 1 1 1 1 1 0.1 0.9 0 1
+mtlcolor 1 1 1 1 1 1 0.1 0.9 0 1 1 1
 sphere -0.175 0 -0.625 0.05
 sphere -0.1 0 -1 0.05
 sphere 0.025 0 -1.375 0.05

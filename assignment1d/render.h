@@ -715,10 +715,16 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
     RGBColor reflectionColor = shadeRay(R, scene, reflectionDepth - 1, intersection.closestSphereIdx);
 
     float F0 = powf(((mtlColor.refractionIndex - 1.0f) / (mtlColor.refractionIndex + 1.0f)), 2);
-    float Fr = powf((F0 + (1 - F0) * (1 - dot(I, surfaceNormal))), 5);
 
+    // Fr = F0 + (1 - F0)(1 - dot(I, N)^5)
+    float d = dot(I, surfaceNormal);
+    float oned = 1.0f - d;
+    float onef = 1.0f - F0;
+    float eoned = powf(oned, 5);
+    float two = onef * eoned;
+    float Fr = F0 + two;
 
-    Vector3 reflectionComponent =  multiply(convertRGBColorToColor(reflectionColor), 1);
+    Vector3 reflectionComponent =  multiply(convertRGBColorToColor(reflectionColor), Fr);
     ambientApplied = multiply(ambientApplied, 1.0f - Fr);
     depthCueingAmbientApplied = multiply(depthCueingAmbientApplied, 1.0f - Fr);
     return add(add(ambientApplied, depthCueingAmbientApplied), reflectionComponent);
