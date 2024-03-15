@@ -27,3 +27,15 @@ assignment1c/textures/table*
 assignment1c/textures/chair*
 assignment1c/textures/plate*
 assignment1c/textures/teapot*
+assignment1d/raytracer1d
+assignment1d/*.ppm
+assignment1d/tests/*.ppm
+assignment1d/longtests/*.ppm
+assignment1d/*.swp
+assignment1d/*.png
+assignment1d/textures/keurig*
+assignment1d/tests/showcase.txt
+assignment1d/textures/table*
+assignment1d/textures/chair*
+assignment1d/textures/plate*
+assignment1d/textures/teapot*
