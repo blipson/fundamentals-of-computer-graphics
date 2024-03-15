@@ -25,7 +25,7 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
         for (int x = 0; x < scene.imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
             Ray viewingRay = traceRay(scene, viewingWindowLocation, parallel);
-            writePixel(outputFilePtr, shadeRay(viewingRay, scene, 5), x, scene.imSize.width);
+            writePixel(outputFilePtr, shadeRay(viewingRay, scene, 5, -1), x, scene.imSize.width);
             progressBar(scene.imSize.width * scene.imSize.height, i);
             i++;
         }
