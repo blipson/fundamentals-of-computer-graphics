@@ -706,30 +706,52 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
     float F0 = powf(((mtlColor.refractionIndex - 1.0f) / (mtlColor.refractionIndex + 1.0f)), 2);
     float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(I, surfaceNormal), 5));
 
-    Vector3 reflectionComponent =  multiply(convertRGBColorToColor(reflectionColor), Fr);
+    Vector3 reflection =  multiply(convertRGBColorToColor(reflectionColor), Fr);
     ambientApplied = multiply(ambientApplied, 1.0f - Fr);
     depthCueingAmbientApplied = multiply(depthCueingAmbientApplied, 1.0f - Fr);
     // todo: write a clamp function
     Vector3 illumination = add(ambientApplied, depthCueingAmbientApplied);
-    Vector3 test = (Vector3) {
+    Vector3 clampedIllumination = (Vector3) {
             .x = max(min(illumination.x, 1.0f), 0.0f),
             .y = max(min(illumination.y, 1.0f), 0.0f),
             .z = max(min(illumination.z, 1.0f), 0.0f)
     };
-    if (test.x == 0.0f && test.y == 0.0f && test.z == 0.0f) {
-        reflectionComponent = (Vector3) {
+    if (clampedIllumination.x == 0.0f && clampedIllumination.y == 0.0f && clampedIllumination.z == 0.0f) {
+        reflection = (Vector3) {
             .x = 0.0f,
             .y = 0.0f,
             .z = 0.0f
         };
-    } else if (test.x == 1.0f && test.y == 1.0f && test.z == 1.0f) {
-        reflectionComponent = (Vector3) {
+    } else if (clampedIllumination.x == 1.0f && clampedIllumination.y == 1.0f && clampedIllumination.z == 1.0f) {
+        reflection = (Vector3) {
                 .x = 1.0f,
                 .y = 1.0f,
                 .z = 1.0f
         };
     }
-    return add(test, reflectionComponent);
+
+    Vector3 finalColor = add(clampedIllumination, reflection);
+
+    // Transparency
+    // (1-Fr)*(1-alpha)*Tlambda
+    // with attenuation
+    // (1-Fr)*(e^(-alphalambda * t))*Tlambda
+
+    float test1 = 1.0f - Fr;
+    float test2 = 1.0f - mtlColor.alpha;
+    float test3 = test1 * test2;
+
+    float eta_i = 1.0; // incident from air
+    float eta_t = mtlColor.alpha;
+    Ray T = (Ray) {
+        .origin = intersectionPoint,
+        .direction = add((multiply((multiply(multiply(surfaceNormal, -1.0f), sqrtf(1.0f - powf(eta_i / eta_t, 2.0f)))), (1.0f - powf(dot(surfaceNormal, incidentDirection), 2.0f)))), (multiply((subtract(multiply(surfaceNormal, dot(surfaceNormal, incidentDirection)), incidentDirection)), (eta_i / eta_t))))
+    };
+    RGBColor refractionColor = shadeRay(T, scene, 1, intersection.closestSphereIdx, intersection.closestEllipsoidIdx, intersection.closestFaceIntersection.faceIdx, 0, 0);
+
+    Vector3 transparency = multiply(convertRGBColorToColor(refractionColor), test3);
+
+    return add(finalColor, transparency);
 }
 
 
