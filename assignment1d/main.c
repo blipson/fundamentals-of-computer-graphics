@@ -23,9 +23,10 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
     int i = 0;
     for (int y = 0; y < scene.imSize.height; y++) {
         for (int x = 0; x < scene.imSize.width; x++) {
+            printf("%d %d\n", x, y);
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
             Ray viewingRay = traceRay(scene, viewingWindowLocation, parallel);
-            writePixel(outputFilePtr, shadeRay(viewingRay, scene, 5, -1, -1, -1, x, y), x, scene.imSize.width);
+            writePixel(outputFilePtr, shadeRay(viewingRay, scene, 5, -1, -1, -1, 1.0f, 1.0f, 1.0f, x, y), x, scene.imSize.width);
             progressBar(scene.imSize.width * scene.imSize.height, i);
             i++;
         }
