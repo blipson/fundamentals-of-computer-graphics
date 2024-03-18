@@ -4,7 +4,7 @@
 
 #include <float.h>
 
-RGBColor shadeRay(Ray ray, Scene scene, Exclusion exclusion, int reflectionDepth, float eta_i, float alpha_i, float shadow);
+RGBColor shadeRay(Ray ray, Scene scene, RayInfo exclusion, int reflectionDepth, float eta_i, float alpha_i, float shadow);
 
 float distance(Vector3 v1, Vector3 v2) {
     return sqrtf(powf(v2.x - v1.x, 2.0f) + powf(v2.y - v1.y, 2.0f) + powf(v2.z - v1.z, 2.0f));
@@ -591,11 +591,26 @@ Ray reflectRay(Vector3 intersectionPoint, Vector3 I, Vector3 normal) {
     };
 }
 
-Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vector3 intersectionPoint, MaterialColor mtlColor, Vector3 surfaceNormal, Vector3 incidentDirection, int reflectionDepth, float eta_i, float eta_t, float alpha_i, float shadow) {
-    Exclusion exclusion = (Exclusion) {
+Vector3 applyBlinnPhongIllumination(
+        Scene scene,
+        Intersection intersection,
+        Vector3 intersectionPoint,
+        MaterialColor mtlColor,
+        Vector3 surfaceNormal,
+        Vector3 incidentDirection,
+        int reflectionDepth,
+        float currentRefractionIndex,
+        float nextRefractionIndex,
+        float currentTransparency,
+        float shadow
+) {
+    RayInfo rayInfo = (RayInfo) {
+        .excludeFromIntersectionCalculation = (Exclusion) {
             .excludeSphereIdx = intersection.closestSphereIdx,
             .excludeEllipsoidIdx = intersection.closestEllipsoidIdx,
             .excludeFaceIdx = intersection.closestFaceIntersection.faceIdx
+
+        }
     };
 
     Vector3 diffuseColor = mtlColor.diffuseColor;
@@ -652,6 +667,7 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
 
 
             if (scene.softShadows) {
+                // todo: soft shadows don't work with transparency
                 float softShadow = 0.0f;
                 int numShadowRays = 500;
 
@@ -661,7 +677,7 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
                     Intersection shadowRay = castRay((Ray) {
                             .origin = intersectionPoint,
                             .direction = normalize(jitteredLightDirection)
-                    }, scene, exclusion);
+                    }, scene, rayInfo.excludeFromIntersectionCalculation);
 
                     if (shadowRay.closestSphereIdx != -1 || shadowRay.closestEllipsoidIdx != -1 || shadowRay.closestFaceIntersection.faceIdx != -1) {
                         if ((light.w == 1.0f && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) ||
@@ -675,13 +691,13 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
                 Intersection shadowIntersection = castRay((Ray) {
                         .origin = intersectionPoint,
                         .direction = lightDirection
-                }, scene, exclusion);
+                }, scene, rayInfo.excludeFromIntersectionCalculation);
                 if (shadowIntersection.closestSphereIdx != -1 || shadowIntersection.closestEllipsoidIdx != -1 || shadowIntersection.closestFaceIntersection.faceIdx != -1) {
                     if (light.w == 1.0f && shadowIntersection.closestIntersection < distance(intersectionPoint, light.position)) {
-                        shadow *= (1.0f - alpha_i);
+                        shadow *= (1.0f - currentTransparency);
                     }
                     if (light.w == 0.0f && shadowIntersection.closestIntersection > 0.0f) {
-                        shadow *= (1.0f - alpha_i);
+                        shadow *= (1.0f - currentTransparency);
                     }
                 }
             }
@@ -714,8 +730,7 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
     Vector3 depthCueingAmbientApplied = add(depthCueingAmbient, depthCueingLightsApplied);
 
     Vector3 I = multiply(incidentDirection, -1.0f);
-    Ray R = reflectRay(intersectionPoint, I, surfaceNormal);
-    RGBColor reflectionColor = shadeRay(R, scene, exclusion, reflectionDepth - 1, eta_i, 1.0f, shadow);
+    RGBColor reflectionColor = shadeRay(reflectRay(intersectionPoint, I, surfaceNormal), scene, rayInfo, reflectionDepth - 1, currentRefractionIndex, 1.0f, shadow);
 
     float F0 = powf(((mtlColor.refractionIndex - 1.0f) / (mtlColor.refractionIndex + 1.0f)), 2);
     float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(I, surfaceNormal), 5));
@@ -723,6 +738,7 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
     Vector3 reflection =  multiply(convertRGBColorToColor(reflectionColor), Fr);
     ambientApplied = multiply(ambientApplied, 1.0f - Fr);
     depthCueingAmbientApplied = multiply(depthCueingAmbientApplied, 1.0f - Fr);
+
     // todo: write a clamp function
     Vector3 illumination = add(ambientApplied, depthCueingAmbientApplied);
     Vector3 clampedIllumination = (Vector3) {
@@ -745,55 +761,45 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
         };
     }
 
-    Vector3 finalColor = add(clampedIllumination, reflection);
+    Vector3 reflectionApplied = add(clampedIllumination, reflection);
 
-    if (mtlColor.alpha < 1.0f && mtlColor.refractionIndex > 1.0f) {
-        // Transparency
-        // (1-Fr)*(1-alpha)*Tlambda
+    if (mtlColor.alpha >= 1.0f || mtlColor.refractionIndex <= 1.0f) {
+        return reflectionApplied;
+    } else {
+        float surfaceNormalDotIncidentDirection = dot(surfaceNormal, incidentDirection);
+        float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
 
-        // with attenuation
-        // (1-Fr)*(e^(-alphalambda * t))*Tlambda
+        float partUnderSqrt = 1.0f - powf(refractionCoefficient, 2.0f) * (1.0f - powf(surfaceNormalDotIncidentDirection, 2.0f));
 
-        float fresnel = (1.0f - Fr) * (1.0f - mtlColor.alpha);
-
-        float NdI = dot(surfaceNormal, incidentDirection);
-        float etaCoefficient = eta_i / eta_t;
-
-        float partUnderSqrt = 1.0f - powf(etaCoefficient, 2) * (1.0f - powf(NdI, 2));
-
-        Vector3 Tdir = add(
-            multiply(
-                    multiply(surfaceNormal, -1.0f),
-                    sqrtf(partUnderSqrt)
-                ),
-                multiply(
-                        subtract(multiply(surfaceNormal, NdI), incidentDirection),
-                        etaCoefficient
-                )
-        );
-
-
-        Ray T = (Ray) {
+        Ray nextIncident = (Ray) {
                 .origin = intersectionPoint,
-                .direction = Tdir
+                .direction = add(
+                        multiply(
+                                multiply(surfaceNormal, -1.0f),
+                                sqrtf(partUnderSqrt)
+                        ),
+                        multiply(
+                                subtract(multiply(surfaceNormal, surfaceNormalDotIncidentDirection), incidentDirection),
+                                refractionCoefficient
+                        )
+                )
         };
 
 
-        RGBColor refractionColor = shadeRay(T, scene, exclusion, reflectionDepth, mtlColor.refractionIndex, mtlColor.alpha, shadow);
-
-        Vector3 transparency = multiply(convertRGBColorToColor(refractionColor), fresnel);
-        return add(finalColor, transparency);
+        RGBColor refractionColor = shadeRay(nextIncident, scene, rayInfo, reflectionDepth, mtlColor.refractionIndex, mtlColor.alpha, shadow);
+        // with attenuation
+        // (1-Fr)*(e^(-alphalambda * t))*Tlambda
+        Vector3 transparency = multiply(convertRGBColorToColor(refractionColor), ((1.0f - Fr) * (1.0f - mtlColor.alpha)));
+        return add(reflectionApplied, transparency);
     }
-
-    return finalColor;
 }
 
 
-RGBColor shadeRay(Ray ray, Scene scene, Exclusion exclusion, int reflectionDepth, float eta_i, float alpha_i, float shadow) {
+RGBColor shadeRay(Ray ray, Scene scene, RayInfo rayInfo, int reflectionDepth, float eta_i, float alpha_i, float shadow) {
     if (reflectionDepth < 0) {
         return convertColorToRGBColor(scene.bkgColor);
     }
-    Intersection intersection = castRay(ray, scene, exclusion);
+    Intersection intersection = castRay(ray, scene, rayInfo.excludeFromIntersectionCalculation);
     Vector3 intersectionPoint = add(
             ray.origin,
             multiply(
