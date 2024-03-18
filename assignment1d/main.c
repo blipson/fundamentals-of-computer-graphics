@@ -24,7 +24,7 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
     for (int y = 0; y < scene.imSize.height; y++) {
         for (int x = 0; x < scene.imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
-            Ray viewingRay = traceRay(scene, viewingWindowLocation, parallel);
+            Ray viewingRay = traceViewingRay(scene, viewingWindowLocation, parallel);
 
             RayInfo rayInfo = (RayInfo) {
                 .excludeFromIntersectionCalculation = (Exclusion) {

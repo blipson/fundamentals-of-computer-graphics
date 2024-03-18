@@ -454,7 +454,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     int faceAllocationCount = 1;
     int ellipsoidAllocationCount = 1;
 
-    // todo: break each of these out into a method.
+    // todo: break each of these out into a method?
     while (inputFileWordsByLine[*line][0] != NULL) {
         if (strcmp(inputFileWordsByLine[*line][0], "mtlcolor") == 0) {
             if (scene->mtlColorCount >= INITIAL_MTLCOLOR_COUNT * mtlColorAllocationCount) {

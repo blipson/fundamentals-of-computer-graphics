@@ -4,7 +4,7 @@
 
 #include <float.h>
 
-RGBColor shadeRay(Ray ray, Scene scene, RayInfo exclusion, int reflectionDepth, float eta_i, float alpha_i, float shadow);
+RGBColor shadeRay(Ray ray, Scene scene, RayInfo exclusion, int reflectionDepth, float currentRefractionIndex, float currentTransparency, float shadow);
 
 float distance(Vector3 v1, Vector3 v2) {
     return sqrtf(powf(v2.x - v1.x, 2.0f) + powf(v2.y - v1.y, 2.0f) + powf(v2.z - v1.z, 2.0f));
@@ -177,7 +177,7 @@ Ray tracePerspectiveRay(Vector3 eye, Vector3 viewingWindowLocation) {
     };
 }
 
-Ray traceRay(Scene scene, Vector3 viewingWindowLocation, bool parallel) {
+Ray traceViewingRay(Scene scene, Vector3 viewingWindowLocation, bool parallel) {
     if (parallel) {
         return traceParallelRay(scene.viewDir, viewingWindowLocation);
     } else {
@@ -795,8 +795,9 @@ Vector3 applyBlinnPhongIllumination(
 }
 
 
-RGBColor shadeRay(Ray ray, Scene scene, RayInfo rayInfo, int reflectionDepth, float eta_i, float alpha_i, float shadow) {
+RGBColor shadeRay(Ray ray, Scene scene, RayInfo rayInfo, int reflectionDepth, float currentRefractionIndex, float currentTransparency, float shadow) {
     if (reflectionDepth < 0) {
+        // Do we want to return the bkgColor here? or something else?
         return convertColorToRGBColor(scene.bkgColor);
     }
     Intersection intersection = castRay(ray, scene, rayInfo.excludeFromIntersectionCalculation);
@@ -821,7 +822,7 @@ RGBColor shadeRay(Ray ray, Scene scene, RayInfo rayInfo, int reflectionDepth, fl
         return convertColorToRGBColor(scene.bkgColor);
     }
 
-    return convertColorToRGBColor(applyBlinnPhongIllumination(scene, intersection, intersectionPoint, mtlColor, surfaceNormal, ray.direction, reflectionDepth, eta_i, mtlColor.refractionIndex, alpha_i, shadow));
+    return convertColorToRGBColor(applyBlinnPhongIllumination(scene, intersection, intersectionPoint, mtlColor, surfaceNormal, ray.direction, reflectionDepth, currentRefractionIndex, mtlColor.refractionIndex, currentTransparency, shadow));
 }
 
 #endif
