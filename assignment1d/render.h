@@ -730,12 +730,12 @@ Vector3 applyBlinnPhongIllumination(
     Vector3 depthCueingAmbientApplied = add(depthCueingAmbient, depthCueingLightsApplied);
 
     Vector3 I = multiply(incidentDirection, -1.0f);
-    RGBColor reflectionColor = shadeRay(reflectRay(intersectionPoint, I, surfaceNormal), scene, rayInfo, reflectionDepth - 1, currentRefractionIndex, 1.0f, shadow);
+    Vector3 reflectionColor = convertRGBColorToColor(shadeRay(reflectRay(intersectionPoint, I, surfaceNormal), scene, rayInfo, reflectionDepth - 1, currentRefractionIndex, 1.0f, shadow));
 
     float F0 = powf(((mtlColor.refractionIndex - 1.0f) / (mtlColor.refractionIndex + 1.0f)), 2);
     float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(I, surfaceNormal), 5));
 
-    Vector3 reflection =  multiply(convertRGBColorToColor(reflectionColor), Fr);
+    Vector3 reflection =  multiply(reflectionColor, Fr);
     ambientApplied = multiply(ambientApplied, 1.0f - Fr);
     depthCueingAmbientApplied = multiply(depthCueingAmbientApplied, 1.0f - Fr);
 
@@ -770,6 +770,10 @@ Vector3 applyBlinnPhongIllumination(
         float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
 
         float partUnderSqrt = 1.0f - powf(refractionCoefficient, 2.0f) * (1.0f - powf(surfaceNormalDotIncidentDirection, 2.0f));
+
+        if (partUnderSqrt < 0.0f) {
+            return reflectionColor;
+        }
 
         Ray nextIncident = (Ray) {
                 .origin = intersectionPoint,
