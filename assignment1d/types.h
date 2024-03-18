@@ -182,4 +182,18 @@ typedef struct {
     enum ObjectType closestObject;
 } Intersection;
 
+typedef struct {
+    int excludeSphereIdx;
+    int excludeEllipsoidIdx;
+    int excludeFaceIdx;
+} Exclusion;
+
+typedef struct {
+    Exclusion excludeFromIntersectionCalculation;
+    int reflectionDepth;
+    float currentRefractionIndex;
+    float currentTransparency;
+    float currentShadow;
+} RayInfo;
+
 #endif

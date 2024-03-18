@@ -25,7 +25,13 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
         for (int x = 0; x < scene.imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
             Ray viewingRay = traceRay(scene, viewingWindowLocation, parallel);
-            writePixel(outputFilePtr, shadeRay(viewingRay, scene, 5, -1, -1, -1, 1.0f, 1.0f, 1.0f, x, y), x, scene.imSize.width);
+
+            Exclusion exclusion = (Exclusion) {
+                .excludeSphereIdx = -1,
+                .excludeEllipsoidIdx = -1,
+                .excludeFaceIdx = -1
+            };
+            writePixel(outputFilePtr, shadeRay(viewingRay, scene, exclusion, 5, 1.0f, 1.0f, 1.0f), x, scene.imSize.width);
             progressBar(scene.imSize.width * scene.imSize.height, i);
             i++;
         }

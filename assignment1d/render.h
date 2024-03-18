@@ -4,7 +4,7 @@
 
 #include <float.h>
 
-RGBColor shadeRay(Ray ray, Scene scene, int reflectionDepth, int excludeSphereIdx, int excludeEllipsoidIdx, int excludeFaceIdx, float eta_i, float alpha_i, float shadow, int x, int y);
+RGBColor shadeRay(Ray ray, Scene scene, Exclusion exclusion, int reflectionDepth, float eta_i, float alpha_i, float shadow);
 
 float distance(Vector3 v1, Vector3 v2) {
     return sqrtf(powf(v2.x - v1.x, 2.0f) + powf(v2.y - v1.y, 2.0f) + powf(v2.z - v1.z, 2.0f));
@@ -392,7 +392,7 @@ void checkFaceIntersections(int excludeIdx, Ray* ray, Scene* scene, float* close
     }
 }
 
-Intersection castRay(Ray ray, Scene scene, int excludeSphereIdx, int excludeEllipsoidIdx, int excludeFaceIdx) {
+Intersection castRay(Ray ray, Scene scene, Exclusion exclusion) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     enum ObjectType closestObject;
     int closestSphereIdx = -1;
@@ -408,12 +408,11 @@ Intersection castRay(Ray ray, Scene scene, int excludeSphereIdx, int excludeElli
             .beta = 0.0f,
             .gamma = 0.0f,
     };
+    checkSphereIntersections(exclusion.excludeSphereIdx, &ray, &scene, &closestIntersection, &closestObject, &closestSphereIdx);
 
-    checkSphereIntersections(excludeSphereIdx, &ray, &scene, &closestIntersection, &closestObject, &closestSphereIdx);
+    checkEllipsoidIntersections(exclusion.excludeEllipsoidIdx, &ray, &scene, &closestIntersection, &closestObject, &closestEllipsoidIdx);
 
-    checkEllipsoidIntersections(excludeEllipsoidIdx, &ray, &scene, &closestIntersection, &closestObject, &closestEllipsoidIdx);
-
-    checkFaceIntersections(excludeFaceIdx, &ray, &scene, &closestIntersection, &closestObject, &closestFaceIntersection);
+    checkFaceIntersections(exclusion.excludeFaceIdx, &ray, &scene, &closestIntersection, &closestObject, &closestFaceIntersection);
 
     return (Intersection) {
             .closestIntersection = closestIntersection,
@@ -592,7 +591,13 @@ Ray reflectRay(Vector3 intersectionPoint, Vector3 I, Vector3 normal) {
     };
 }
 
-Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vector3 intersectionPoint, MaterialColor mtlColor, Vector3 surfaceNormal, Vector3 incidentDirection, int reflectionDepth, float eta_i, float eta_t, float alpha_i, float shadow, int x, int y) {
+Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vector3 intersectionPoint, MaterialColor mtlColor, Vector3 surfaceNormal, Vector3 incidentDirection, int reflectionDepth, float eta_i, float eta_t, float alpha_i, float shadow) {
+    Exclusion exclusion = (Exclusion) {
+            .excludeSphereIdx = intersection.closestSphereIdx,
+            .excludeEllipsoidIdx = intersection.closestEllipsoidIdx,
+            .excludeFaceIdx = intersection.closestFaceIntersection.faceIdx
+    };
+
     Vector3 diffuseColor = mtlColor.diffuseColor;
     Vector3 specularColor = mtlColor.specularColor;
     Vector3 ambient = (Vector3) {
@@ -645,6 +650,7 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
             };
 
 
+
             if (scene.softShadows) {
                 float softShadow = 0.0f;
                 int numShadowRays = 500;
@@ -655,7 +661,7 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
                     Intersection shadowRay = castRay((Ray) {
                             .origin = intersectionPoint,
                             .direction = normalize(jitteredLightDirection)
-                    }, scene, intersection.closestSphereIdx, intersection.closestEllipsoidIdx, intersection.closestFaceIntersection.faceIdx);
+                    }, scene, exclusion);
 
                     if (shadowRay.closestSphereIdx != -1 || shadowRay.closestEllipsoidIdx != -1 || shadowRay.closestFaceIntersection.faceIdx != -1) {
                         if ((light.w == 1.0f && shadowRay.closestIntersection < distance(intersectionPoint, light.position)) ||
@@ -666,24 +672,15 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
                 }
                 shadow = 1.0f - softShadow;
             } else {
-                // todo: handle opacity with shadows
-                // I think I need to use shadeRay instead of castRay :-(
-                // just to get the mtlColor so I can get the mtlColor.alpha
                 Intersection shadowIntersection = castRay((Ray) {
                         .origin = intersectionPoint,
                         .direction = lightDirection
-                }, scene, intersection.closestSphereIdx, intersection.closestEllipsoidIdx, intersection.closestFaceIntersection.faceIdx);
+                }, scene, exclusion);
                 if (shadowIntersection.closestSphereIdx != -1 || shadowIntersection.closestEllipsoidIdx != -1 || shadowIntersection.closestFaceIntersection.faceIdx != -1) {
                     if (light.w == 1.0f && shadowIntersection.closestIntersection < distance(intersectionPoint, light.position)) {
-                        if (x == 247 && y == 172) {
-                            int asdf = 0;
-                        }
                         shadow *= (1.0f - alpha_i);
                     }
                     if (light.w == 0.0f && shadowIntersection.closestIntersection > 0.0f) {
-                        if (x == 247 && y == 172) {
-                            int asdf = 0;
-                        }
                         shadow *= (1.0f - alpha_i);
                     }
                 }
@@ -718,7 +715,7 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
 
     Vector3 I = multiply(incidentDirection, -1.0f);
     Ray R = reflectRay(intersectionPoint, I, surfaceNormal);
-    RGBColor reflectionColor = shadeRay(R, scene, reflectionDepth - 1, intersection.closestSphereIdx, intersection.closestEllipsoidIdx, intersection.closestFaceIntersection.faceIdx, eta_i, 1.0f, shadow, x, y);
+    RGBColor reflectionColor = shadeRay(R, scene, exclusion, reflectionDepth - 1, eta_i, 1.0f, shadow);
 
     float F0 = powf(((mtlColor.refractionIndex - 1.0f) / (mtlColor.refractionIndex + 1.0f)), 2);
     float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(I, surfaceNormal), 5));
@@ -782,8 +779,7 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
         };
 
 
-        RGBColor refractionColor = shadeRay(T, scene, reflectionDepth, intersection.closestSphereIdx, intersection.closestEllipsoidIdx,
-                                            intersection.closestFaceIntersection.faceIdx, mtlColor.refractionIndex, mtlColor.alpha, shadow, x, y);
+        RGBColor refractionColor = shadeRay(T, scene, exclusion, reflectionDepth, mtlColor.refractionIndex, mtlColor.alpha, shadow);
 
         Vector3 transparency = multiply(convertRGBColorToColor(refractionColor), fresnel);
         return add(finalColor, transparency);
@@ -793,11 +789,11 @@ Vector3 applyBlinnPhongIllumination(Scene scene, Intersection intersection, Vect
 }
 
 
-RGBColor shadeRay(Ray ray, Scene scene, int reflectionDepth, int excludeSphereIdx, int excludeEllipsoidIdx, int excludeFaceIdx, float eta_i, float alpha_i, float shadow, int x, int y) {
+RGBColor shadeRay(Ray ray, Scene scene, Exclusion exclusion, int reflectionDepth, float eta_i, float alpha_i, float shadow) {
     if (reflectionDepth < 0) {
         return convertColorToRGBColor(scene.bkgColor);
     }
-    Intersection intersection = castRay(ray, scene, excludeSphereIdx, excludeEllipsoidIdx, excludeFaceIdx);
+    Intersection intersection = castRay(ray, scene, exclusion);
     Vector3 intersectionPoint = add(
             ray.origin,
             multiply(
@@ -818,11 +814,8 @@ RGBColor shadeRay(Ray ray, Scene scene, int reflectionDepth, int excludeSphereId
     } else {
         return convertColorToRGBColor(scene.bkgColor);
     }
-//    if (!entering) {
-//        surfaceNormal = multiply(surfaceNormal, -1.0f);
-//    }
 
-    return convertColorToRGBColor(applyBlinnPhongIllumination(scene, intersection, intersectionPoint, mtlColor, surfaceNormal, ray.direction, reflectionDepth, eta_i, mtlColor.refractionIndex, alpha_i, shadow, x, y));
+    return convertColorToRGBColor(applyBlinnPhongIllumination(scene, intersection, intersectionPoint, mtlColor, surfaceNormal, ray.direction, reflectionDepth, eta_i, mtlColor.refractionIndex, alpha_i, shadow));
 }
 
 #endif
