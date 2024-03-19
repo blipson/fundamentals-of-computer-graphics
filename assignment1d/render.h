@@ -4,7 +4,7 @@
 
 #include <float.h>
 
-RGBColor shadeRay(Ray ray, Scene scene, RayInfo exclusion, int reflectionDepth, float currentRefractionIndex, float currentTransparency, float shadow);
+RGBColor shadeRay(Ray ray, Scene scene, RayInfo exclusion, int reflectionDepth, float currentTransparency, float shadow, bool entering);
 
 float distance(Vector3 v1, Vector3 v2) {
     return sqrtf(powf(v2.x - v1.x, 2.0f) + powf(v2.y - v1.y, 2.0f) + powf(v2.z - v1.z, 2.0f));
@@ -602,7 +602,8 @@ Vector3 applyBlinnPhongIllumination(
         float currentRefractionIndex,
         float nextRefractionIndex,
         float currentTransparency,
-        float shadow
+        float shadow,
+        bool entering
 ) {
     RayInfo rayInfo = (RayInfo) {
         .excludeFromIntersectionCalculation = (Exclusion) {
@@ -730,22 +731,34 @@ Vector3 applyBlinnPhongIllumination(
     Vector3 depthCueingAmbientApplied = add(depthCueingAmbient, depthCueingLightsApplied);
 
     Vector3 I = multiply(incidentDirection, -1.0f);
-    Vector3 reflectionColor = convertRGBColorToColor(shadeRay(reflectRay(intersectionPoint, I, surfaceNormal), scene, rayInfo, reflectionDepth - 1, currentRefractionIndex, 1.0f, shadow));
+
+    Vector3 reflection = (Vector3) {
+        .x = 0.0f,
+        .y = 0.0f,
+        .z = 0.0f
+    };
 
     float F0 = powf(((mtlColor.refractionIndex - 1.0f) / (mtlColor.refractionIndex + 1.0f)), 2);
     float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(I, surfaceNormal), 5));
 
-    Vector3 reflection =  multiply(reflectionColor, Fr);
-    ambientApplied = multiply(ambientApplied, 1.0f - Fr);
-    depthCueingAmbientApplied = multiply(depthCueingAmbientApplied, 1.0f - Fr);
-
-    // todo: write a clamp function
     Vector3 illumination = add(ambientApplied, depthCueingAmbientApplied);
+    Vector3 reflectionColor = illumination;
+
+    if (mtlColor.specularCoefficient > 0.0f) {
+        reflectionColor = convertRGBColorToColor(shadeRay(reflectRay(intersectionPoint, I, surfaceNormal), scene, rayInfo, reflectionDepth - 1, 1.0f, shadow, entering));
+        reflection = multiply(reflectionColor, Fr);
+        ambientApplied = multiply(ambientApplied, 1.0f - Fr);
+        depthCueingAmbientApplied = multiply(depthCueingAmbientApplied, 1.0f - Fr);
+        illumination = add(ambientApplied, depthCueingAmbientApplied);
+    }
+
     Vector3 clampedIllumination = (Vector3) {
             .x = max(min(illumination.x, 1.0f), 0.0f),
             .y = max(min(illumination.y, 1.0f), 0.0f),
             .z = max(min(illumination.z, 1.0f), 0.0f)
     };
+
+    // todo: write a clamp function
     if (clampedIllumination.x == 0.0f && clampedIllumination.y == 0.0f && clampedIllumination.z == 0.0f) {
         reflection = (Vector3) {
             .x = 0.0f,
@@ -763,43 +776,44 @@ Vector3 applyBlinnPhongIllumination(
 
     Vector3 reflectionApplied = add(clampedIllumination, reflection);
 
-    if (mtlColor.alpha >= 1.0f || mtlColor.refractionIndex <= 1.0f) {
+    if (mtlColor.alpha >= 1.0f) {
         return reflectionApplied;
-    } else {
-        float surfaceNormalDotIncidentDirection = dot(surfaceNormal, incidentDirection);
-        float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
-
-        float partUnderSqrt = 1.0f - powf(refractionCoefficient, 2.0f) * (1.0f - powf(surfaceNormalDotIncidentDirection, 2.0f));
-
-        if (partUnderSqrt < 0.0f) {
-            return reflectionColor;
-        }
-
-        Ray nextIncident = (Ray) {
-                .origin = intersectionPoint,
-                .direction = add(
-                        multiply(
-                                multiply(surfaceNormal, -1.0f),
-                                sqrtf(partUnderSqrt)
-                        ),
-                        multiply(
-                                subtract(multiply(surfaceNormal, surfaceNormalDotIncidentDirection), incidentDirection),
-                                refractionCoefficient
-                        )
-                )
-        };
-
-
-        RGBColor refractionColor = shadeRay(nextIncident, scene, rayInfo, reflectionDepth, mtlColor.refractionIndex, mtlColor.alpha, shadow);
-        // with attenuation
-        // (1-Fr)*(e^(-alphalambda * t))*Tlambda
-        Vector3 transparency = multiply(convertRGBColorToColor(refractionColor), ((1.0f - Fr) * (1.0f - mtlColor.alpha)));
-        return add(reflectionApplied, transparency);
     }
+
+    float surfaceNormalDotIncidentDirection = dot(surfaceNormal, incidentDirection);
+    float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
+
+    float partUnderSqrt = 1.0f - powf(refractionCoefficient, 2.0f) * (1.0f - powf(surfaceNormalDotIncidentDirection, 2.0f));
+
+    if (partUnderSqrt < 0.0f) {
+        return reflectionColor;
+    }
+
+    Ray nextIncident = (Ray) {
+            .origin = intersectionPoint,
+//            .direction = incidentDirection
+            .direction = add(
+                    multiply(
+                            multiply(surfaceNormal, -1.0f),
+                            sqrtf(partUnderSqrt)
+                    ),
+                    multiply(
+                            subtract(multiply(surfaceNormal, surfaceNormalDotIncidentDirection), incidentDirection),
+                            refractionCoefficient
+                    )
+            )
+    };
+
+
+    RGBColor refractionColor = shadeRay(nextIncident, scene, rayInfo, reflectionDepth, mtlColor.alpha, shadow, !entering);
+    // with attenuation
+    // (1-Fr)*(e^(-alphalambda * t))*Tlambda
+    Vector3 transparency = multiply(convertRGBColorToColor(refractionColor), ((1.0f - Fr) * (1.0f - mtlColor.alpha)));
+    return add(reflectionApplied, transparency);
 }
 
 
-RGBColor shadeRay(Ray ray, Scene scene, RayInfo rayInfo, int reflectionDepth, float currentRefractionIndex, float currentTransparency, float shadow) {
+RGBColor shadeRay(Ray ray, Scene scene, RayInfo rayInfo, int reflectionDepth, float currentTransparency, float shadow, bool entering) {
     if (reflectionDepth < 0) {
         // Do we want to return the bkgColor here? or something else?
         return convertColorToRGBColor(scene.bkgColor);
@@ -826,7 +840,17 @@ RGBColor shadeRay(Ray ray, Scene scene, RayInfo rayInfo, int reflectionDepth, fl
         return convertColorToRGBColor(scene.bkgColor);
     }
 
-    return convertColorToRGBColor(applyBlinnPhongIllumination(scene, intersection, intersectionPoint, mtlColor, surfaceNormal, ray.direction, reflectionDepth, currentRefractionIndex, mtlColor.refractionIndex, currentTransparency, shadow));
+    float currentRefractionIndex;
+    float nextRefractionIndex;
+//    if (entering) {
+//        currentRefractionIndex = 1.0f;
+//        nextRefractionIndex = mtlColor.refractionIndex;
+//    } else {
+//        currentRefractionIndex = mtlColor.refractionIndex;
+//        nextRefractionIndex = 1.0f;
+//    }
+
+    return convertColorToRGBColor(applyBlinnPhongIllumination(scene, intersection, intersectionPoint, mtlColor, surfaceNormal, ray.direction, reflectionDepth, currentRefractionIndex, nextRefractionIndex, currentTransparency, shadow, entering));
 }
 
 #endif
