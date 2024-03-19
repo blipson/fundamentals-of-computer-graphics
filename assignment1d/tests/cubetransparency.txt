@@ -3,7 +3,7 @@ eye 3 3 -2
 viewdir -1 -1 -1
 hfov 60
 updir 0 1 0
-bkgcolor 0.2 0.2 0.2
+bkgcolor 0.2 0.2 0.2 1
 light 1.5 1.5 -3.5 1 1
 
 v -1 -1 -4

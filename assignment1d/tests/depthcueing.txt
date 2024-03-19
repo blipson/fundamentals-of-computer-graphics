@@ -3,7 +3,7 @@ eye 0 0 0
 viewdir 0 0 -1
 hfov 45
 updir 0 1 0
-bkgcolor 0 0 0
+bkgcolor 0 0 0 1
 depthcueing 0 0 0 0 1 0 225
 light 10 10 -25 1 1
 

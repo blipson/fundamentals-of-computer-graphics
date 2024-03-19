@@ -3,7 +3,7 @@ viewdir 0 0 -1
 updir 0 1 0
 hfov 45
 imsize 500 330
-bkgcolor 0 0 0
+bkgcolor 0 0 0 1
 light 0 0 24 1 1
 
 v -9 -6  -10

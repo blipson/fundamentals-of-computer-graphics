@@ -106,12 +106,17 @@ typedef struct {
 } TextureCoordinate;
 
 typedef struct {
+    Vector3 color;
+    float refractionIndex;
+} Background;
+
+typedef struct {
     Vector3 eye;
     Vector3 viewDir;
     Vector3 upDir;
     FieldOfView fov;
     ImSize imSize;
-    Vector3 bkgColor;
+    Background bkgColor;
     Parallel parallel;
     MaterialColor* mtlColors;
     int mtlColorCount;

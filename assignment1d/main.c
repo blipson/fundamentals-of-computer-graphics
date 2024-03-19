@@ -52,7 +52,10 @@ int main(int argc, char* argv[]) {
             .upDir = {.x = 0.0f, .y = 0.0f, .z = 0.0f},
             .fov = {.h = 0.0f, .v = 0.0f },
             .imSize = {.width = 0, .height = 0},
-            .bkgColor = {.x = 0.0f, .y = 0.0f, .z = 0.0f},
+            .bkgColor = (Background) {
+                .color = (Vector3) { .x = 0.0f, .y = 0.0f, .z = 0.0f },
+                .refractionIndex = 1.0f
+            },
             .parallel = {.frustumWidth = 0.0f},
             .mtlColors = (MaterialColor*) malloc(INITIAL_MTLCOLOR_COUNT * sizeof(MaterialColor)),
             .mtlColorCount = 0,

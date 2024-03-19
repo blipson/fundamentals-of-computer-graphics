@@ -824,7 +824,7 @@ Vector3 applyBlinnPhongIllumination(
 RGBColor shadeRay(Ray ray, Scene scene, RayInfo rayInfo, int reflectionDepth, float currentTransparency, float shadow, bool entering) {
     if (reflectionDepth > 10) {
         // Do we want to return the bkgColor here? or something else?
-        return convertColorToRGBColor(scene.bkgColor);
+        return convertColorToRGBColor(scene.bkgColor.color);
     }
     Intersection intersection = castRay(ray, scene, rayInfo.excludeFromIntersectionCalculation);
     Vector3 intersectionPoint = add(
@@ -845,18 +845,21 @@ RGBColor shadeRay(Ray ray, Scene scene, RayInfo rayInfo, int reflectionDepth, fl
     } else if (intersection.closestFaceIntersection.faceIdx != -1 && intersection.closestObject == TRIANGLE) {
         handleFaceIntersection(scene, intersection, &mtlColor, &surfaceNormal);
     } else {
-        return convertColorToRGBColor(scene.bkgColor);
+        return convertColorToRGBColor(scene.bkgColor.color);
     }
 
     float currentRefractionIndex;
     float nextRefractionIndex;
 //    if (entering) {
-//        currentRefractionIndex = 1.0f;
+//        currentRefractionIndex = scene.bkgColor.refractionIndex;
 //        nextRefractionIndex = mtlColor.refractionIndex;
 //    } else {
 //        currentRefractionIndex = mtlColor.refractionIndex;
-//        nextRefractionIndex = 1.0f;
+//        nextRefractionIndex = scene.bkgColor.refractionIndex;
 //    }
+
+    // TODO: How do I make it work with camera inside of sphere??
+    // TODO: How do I make it work with underwater?
 
     return convertColorToRGBColor(applyBlinnPhongIllumination(scene, intersection, intersectionPoint, mtlColor, surfaceNormal, ray.direction, reflectionDepth, currentRefractionIndex, nextRefractionIndex, currentTransparency, shadow, entering));
 }

@@ -261,10 +261,11 @@ void readSceneSetup(
             scene->imSize.width = convertStringToInt(inputFileWordsByLine[*line][1]);
             scene->imSize.height = convertStringToInt(inputFileWordsByLine[*line][2]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "bkgcolor") == 0) {
-            checkValues(inputFileWordsByLine[*line], 3, "bkgcolor");
-            scene->bkgColor.x = convertStringToFloat(inputFileWordsByLine[*line][1]);
-            scene->bkgColor.y = convertStringToFloat(inputFileWordsByLine[*line][2]);
-            scene->bkgColor.z = convertStringToFloat(inputFileWordsByLine[*line][3]);
+            checkValues(inputFileWordsByLine[*line], 4, "bkgcolor");
+            scene->bkgColor.color.x = convertStringToFloat(inputFileWordsByLine[*line][1]);
+            scene->bkgColor.color.y = convertStringToFloat(inputFileWordsByLine[*line][2]);
+            scene->bkgColor.color.z = convertStringToFloat(inputFileWordsByLine[*line][3]);
+            scene->bkgColor.refractionIndex = convertStringToFloat(inputFileWordsByLine[*line][4]);
         } else if (strcmp(inputFileWordsByLine[*line][0], "parallel") == 0) {
             checkValues(inputFileWordsByLine[*line], 1, "parallel");
             scene->parallel.frustumWidth = convertStringToFloat(inputFileWordsByLine[*line][1]);
@@ -624,7 +625,7 @@ void printScene(Scene scene) {
     printf("updir: %f %f %f\n", scene.upDir.x, scene.upDir.y, scene.upDir.z);
     printf("hfov: %f\n", scene.fov.h);
     printf("imsize: %d %d\n", scene.imSize.width, scene.imSize.height);
-    printf("bkgcolor: %f %f %f\n", scene.bkgColor.x, scene.bkgColor.y, scene.bkgColor.z);
+    printf("bkgcolor: %f %f %f\n", scene.bkgColor.color.x, scene.bkgColor.color.y, scene.bkgColor.color.z);
     printf("parallel: %f\n", scene.parallel.frustumWidth);
     if (scene.lights != NULL) {
         for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++) {
