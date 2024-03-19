@@ -806,6 +806,45 @@ Vector3 applyBlinnPhongIllumination(
 
     Vector3 transparency = multiply(convertRGBColorToColor(refractionColor), ((1.0f - Fr) * (1.0f - mtlColor.alpha)));
     return add(reflectionApplied, transparency);
+
+// somehow this code makes it work when the camera is in the sphere?
+//    float cosThetaEntering = dot(surfaceNormal, incidentDirection);
+//    if (cosThetaEntering > 0.0f) {
+//        entering = !entering;
+//        surfaceNormal = multiply(surfaceNormal, -1.0f);
+//        cosThetaEntering = -cosThetaEntering;
+//    }
+//    float currentRefractionIndex = scene.bkgColor.refractionIndex;
+//    float nextRefractionIndex = mtlColor.refractionIndex;
+//    if (!entering) {
+//        float tempRefractionIndex = currentRefractionIndex;
+//        currentRefractionIndex = nextRefractionIndex;
+//        nextRefractionIndex = tempRefractionIndex;
+//        surfaceNormal = multiply(surfaceNormal, -1.0f);
+//    }
+//
+//
+//    float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
+//    float partUnderSqrt = 1.0f - powf(refractionCoefficient, 2.0f) * (1.0f - powf(cosThetaEntering, 2.0f));
+//    if (partUnderSqrt < 0.0f) {
+//        return reflectionColor;
+//    }
+//
+//    Vector3 refractionDirection = subtract(
+//            multiply(incidentDirection, refractionCoefficient),
+//            multiply(surfaceNormal, (refractionCoefficient * cosThetaEntering + sqrtf(partUnderSqrt)))
+//    );
+//
+//    Vector3 refractionColor = convertRGBColorToColor(shadeRay(
+//            (Ray){ .origin = intersectionPoint, .direction = normalize(refractionDirection) },
+//            scene, rayInfo, reflectionDepth + 1, currentTransparency * mtlColor.alpha, shadow, entering
+//    ));
+//
+//    F0 = powf(((currentRefractionIndex - nextRefractionIndex) / (currentRefractionIndex + nextRefractionIndex)), 2);
+//    Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(incidentDirection, surfaceNormal), 5));
+//    reflectionColor = multiply(reflectionColor, Fr);
+//    refractionColor = multiply(refractionColor, 1.0f - Fr);
+//    return add(reflectionColor, refractionColor);
 }
 
 RGBColor shadeRay(Ray ray, Scene scene, RayInfo rayInfo, int reflectionDepth, float currentTransparency, float shadow, bool entering) {
