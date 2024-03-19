@@ -776,6 +776,16 @@ Vector3 applyBlinnPhongIllumination(
 
     // TRANSPARENCY
     float surfaceNormalDotIncidentDirection = dot(surfaceNormal, incidentDirection);
+// Practice problem input
+//    incidentDirection = (Vector3) {
+//        .x = -1.0f / 9.0f,
+//        .y = 4.0f / 9.0f,
+//        .z = 8.0f / 9.0f
+//    };
+//    currentRefractionIndex = 1.0f;
+//    nextRefractionIndex = 1.2f;
+//
+//    surfaceNormalDotIncidentDirection = 4.0f / 9.0f;
     float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
 
     float partUnderSqrt = 1.0f - powf(refractionCoefficient, 2.0f) * (1.0f - powf(surfaceNormalDotIncidentDirection, 2.0f));
@@ -799,6 +809,9 @@ Vector3 applyBlinnPhongIllumination(
             )
     };
 
+    if (intersection.closestObject == TRIANGLE) {
+        nextIncident.direction = incidentDirection;
+    }
 
     RGBColor refractionColor = shadeRay(nextIncident, scene, rayInfo, reflectionDepth, mtlColor.alpha, shadow, !entering);
     // with attenuation
