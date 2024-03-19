@@ -33,7 +33,7 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
                         .excludeFaceIdx = -1
                 },
             };
-            writePixel(outputFilePtr, shadeRay(viewingRay, scene, rayInfo, 10, 1.0f, 1.0f, true), x, scene.imSize.width);
+            writePixel(outputFilePtr, shadeRay(viewingRay, scene, rayInfo, 0, 1.0f, 1.0f, true), x, scene.imSize.width);
             progressBar(scene.imSize.width * scene.imSize.height, i);
             i++;
         }

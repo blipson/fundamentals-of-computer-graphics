@@ -578,16 +578,10 @@ void handleFaceIntersection(Scene scene, Intersection intersection, MaterialColo
     }
 }
 
-Ray reflectRay(Vector3 intersectionPoint, Vector3 I, Vector3 normal) {
-    // Calculate the reflected ray direction using the incident and normal vectors
-    float d = dot(normal, I);
-    float twod = 2.0f * d;
-    Vector3 nd = multiply(normal, twod);
-    Vector3 dir = subtract(nd, I);
-
+Ray reflectRay(Vector3 intersectionPoint, Vector3 reverseIncidentDirection, Vector3 surfaceNormal) {
     return (Ray) {
             .origin = intersectionPoint,
-            .direction = dir
+            .direction = subtract((multiply(surfaceNormal, (2.0f * dot(surfaceNormal, reverseIncidentDirection)))), reverseIncidentDirection)
     };
 }
 
@@ -729,8 +723,11 @@ Vector3 applyBlinnPhongIllumination(
 
     Vector3 ambientApplied = add(ambient, lightsApplied);
     Vector3 depthCueingAmbientApplied = add(depthCueingAmbient, depthCueingLightsApplied);
+    Vector3 illumination = add(ambientApplied, depthCueingAmbientApplied);
 
-    Vector3 I = multiply(incidentDirection, -1.0f);
+    // REFLECTIONS
+    Vector3 reflectionColor = illumination;
+    Vector3 reverseIncidentDirection = multiply(incidentDirection, -1.0f);
 
     Vector3 reflection = (Vector3) {
         .x = 0.0f,
@@ -739,13 +736,10 @@ Vector3 applyBlinnPhongIllumination(
     };
 
     float F0 = powf(((mtlColor.refractionIndex - 1.0f) / (mtlColor.refractionIndex + 1.0f)), 2);
-    float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(I, surfaceNormal), 5));
-
-    Vector3 illumination = add(ambientApplied, depthCueingAmbientApplied);
-    Vector3 reflectionColor = illumination;
+    float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(reverseIncidentDirection, surfaceNormal), 5));
 
     if (mtlColor.specularCoefficient > 0.0f) {
-        reflectionColor = convertRGBColorToColor(shadeRay(reflectRay(intersectionPoint, I, surfaceNormal), scene, rayInfo, reflectionDepth - 1, 1.0f, shadow, entering));
+        reflectionColor = convertRGBColorToColor(shadeRay(reflectRay(intersectionPoint, reverseIncidentDirection, surfaceNormal), scene, rayInfo, reflectionDepth + 1, 1.0f, shadow, entering));
         reflection = multiply(reflectionColor, Fr);
         ambientApplied = multiply(ambientApplied, 1.0f - Fr);
         depthCueingAmbientApplied = multiply(depthCueingAmbientApplied, 1.0f - Fr);
@@ -780,6 +774,7 @@ Vector3 applyBlinnPhongIllumination(
         return reflectionApplied;
     }
 
+    // TRANSPARENCY
     float surfaceNormalDotIncidentDirection = dot(surfaceNormal, incidentDirection);
     float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
 
@@ -814,7 +809,7 @@ Vector3 applyBlinnPhongIllumination(
 
 
 RGBColor shadeRay(Ray ray, Scene scene, RayInfo rayInfo, int reflectionDepth, float currentTransparency, float shadow, bool entering) {
-    if (reflectionDepth < 0) {
+    if (reflectionDepth > 10) {
         // Do we want to return the bkgColor here? or something else?
         return convertColorToRGBColor(scene.bkgColor);
     }
