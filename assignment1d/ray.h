@@ -455,6 +455,11 @@ Intersection castRay(Ray ray, Scene scene, Exclusion exclusion) {
             .surfaceNormal = surfaceNormal,
             .mtlColor = mtlColor,
             .incidentDirection = ray.direction,
+            .exclusion = (Exclusion) {
+                .excludeSphereIdx = closestSphereIdx,
+                .excludeEllipsoidIdx = closestEllipsoidIdx,
+                .excludeFaceIdx = closestFaceIntersection.faceIdx
+            }
     };
 }
 

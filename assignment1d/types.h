@@ -180,6 +180,12 @@ typedef struct {
 } FaceIntersection;
 
 typedef struct {
+    int excludeSphereIdx;
+    int excludeEllipsoidIdx;
+    int excludeFaceIdx;
+} Exclusion;
+
+typedef struct {
     float closestIntersection;
     int closestSphereIdx;
     int closestEllipsoidIdx;
@@ -189,17 +195,19 @@ typedef struct {
     Vector3 surfaceNormal;
     Vector3 incidentDirection;
     MaterialColor mtlColor;
+    Exclusion exclusion;
 } Intersection;
-
-typedef struct {
-    int excludeSphereIdx;
-    int excludeEllipsoidIdx;
-    int excludeFaceIdx;
-} Exclusion;
 
 typedef struct {
     Vector3 color;
     Vector3 reflectionColor;
+} Reflection;
+
+typedef struct {
+    Vector3 ambient;
+    Vector3 depthCueingAmbient;
+    Vector3 color;
+    Vector3 depthCueingColor;
 } Illumination;
 
 #endif
