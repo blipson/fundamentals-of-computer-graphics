@@ -197,4 +197,9 @@ typedef struct {
     int excludeFaceIdx;
 } Exclusion;
 
+typedef struct {
+    Vector3 color;
+    Vector3 reflectionColor;
+} Illumination;
+
 #endif
