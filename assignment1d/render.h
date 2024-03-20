@@ -6,7 +6,7 @@
 #include "vector.h"
 #include "ray.h"
 
-Vector3 shadeRay(Ray ray, Scene scene, Exclusion exclusion, int reflectionDepth, float shadow, bool entering);
+Vector3 shadeRay(Ray ray, Scene scene, RayState rayState);
 
 Illumination applyLights(Scene scene, Intersection intersection, float shadow) {
     Vector3 ambient = (Vector3) {
@@ -81,7 +81,9 @@ Illumination applyLights(Scene scene, Intersection intersection, float shadow) {
                         }
                     }
                 }
-                softShadow *= (1.0f - centralShadowIntersection.mtlColor.alpha);
+                if (centralShadowIntersection.mtlColor.alpha < 1.0f) {
+                    softShadow *= (1.0f - centralShadowIntersection.mtlColor.alpha);
+                }
                 shadow = 1.0f - softShadow;
             } else {
                 Intersection shadowIntersection = castRay((Ray) {
@@ -138,10 +140,8 @@ Reflection applyReflections(
         Scene scene,
         Intersection intersection,
         Illumination illumination,
-        float shadow,
-        int reflectionDepth,
-        bool entering,
-        float Fr
+        RayState rayState,
+        float intersectionPointReflectionCoefficient
 ) {
     Vector3 baseColor = illumination.color;
     Vector3 reflectionColor = (Vector3) {
@@ -156,16 +156,32 @@ Reflection applyReflections(
     };
 
     if (intersection.mtlColor.specularCoefficient > 0.0f) {
-        reflectionColor = shadeRay(reflectRay(intersection.intersectionPoint, multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), scene, intersection.exclusion, reflectionDepth + 1, shadow, entering);
-        reflection = multiply(reflectionColor, Fr);
-        baseColor = clamp(add(multiply(illumination.ambient, 1.0f - Fr), multiply(illumination.depthCueingAmbient, 1.0f - Fr)));
+        reflectionColor = shadeRay(
+            reflectRay(
+                    intersection.intersectionPoint,
+                    multiply(intersection.incidentDirection, -1.0f),
+                    intersection.surfaceNormal
+                ),
+                scene,
+                (RayState) {
+                    .exclusion = rayState.exclusion,
+                    .shadow = rayState.shadow,
+                    .entering = rayState.entering,
+                    .reflectionDepth = rayState.reflectionDepth + 1
+                }
+        );
+        reflection = multiply(reflectionColor, intersectionPointReflectionCoefficient);
+        baseColor = clamp(add(
+            multiply(illumination.ambient, 1.0f - intersectionPointReflectionCoefficient),
+            multiply(illumination.depthCueingAmbient, 1.0f - intersectionPointReflectionCoefficient)
+        ));
     }
 
     if (baseColor.x == 0.0f && baseColor.y == 0.0f && baseColor.z == 0.0f) {
         reflection = (Vector3) {
-                .x = 0.0f,
-                .y = 0.0f,
-                .z = 0.0f
+            .x = 0.0f,
+            .y = 0.0f,
+            .z = 0.0f
         };
     }
 
@@ -177,28 +193,14 @@ Reflection applyReflections(
     };
 }
 
-Vector3 applyBlinnPhongIllumination(
-        Scene scene,
-        Intersection intersection,
-        int reflectionDepth,
-        float shadow,
-        bool entering
-) {
-    Illumination illumination = applyLights(scene, intersection, shadow);
-
-    float perpendicularReflectionCoefficient = powf(((intersection.mtlColor.refractionIndex - 1.0f) / (intersection.mtlColor.refractionIndex + 1.0f)), 2);
-    float intersectionPointReflectionCoefficient = perpendicularReflectionCoefficient + ((1.0f - perpendicularReflectionCoefficient) * powf(1.0f - dot(multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), 5));
-    Reflection reflection = applyReflections(scene, intersection, illumination, shadow, reflectionDepth, entering, intersectionPointReflectionCoefficient);
-
-    // refraction
-    if (intersection.mtlColor.alpha >= 1.0f) {
-        return reflection.color;
-    }
-
+Vector3 applyTransparency(Scene scene, Intersection intersection, RayState rayState, Reflection reflection, float intersectionPointReflectionCoefficient) {
+    // TODO: How do I make transparency and refraction work with camera inside of sphere??
+    // TODO: How do I make refraction work with underwater?
+    // TODO: How do I make transparency and refraction work with multiple transparent objects nested inside each other?? Maintain a stack??
     float currentRefractionIndex = scene.bkgColor.refractionIndex;
     float nextRefractionIndex = intersection.mtlColor.refractionIndex;
 
-    if (!entering) {
+    if (!rayState.entering) {
         float tempRefractionIndex = currentRefractionIndex;
         currentRefractionIndex = nextRefractionIndex;
         nextRefractionIndex = tempRefractionIndex;
@@ -211,7 +213,6 @@ Vector3 applyBlinnPhongIllumination(
         nextRefractionIndex = tempRefractionIndex;
         intersection.surfaceNormal = multiply(intersection.surfaceNormal, -1.0f);
     }
-
     float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
     float partUnderSqrt = 1.0f - powf(refractionCoefficient, 2.0f) * (1.0f - powf(cosThetaEntering, 2.0f));
     if (partUnderSqrt < 0.0f) {
@@ -231,66 +232,40 @@ Vector3 applyBlinnPhongIllumination(
             )
     };
 
-    Vector3 refractionColor = shadeRay(nextIncident, scene, intersection.exclusion, reflectionDepth, shadow, !entering);
-
-    Vector3 transparency = multiply(refractionColor, ((1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha)));
+    Vector3 transparencyColor = shadeRay(nextIncident, scene, (RayState) { .shadow = rayState.shadow, .entering = !rayState.entering, .reflectionDepth = rayState.reflectionDepth, .exclusion = intersection.exclusion });
+    Vector3 transparency = multiply(transparencyColor, ((1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha)));
     return add(reflection.color, transparency);
-
-// somehow this code makes it work when the camera is in the sphere?
-//    float cosThetaEntering = dot(surfaceNormal, incidentDirection);
-//    if (cosThetaEntering > 0.0f) {
-//        entering = !entering;
-//        surfaceNormal = multiply(surfaceNormal, -1.0f);
-//        cosThetaEntering = -cosThetaEntering;
-//    }
-//    float currentRefractionIndex = scene.bkgColor.refractionIndex;
-//    float nextRefractionIndex = mtlColor.refractionIndex;
-//    if (!entering) {
-//        float tempRefractionIndex = currentRefractionIndex;
-//        currentRefractionIndex = nextRefractionIndex;
-//        nextRefractionIndex = tempRefractionIndex;
-//        surfaceNormal = multiply(surfaceNormal, -1.0f);
-//    }
-//
-//
-//    float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
-//    float partUnderSqrt = 1.0f - powf(refractionCoefficient, 2.0f) * (1.0f - powf(cosThetaEntering, 2.0f));
-//    if (partUnderSqrt < 0.0f) {
-//        return reflectionColor;
-//    }
-//
-//    Vector3 refractionDirection = subtract(
-//            multiply(incidentDirection, refractionCoefficient),
-//            multiply(surfaceNormal, (refractionCoefficient * cosThetaEntering + sqrtf(partUnderSqrt)))
-//    );
-//
-//    Vector3 refractionColor = convertRGBColorToColor(shadeRay(
-//            (Ray){ .origin = intersectionPoint, .direction = normalize(refractionDirection) },
-//            scene, rayInfo, reflectionDepth + 1, currentTransparency * mtlColor.alpha, shadow, entering
-//    ));
-//
-//    F0 = powf(((currentRefractionIndex - nextRefractionIndex) / (currentRefractionIndex + nextRefractionIndex)), 2);
-//    Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(incidentDirection, surfaceNormal), 5));
-//    reflectionColor = multiply(reflectionColor, Fr);
-//    refractionColor = multiply(refractionColor, 1.0f - Fr);
-//    return add(reflectionColor, refractionColor);
 }
 
-Vector3 shadeRay(Ray ray, Scene scene, Exclusion exclusion, int reflectionDepth, float shadow, bool entering) {
-    if (reflectionDepth > 10) {
+Vector3 applyBlinnPhongIllumination(
+        Scene scene,
+        Intersection intersection,
+        RayState rayState
+) {
+    Illumination illumination = applyLights(scene, intersection,  rayState.shadow);
+
+    float perpendicularReflectionCoefficient = powf(((intersection.mtlColor.refractionIndex - 1.0f) / (intersection.mtlColor.refractionIndex + 1.0f)), 2);
+    float intersectionPointReflectionCoefficient = perpendicularReflectionCoefficient + ((1.0f - perpendicularReflectionCoefficient) * powf(1.0f - dot(multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), 5));
+    Reflection reflection = applyReflections(scene, intersection, illumination, rayState, intersectionPointReflectionCoefficient);
+
+    if (intersection.mtlColor.alpha >= 1.0f) {
+        return reflection.color;
+    }
+
+    return applyTransparency(scene, intersection, rayState, reflection, intersectionPointReflectionCoefficient);
+}
+
+Vector3 shadeRay(Ray ray, Scene scene, RayState rayState) {
+    if (rayState.reflectionDepth > 10) {
         return scene.bkgColor.color;
     }
 
-    Intersection intersection = castRay(ray, scene, exclusion);
+    Intersection intersection = castRay(ray, scene, rayState.exclusion);
     if (!intersectionExists(intersection)) {
         return scene.bkgColor.color;
     }
 
-    // TODO: How do I make transparency and refraction work with camera inside of sphere??
-    // TODO: How do I make refraction work with underwater?
-    // TODO: How do I make transparency and refraction work with multiple transparent objects nested inside each other?? Maintain a stack??
-
-    return applyBlinnPhongIllumination(scene, intersection, reflectionDepth, shadow, entering);
+    return applyBlinnPhongIllumination(scene, intersection, rayState);
 }
 
 #endif

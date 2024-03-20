@@ -25,12 +25,20 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
         for (int x = 0; x < scene.imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
             Ray viewingRay = traceViewingRay(scene, viewingWindowLocation, parallel);
-            Exclusion exclusion = (Exclusion) {
-                .excludeSphereIdx = -1,
-                .excludeEllipsoidIdx = -1,
-                .excludeFaceIdx = -1
+            RayState rayState = (RayState) {
+                .exclusion = (Exclusion) {
+                        .excludeSphereIdx = -1,
+                        .excludeEllipsoidIdx = -1,
+                        .excludeFaceIdx = -1
+                },
+                .reflectionDepth = 0,
+                .shadow = 1.0f,
+                .entering = true
             };
-            writePixel(outputFilePtr, convertColorToRGBColor(shadeRay(viewingRay, scene, exclusion, 0, 1.0f, true)), x, scene.imSize.width);
+            if (x == 260 && y == 368) {
+                int test = 1234;
+            }
+            writePixel(outputFilePtr, convertColorToRGBColor(shadeRay(viewingRay, scene, rayState)), x, scene.imSize.width);
             progressBar(scene.imSize.width * scene.imSize.height, i);
             i++;
         }
