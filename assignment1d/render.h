@@ -191,7 +191,7 @@ Vector3 applyBlinnPhongIllumination(
     Illumination illumination = applyLights(scene, intersection, intersection.mtlColor, intersection.surfaceNormal, exclusion, shadow, reflectionDepth, entering);
 
     if (intersection.mtlColor.alpha >= 1.0f) {
-        return illumination.reflectionColor;
+        return illumination.color;
     }
 
     float currentRefractionIndex = scene.bkgColor.refractionIndex;
