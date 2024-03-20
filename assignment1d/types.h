@@ -63,8 +63,8 @@ typedef struct {
 
 typedef struct {
     Vector3 position;
-    float w;
-    float i;
+    float pointOrDirectional;
+    float intensity;
     float constantAttenuation;
     float linearAttenuation;
     float quadraticAttenuation;
@@ -185,6 +185,10 @@ typedef struct {
     int closestEllipsoidIdx;
     FaceIntersection closestFaceIntersection;
     enum ObjectType closestObject;
+    Vector3 intersectionPoint;
+    Vector3 surfaceNormal;
+    Vector3 incidentDirection;
+    MaterialColor mtlColor;
 } Intersection;
 
 typedef struct {
@@ -192,13 +196,5 @@ typedef struct {
     int excludeEllipsoidIdx;
     int excludeFaceIdx;
 } Exclusion;
-
-typedef struct {
-    Exclusion excludeFromIntersectionCalculation;
-    int reflectionDepth;
-    float currentRefractionIndex;
-    float currentTransparency;
-    float currentShadow;
-} RayInfo;
 
 #endif

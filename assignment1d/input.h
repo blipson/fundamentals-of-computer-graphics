@@ -215,8 +215,8 @@ void readLight(char** const* inputFileWordsByLine, const int* line, Scene* scene
             .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
             .z = convertStringToFloat(inputFileWordsByLine[*line][3])
     };
-    scene->lights[scene->lightCount].w = convertStringToFloat(inputFileWordsByLine[*line][4]);
-    scene->lights[scene->lightCount].i = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0); // clamp light intensity to 0-1
+    scene->lights[scene->lightCount].pointOrDirectional = convertStringToFloat(inputFileWordsByLine[*line][4]);
+    scene->lights[scene->lightCount].intensity = max(min(convertStringToFloat(inputFileWordsByLine[*line][5]), 1), 0); // clamp light intensity to 0-1
     scene->lights[scene->lightCount].constantAttenuation = attLight ? convertStringToFloat(inputFileWordsByLine[*line][6]) : 0.0f;
     scene->lights[scene->lightCount].linearAttenuation = attLight ? convertStringToFloat(inputFileWordsByLine[*line][7]) : 0.0f;
     scene->lights[scene->lightCount].quadraticAttenuation = attLight ? convertStringToFloat(inputFileWordsByLine[*line][8]) : 0.0f;
@@ -629,7 +629,7 @@ void printScene(Scene scene) {
     printf("parallel: %f\n", scene.parallel.frustumWidth);
     if (scene.lights != NULL) {
         for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++) {
-            printf("light: %f %f %f %f %f %f %f %f\n", scene.lights[lightIdx].position.x, scene.lights[lightIdx].position.y, scene.lights[lightIdx].position.z, scene.lights[lightIdx].w, scene.lights[lightIdx].i, scene.lights[lightIdx].constantAttenuation, scene.lights[lightIdx].linearAttenuation, scene.lights[lightIdx].quadraticAttenuation);
+            printf("light: %f %f %f %f %f %f %f %f\n", scene.lights[lightIdx].position.x, scene.lights[lightIdx].position.y, scene.lights[lightIdx].position.z, scene.lights[lightIdx].pointOrDirectional, scene.lights[lightIdx].intensity, scene.lights[lightIdx].constantAttenuation, scene.lights[lightIdx].linearAttenuation, scene.lights[lightIdx].quadraticAttenuation);
         }
     }
     if (scene.mtlColors != NULL) {

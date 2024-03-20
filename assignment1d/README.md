@@ -39,8 +39,8 @@ hfov v
 updir x y z
 bkgcolor x y z
 parallel v
-light x y z w i
-attlight x y z w i c1 c2 c3
+light x y z pointOrDirectional intensity
+attlight x y z pointOrDirectional intensity c1 c2 c3
 depthcueing dcr dcg dcb αmin αmax distmin distmax
 ```
 ### Body
