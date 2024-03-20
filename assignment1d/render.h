@@ -134,36 +134,30 @@ Illumination applyLights(Scene scene, Intersection intersection, float shadow) {
 Reflection applyReflections(
         Scene scene,
         Intersection intersection,
-        Illumination lightsApplied,
+        Vector3 ambientApplied,
+        Vector3 depthCueingAmbientApplied,
         float shadow,
         int reflectionDepth,
         bool entering,
         float Fr
 ) {
-    Vector3 ambientApplied = add(lightsApplied.ambient, lightsApplied.color);
-    Vector3 depthCueingAmbientApplied = add(lightsApplied.depthCueingAmbient, lightsApplied.depthCueingColor);
-    Vector3 baseColor = add(ambientApplied, depthCueingAmbientApplied);
+    // todo: calculate base color earlier and add it to Illumination, then pass illumination in here
+    Vector3 baseColor = clamp(add(ambientApplied, depthCueingAmbientApplied));
 
     Vector3 reflectionColor = baseColor;
-
     Vector3 reflection = (Vector3) {
             .x = 0.0f,
             .y = 0.0f,
             .z = 0.0f
     };
 
-    // reflections
     if (intersection.mtlColor.specularCoefficient > 0.0f) {
         reflectionColor = convertRGBColorToColor(shadeRay(reflectRay(intersection.intersectionPoint, multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), scene, intersection.exclusion, reflectionDepth + 1, shadow, entering));
         reflection = multiply(reflectionColor, Fr);
-        ambientApplied = multiply(ambientApplied, 1.0f - Fr);
-        depthCueingAmbientApplied = multiply(depthCueingAmbientApplied, 1.0f - Fr);
-        baseColor = add(ambientApplied, depthCueingAmbientApplied);
+        baseColor = clamp(add(multiply(ambientApplied, 1.0f - Fr), multiply(depthCueingAmbientApplied, 1.0f - Fr)));
     }
 
-    Vector3 clampedIllumination = clamp(baseColor);
-
-    if (clampedIllumination.x == 0.0f && clampedIllumination.y == 0.0f && clampedIllumination.z == 0.0f) {
+    if (baseColor.x == 0.0f && baseColor.y == 0.0f && baseColor.z == 0.0f) {
         reflection = (Vector3) {
                 .x = 0.0f,
                 .y = 0.0f,
@@ -171,11 +165,11 @@ Reflection applyReflections(
         };
     }
 
-    Vector3 illumination = add(clampedIllumination, reflection);
+    Vector3 illumination = add(baseColor, reflection);
 
     return (Reflection) {
-        .color = illumination,
-        .reflectionColor = reflectionColor
+        .color = clamp(illumination),
+        .reflectionColor = clamp(reflectionColor)
     };
 }
 
@@ -187,10 +181,12 @@ Vector3 applyBlinnPhongIllumination(
         bool entering
 ) {
     Illumination lightsApplied = applyLights(scene, intersection, shadow);
+    Vector3 ambientApplied = add(lightsApplied.ambient, lightsApplied.color);
+    Vector3 depthCueingAmbientApplied = add(lightsApplied.depthCueingAmbient, lightsApplied.depthCueingColor);
 
     float perpendicularReflectionCoefficient = powf(((intersection.mtlColor.refractionIndex - 1.0f) / (intersection.mtlColor.refractionIndex + 1.0f)), 2);
     float intersectionPointReflectionCoefficient = perpendicularReflectionCoefficient + ((1.0f - perpendicularReflectionCoefficient) * powf(1.0f - dot(multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), 5));
-    Reflection reflection = applyReflections(scene, intersection, lightsApplied, shadow, reflectionDepth, entering, intersectionPointReflectionCoefficient);
+    Reflection reflection = applyReflections(scene, intersection, ambientApplied, depthCueingAmbientApplied, shadow, reflectionDepth, entering, intersectionPointReflectionCoefficient);
 
     // refraction
     if (intersection.mtlColor.alpha >= 1.0f) {
