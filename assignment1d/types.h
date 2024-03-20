@@ -207,7 +207,6 @@ typedef struct {
     Vector3 ambient;
     Vector3 depthCueingAmbient;
     Vector3 color;
-    Vector3 depthCueingColor;
 } Illumination;
 
 #endif
