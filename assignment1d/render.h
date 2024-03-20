@@ -60,23 +60,28 @@ Illumination applyLights(Scene scene, Intersection intersection, float shadow) {
             // shadows
             if (scene.softShadows) {
                 float softShadow = 0.0f;
-                int numShadowRays = 500;
+                int numShadowRays = 50;
 
+                Intersection centralShadowIntersection = castRay((Ray) {
+                        .origin = intersection.intersectionPoint,
+                        .direction = lightDirection
+                }, scene, intersection.exclusion);
                 for (int i = 0; i < numShadowRays; ++i) {
                     Vector3 jitteredLightDirection = add(lightDirection, multiply(randomUnitVector(), 0.005f));
 
-                    Intersection shadowRay = castRay((Ray) {
+                    Intersection shadowIntersection = castRay((Ray) {
                             .origin = intersection.intersectionPoint,
                             .direction = normalize(jitteredLightDirection)
                     }, scene, intersection.exclusion);
 
-                    if (shadowRay.closestSphereIdx != -1 || shadowRay.closestEllipsoidIdx != -1 || shadowRay.closestFaceIntersection.faceIdx != -1) {
-                        if ((light.pointOrDirectional == 1.0f && shadowRay.closestIntersection < distance(intersection.intersectionPoint, light.position)) ||
-                            (light.pointOrDirectional == 0.0f && shadowRay.closestIntersection > 0.0f)) {
+                    if (shadowIntersection.closestSphereIdx != -1 || shadowIntersection.closestEllipsoidIdx != -1 || shadowIntersection.closestFaceIntersection.faceIdx != -1) {
+                        if ((light.pointOrDirectional == 1.0f && shadowIntersection.closestIntersection < distance(intersection.intersectionPoint, light.position)) ||
+                            (light.pointOrDirectional == 0.0f && shadowIntersection.closestIntersection > 0.0f)) {
                             softShadow += 1.0f / (float) numShadowRays;
                         }
                     }
                 }
+                softShadow *= (1.0f - centralShadowIntersection.mtlColor.alpha);
                 shadow = 1.0f - softShadow;
             } else {
                 Intersection shadowIntersection = castRay((Ray) {
@@ -181,12 +186,11 @@ Vector3 applyBlinnPhongIllumination(
         float shadow,
         bool entering
 ) {
-
     Illumination lightsApplied = applyLights(scene, intersection, shadow);
 
-    float F0 = powf(((intersection.mtlColor.refractionIndex - 1.0f) / (intersection.mtlColor.refractionIndex + 1.0f)), 2);
-    float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), 5));
-    Reflection reflection = applyReflections(scene, intersection, lightsApplied, shadow, reflectionDepth, entering, Fr);
+    float perpendicularReflectionCoefficient = powf(((intersection.mtlColor.refractionIndex - 1.0f) / (intersection.mtlColor.refractionIndex + 1.0f)), 2);
+    float intersectionPointReflectionCoefficient = perpendicularReflectionCoefficient + ((1.0f - perpendicularReflectionCoefficient) * powf(1.0f - dot(multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), 5));
+    Reflection reflection = applyReflections(scene, intersection, lightsApplied, shadow, reflectionDepth, entering, intersectionPointReflectionCoefficient);
 
     // refraction
     if (intersection.mtlColor.alpha >= 1.0f) {
@@ -231,7 +235,7 @@ Vector3 applyBlinnPhongIllumination(
 
     RGBColor refractionColor = shadeRay(nextIncident, scene, intersection.exclusion, reflectionDepth, shadow, !entering);
 
-    Vector3 transparency = multiply(convertRGBColorToColor(refractionColor), ((1.0f - Fr) * (1.0f - intersection.mtlColor.alpha)));
+    Vector3 transparency = multiply(convertRGBColorToColor(refractionColor), ((1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha)));
     return add(reflection.color, transparency);
 
 // somehow this code makes it work when the camera is in the sphere?
