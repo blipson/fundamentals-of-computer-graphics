@@ -200,7 +200,7 @@ Vector3 applyTransparency(Scene scene, Intersection intersection, RayState raySt
 
     Vector3 I = multiply(intersection.incidentDirection, -1.0f);
     // TODO: Test underwater
-    // TODO: How do I make transparency and refraction work with multiple transparent objects nested inside each other?? Maintain a stack??
+    // TODO: Test nested objects
 
     float cosThetaEntering = dot(intersection.surfaceNormal, I);
     float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
