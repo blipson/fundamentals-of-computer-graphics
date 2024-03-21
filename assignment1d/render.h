@@ -193,7 +193,7 @@ Reflection applyReflections(
     };
 }
 
-Vector3 applyTransparency(Scene scene, Intersection intersection, RayState rayState, Reflection reflection, float intersectionPointReflectionCoefficient) {
+Vector3 applyTransparency(Scene scene, Intersection intersection, RayState rayState, Reflection reflection, float intersectionPointReflectionCoefficient, float currentRefractionIndex, float nextRefractionIndex) {
     if (intersection.mtlColor.alpha >= 1.0f) {
         return reflection.color;
     }
@@ -201,15 +201,6 @@ Vector3 applyTransparency(Scene scene, Intersection intersection, RayState raySt
     Vector3 I = multiply(intersection.incidentDirection, -1.0f);
     // TODO: Test underwater
     // TODO: How do I make transparency and refraction work with multiple transparent objects nested inside each other?? Maintain a stack??
-    float currentRefractionIndex = scene.bkgColor.refractionIndex;
-    float nextRefractionIndex = intersection.mtlColor.refractionIndex;
-
-    if (!rayState.entering) {
-        float tempRefractionIndex = currentRefractionIndex;
-        currentRefractionIndex = nextRefractionIndex;
-        nextRefractionIndex = tempRefractionIndex;
-        intersection.surfaceNormal = multiply(intersection.surfaceNormal, -1.0f);
-    }
 
     float cosThetaEntering = dot(intersection.surfaceNormal, I);
     float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
@@ -232,12 +223,9 @@ Vector3 applyTransparency(Scene scene, Intersection intersection, RayState raySt
 
     // TODO: How do I determine if I'm really entering an object, or just going through a face floating in space? If it's just a face then I don't want to flip entering. Is that even valid?
     Vector3 transparencyColor = shadeRay(nextIncident, scene, (RayState) { .shadow = rayState.shadow, .entering = !rayState.entering, .reflectionDepth = rayState.reflectionDepth, .exclusion = (Exclusion) { .excludeFaceIdx = intersection.exclusion.excludeFaceIdx, .excludeEllipsoidIdx = -1, .excludeSphereIdx = -1 } });
+    Vector3 transparency = multiply(transparencyColor, (1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha));
 
-    // TODO: why does this break it???
-    float test = (1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha);
-    Vector3 transparency = multiply(transparencyColor, test);
-
-    return add(reflection.color, transparencyColor);
+    return add(reflection.color, transparency);
 }
 
 Vector3 applyBlinnPhongIllumination(
@@ -247,15 +235,25 @@ Vector3 applyBlinnPhongIllumination(
 ) {
     Illumination illumination = applyLights(scene, intersection,  rayState.shadow);
 
-    float perpendicularReflectionCoefficient = powf(((intersection.mtlColor.refractionIndex - 1.0f) / (intersection.mtlColor.refractionIndex + 1.0f)), 2);
-    float intersectionPointReflectionCoefficient = perpendicularReflectionCoefficient + ((1.0f - perpendicularReflectionCoefficient) * powf(1.0f - dot(multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), 5));
-    Reflection reflection = applyReflections(scene, intersection, illumination, rayState, intersectionPointReflectionCoefficient);
+    float currentRefractionIndex = scene.bkgColor.refractionIndex;
+    float nextRefractionIndex = intersection.mtlColor.refractionIndex;
+
+    if (!rayState.entering) {
+        float tempRefractionIndex = currentRefractionIndex;
+        currentRefractionIndex = nextRefractionIndex;
+        nextRefractionIndex = tempRefractionIndex;
+        intersection.surfaceNormal = multiply(intersection.surfaceNormal, -1.0f);
+    }
+
+    float F0 = powf(((nextRefractionIndex - 1.0f) / (nextRefractionIndex + 1.0f)), 2);
+    float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), 5));
+    Reflection reflection = applyReflections(scene, intersection, illumination, rayState, Fr);
 
     if (!rayState.entering && intersection.mtlColor.alpha >= 1.0f) {
         return reflection.color;
     }
 
-    return applyTransparency(scene, intersection, rayState, reflection, intersectionPointReflectionCoefficient);
+    return applyTransparency(scene, intersection, rayState, reflection, Fr, currentRefractionIndex, nextRefractionIndex);
 }
 
 Vector3 shadeRay(Ray ray, Scene scene, RayState rayState) {
