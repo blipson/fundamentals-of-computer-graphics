@@ -6,7 +6,9 @@
 #include "vector.h"
 #include "ray.h"
 
-Vector3 shadeRay(Ray ray, Scene scene, RayState rayState);
+#define MAX_REFLECTION_DEPTH 3
+
+Vector3 shadeRay(Ray ray, Scene* scene, RayState rayState);
 
 Illumination applyLights(Scene scene, Intersection intersection, float shadow) {
     Vector3 ambient = (Vector3) {
@@ -162,7 +164,7 @@ Reflection applyReflections(
                     multiply(intersection.incidentDirection, -1.0f),
                     intersection.surfaceNormal
                 ),
-                scene,
+                &scene,
                 (RayState) {
                     .exclusion = rayState.exclusion,
                     .shadow = rayState.shadow,
@@ -219,8 +221,7 @@ Vector3 applyTransparency(Scene scene, Intersection intersection, RayState raySt
             )
     };
 
-    // TODO: How do I determine if I'm really entering an object, or just going through a face floating in space? If it's just a face then I don't want to flip entering. Is that even valid?
-    Vector3 transparencyColor = shadeRay(nextIncident, scene, (RayState) { .shadow = rayState.shadow, .entering = rayState.entering, .reflectionDepth = rayState.reflectionDepth, .exclusion = newExclusion });
+    Vector3 transparencyColor = shadeRay(nextIncident, &scene, (RayState) { .shadow = rayState.shadow, .entering = rayState.entering, .reflectionDepth = rayState.reflectionDepth, .exclusion = newExclusion });
     Vector3 transparency = multiply(transparencyColor, (1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha));
 
     return add(reflection.color, transparency);
@@ -260,17 +261,17 @@ Vector3 applyBlinnPhongIllumination(
     return applyTransparency(scene, intersection, rayState, reflection, Fr, currentRefractionIndex, nextRefractionIndex, newExclusion);
 }
 
-Vector3 shadeRay(Ray ray, Scene scene, RayState rayState) {
-    if (rayState.reflectionDepth > 10) {
-        return scene.bkgColor.color;
+Vector3 shadeRay(Ray ray, Scene* scene, RayState rayState) {
+    if (rayState.reflectionDepth > MAX_REFLECTION_DEPTH) {
+        return scene->bkgColor.color;
     }
 
-    Intersection intersection = castRay(ray, scene, rayState.exclusion);
+    Intersection intersection = castRay(ray, *scene, rayState.exclusion);
     if (!intersectionExists(intersection)) {
-        return scene.bkgColor.color;
+        return scene->bkgColor.color;
     }
 
-    return applyBlinnPhongIllumination(scene, intersection, rayState);
+    return applyBlinnPhongIllumination(*scene, intersection, rayState);
 }
 
 #endif

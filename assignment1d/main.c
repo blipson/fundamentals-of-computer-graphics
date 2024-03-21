@@ -19,12 +19,12 @@ void progressBar(int total, int current) {
     fflush(stdout);
 }
 
-void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, bool parallel) {
+void render(FILE* outputFilePtr, Scene* scene, ViewParameters viewParameters, bool parallel) {
     int i = 0;
-    for (int y = 0; y < scene.imSize.height; y++) {
-        for (int x = 0; x < scene.imSize.width; x++) {
+    for (int y = 0; y < scene->imSize.height; y++) {
+        for (int x = 0; x < scene->imSize.width; x++) {
             Vector3 viewingWindowLocation = getViewingWindowLocation(viewParameters, x, y);
-            Ray viewingRay = traceViewingRay(scene, viewingWindowLocation, parallel);
+            Ray viewingRay = traceViewingRay(*scene, viewingWindowLocation, parallel);
             RayState rayState = (RayState) {
                 .exclusion = (Exclusion) {
                         .excludeSphereIdx = -1,
@@ -36,11 +36,8 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
                 // TODO: figure out how to default this to false if camera is inside of an object
                 .entering = true
             };
-            if (x == 64 && y == 64) {
-                int test = 1234;
-            }
-            writePixel(outputFilePtr, convertColorToRGBColor(shadeRay(viewingRay, scene, rayState)), x, scene.imSize.width);
-            progressBar(scene.imSize.width * scene.imSize.height, i);
+            writePixel(outputFilePtr, convertColorToRGBColor(shadeRay(viewingRay, scene, rayState)), x, scene->imSize.width);
+            progressBar(scene->imSize.width * scene->imSize.height, i);
             i++;
         }
     }
@@ -124,7 +121,7 @@ int main(int argc, char* argv[]) {
     FILE* outputFilePtr = openOutputFile(softShadows ? argv[2] : argv[1]);
     writeHeader(outputFilePtr, scene.imSize.width, scene.imSize.height);
 
-    render(outputFilePtr, scene, viewParameters, parallel);
+    render(outputFilePtr, &scene, viewParameters, parallel);
 
     freeInput(scene);
 
