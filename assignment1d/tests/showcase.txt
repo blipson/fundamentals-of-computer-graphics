@@ -1,0 +1,32 @@
+imsize 1920 1080
+eye -4 -1 35
+viewdir .15 0 -1
+updir 0 1 0
+hfov 45
+bkgcolor 0 0 0 1
+light 0 0 24 1 1
+
+mtlcolor 0 0.5 0 1 1 1 0.00001 0.5 0.0001 100 0.5 1.9
+sphere 0 -3 10 2
+
+mtlcolor 1 0 0 1 1 1 0.9 0.5 0.2 100 1 15
+sphere 5 -3 10 2
+
+mtlcolor 0 0 1 1 1 1 0.9 0.5 0.2 100 1 15
+sphere -5 -3 10 2
+
+mtlcolor  1 1 1 1 1 1 0.5 1 0 20 1 1
+texture textures/chess.ppm
+
+v -10 -5  -10
+v  10 -5  -10
+v -10 -5  20
+v  10 -5  20
+
+vt 0 1
+vt 1 1
+vt 1 0
+vt 0 0
+
+f 3/1 4/2 2/3
+f 3/1 2/3 1/4
