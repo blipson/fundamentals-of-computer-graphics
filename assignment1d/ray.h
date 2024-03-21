@@ -209,7 +209,9 @@ int checkFaceIntersection(const Ray* ray, const Scene* scene, float* closestInte
 
 
     if ((alpha > 0 && alpha < 1) && (beta > 0 && beta < 1) && (gamma > 0 && gamma < 1)) {
-        if (t > 0.0f && t < (*closestIntersection)) {
+        float smallDistance = distance((*ray).origin, addf((*ray).origin, EPSILON));
+
+        if (t >= 0.0f && t < (*closestIntersection) && t > smallDistance) {
             (*closestIntersection) = t;
 
             Vector3 T = (Vector3) { 0.0f, 0.0f, 0.0f };

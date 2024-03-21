@@ -193,14 +193,12 @@ Reflection applyReflections(
     };
 }
 
-Vector3 applyTransparency(Scene scene, Intersection intersection, RayState rayState, Reflection reflection, float intersectionPointReflectionCoefficient, float currentRefractionIndex, float nextRefractionIndex) {
+Vector3 applyTransparency(Scene scene, Intersection intersection, RayState rayState, Reflection reflection, float intersectionPointReflectionCoefficient, float currentRefractionIndex, float nextRefractionIndex, Exclusion newExclusion) {
     if (intersection.mtlColor.alpha >= 1.0f) {
         return reflection.color;
     }
 
     Vector3 I = multiply(intersection.incidentDirection, -1.0f);
-    // TODO: Test underwater
-    // TODO: Test nested objects
 
     float cosThetaEntering = dot(intersection.surfaceNormal, I);
     float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
@@ -222,7 +220,7 @@ Vector3 applyTransparency(Scene scene, Intersection intersection, RayState raySt
     };
 
     // TODO: How do I determine if I'm really entering an object, or just going through a face floating in space? If it's just a face then I don't want to flip entering. Is that even valid?
-    Vector3 transparencyColor = shadeRay(nextIncident, scene, (RayState) { .shadow = rayState.shadow, .entering = !rayState.entering, .reflectionDepth = rayState.reflectionDepth, .exclusion = (Exclusion) { .excludeFaceIdx = intersection.exclusion.excludeFaceIdx, .excludeEllipsoidIdx = -1, .excludeSphereIdx = -1 } });
+    Vector3 transparencyColor = shadeRay(nextIncident, scene, (RayState) { .shadow = rayState.shadow, .entering = rayState.entering, .reflectionDepth = rayState.reflectionDepth, .exclusion = newExclusion });
     Vector3 transparency = multiply(transparencyColor, (1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha));
 
     return add(reflection.color, transparency);
@@ -238,11 +236,17 @@ Vector3 applyBlinnPhongIllumination(
     float currentRefractionIndex = scene.bkgColor.refractionIndex;
     float nextRefractionIndex = intersection.mtlColor.refractionIndex;
 
-    if (!rayState.entering) {
+    Exclusion newExclusion = rayState.exclusion;
+    if ((dot(intersection.surfaceNormal, intersection.incidentDirection) >= 0)) {
         float tempRefractionIndex = currentRefractionIndex;
         currentRefractionIndex = nextRefractionIndex;
         nextRefractionIndex = tempRefractionIndex;
         intersection.surfaceNormal = multiply(intersection.surfaceNormal, -1.0f);
+        newExclusion = (Exclusion) {
+            .excludeSphereIdx = -1,
+            .excludeEllipsoidIdx = -1,
+            .excludeFaceIdx = intersection.exclusion.excludeFaceIdx
+        };
     }
 
     float F0 = powf(((nextRefractionIndex - 1.0f) / (nextRefractionIndex + 1.0f)), 2);
@@ -253,7 +257,7 @@ Vector3 applyBlinnPhongIllumination(
         return reflection.color;
     }
 
-    return applyTransparency(scene, intersection, rayState, reflection, Fr, currentRefractionIndex, nextRefractionIndex);
+    return applyTransparency(scene, intersection, rayState, reflection, Fr, currentRefractionIndex, nextRefractionIndex, newExclusion);
 }
 
 Vector3 shadeRay(Ray ray, Scene scene, RayState rayState) {

@@ -6,7 +6,7 @@ imsize 512 512
 bkgcolor 1 1 1 1
 light 0 0 19 1 1
 
-mtlcolor 1 0 0 1 1 1 0.2 0.2 0.2 0 0 1.5
+mtlcolor 0 0 0 1 1 1 0 0 0.5 1 0 2
 sphere 0 0 10 2
 
 mtlcolor  1 1 1 1 1 1 0.5 1 0 20 1 1
