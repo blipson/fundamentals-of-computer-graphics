@@ -1,23 +1,23 @@
-eye 0 5 17
-viewdir 0 -.5 -1
+eye 0 0 9
+viewdir 0 0 -1
 updir 0 1 0
 hfov 45
 imsize 512 512
 bkgcolor 1 1 1 1
-light 0 0 19 1 1
+light 0 0 9 1 0.1
 
-mtlcolor 1 0 0 1 1 1 0.2 0.2 0.2 0 0.5 1.9
-sphere 0 0 10 2
+mtlcolor 0 0 0 1 1 1 0 0 0.5 1 0 2
+sphere 0 0 0 2
 
 mtlcolor  1 1 1 1 1 1 0.5 1 0 20 1 1
 v -9 -6  -10
 v  9 -6  -10
 v  9  6  -10
 v -9  6  -10
-v -9 -6  20
-v  9 -6  20
-v  9  6  20
-v -9  6  20
+v -9 -6  10
+v  9 -6  10
+v  9  6  10
+v -9  6  10
 vt 0 1
 vt 1 1
 vt 1 0

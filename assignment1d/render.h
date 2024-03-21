@@ -194,8 +194,12 @@ Reflection applyReflections(
 }
 
 Vector3 applyTransparency(Scene scene, Intersection intersection, RayState rayState, Reflection reflection, float intersectionPointReflectionCoefficient) {
-    // TODO: How do I make transparency and refraction work with camera inside of sphere??
-    // TODO: How do I make refraction work with underwater?
+    if (intersection.mtlColor.alpha >= 1.0f) {
+        return reflection.color;
+    }
+
+    Vector3 I = multiply(intersection.incidentDirection, -1.0f);
+    // TODO: Test underwater
     // TODO: How do I make transparency and refraction work with multiple transparent objects nested inside each other?? Maintain a stack??
     float currentRefractionIndex = scene.bkgColor.refractionIndex;
     float nextRefractionIndex = intersection.mtlColor.refractionIndex;
@@ -204,23 +208,17 @@ Vector3 applyTransparency(Scene scene, Intersection intersection, RayState raySt
         float tempRefractionIndex = currentRefractionIndex;
         currentRefractionIndex = nextRefractionIndex;
         nextRefractionIndex = tempRefractionIndex;
-    }
-
-    float cosThetaEntering = dot(intersection.surfaceNormal, intersection.incidentDirection);
-    if (cosThetaEntering > 0.0f) {
-        float tempRefractionIndex = currentRefractionIndex;
-        currentRefractionIndex = nextRefractionIndex;
-        nextRefractionIndex = tempRefractionIndex;
         intersection.surfaceNormal = multiply(intersection.surfaceNormal, -1.0f);
     }
+
+    float cosThetaEntering = dot(intersection.surfaceNormal, I);
     float refractionCoefficient = currentRefractionIndex / nextRefractionIndex;
     float partUnderSqrt = 1.0f - powf(refractionCoefficient, 2.0f) * (1.0f - powf(cosThetaEntering, 2.0f));
     if (partUnderSqrt < 0.0f) {
         return reflection.reflectionColor;
     }
 
-    // Q: Why do I have to handle faces differently?
-    Vector3 refractionDirToMultiply = intersection.closestObject == SPHERE ? subtract(multiply(intersection.surfaceNormal, cosThetaEntering), intersection.incidentDirection) : intersection.incidentDirection;
+    Vector3 refractionDirToMultiply = subtract(multiply(intersection.surfaceNormal, cosThetaEntering), I);
 
     float cosThetaExiting = sqrtf(partUnderSqrt);
 
@@ -232,9 +230,14 @@ Vector3 applyTransparency(Scene scene, Intersection intersection, RayState raySt
             )
     };
 
-    Vector3 transparencyColor = shadeRay(nextIncident, scene, (RayState) { .shadow = rayState.shadow, .entering = !rayState.entering, .reflectionDepth = rayState.reflectionDepth, .exclusion = intersection.exclusion });
-    Vector3 transparency = multiply(transparencyColor, ((1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha)));
-    return add(reflection.color, transparency);
+    // TODO: How do I determine if I'm really entering an object, or just going through a face floating in space? If it's just a face then I don't want to flip entering. Is that even valid?
+    Vector3 transparencyColor = shadeRay(nextIncident, scene, (RayState) { .shadow = rayState.shadow, .entering = !rayState.entering, .reflectionDepth = rayState.reflectionDepth, .exclusion = (Exclusion) { .excludeFaceIdx = intersection.exclusion.excludeFaceIdx, .excludeEllipsoidIdx = -1, .excludeSphereIdx = -1 } });
+
+    // TODO: why does this break it???
+    float test = (1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha);
+    Vector3 transparency = multiply(transparencyColor, test);
+
+    return add(reflection.color, transparencyColor);
 }
 
 Vector3 applyBlinnPhongIllumination(
@@ -248,7 +251,7 @@ Vector3 applyBlinnPhongIllumination(
     float intersectionPointReflectionCoefficient = perpendicularReflectionCoefficient + ((1.0f - perpendicularReflectionCoefficient) * powf(1.0f - dot(multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), 5));
     Reflection reflection = applyReflections(scene, intersection, illumination, rayState, intersectionPointReflectionCoefficient);
 
-    if (intersection.mtlColor.alpha >= 1.0f) {
+    if (!rayState.entering && intersection.mtlColor.alpha >= 1.0f) {
         return reflection.color;
     }
 

@@ -33,11 +33,9 @@ void render(FILE* outputFilePtr, Scene scene, ViewParameters viewParameters, boo
                 },
                 .reflectionDepth = 0,
                 .shadow = 1.0f,
+                // TODO: figure out how to default this to false if camera is inside of an object
                 .entering = true
             };
-            if (x == 260 && y == 368) {
-                int test = 1234;
-            }
             writePixel(outputFilePtr, convertColorToRGBColor(shadeRay(viewingRay, scene, rayState)), x, scene.imSize.width);
             progressBar(scene.imSize.width * scene.imSize.height, i);
             i++;

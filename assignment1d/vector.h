@@ -88,13 +88,10 @@ Vector3 divide(Vector3 v, float c) {
 }
 
 Vector3 convertNormalToVector(RGBColor rgbColor) {
-    if (rgbColor.blue < 128) {
-        rgbColor.blue = 120;
-    }
     return (Vector3) {
             .x = ((float) rgbColor.red - 127.5f) / 127.5f,
             .y = ((float) rgbColor.green - 127.5f) / 127.5f,
-            .z = (float) rgbColor.blue / 127.5f,
+            .z = ((float) rgbColor.blue -127.5f) / 127.5f,
     };
 }
 
