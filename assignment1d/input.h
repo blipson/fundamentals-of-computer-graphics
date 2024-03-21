@@ -618,106 +618,106 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     }
 }
 
-void printScene(Scene scene) {
+void printScene(Scene* scene) {
     printf("--------------------SCENE--------------------\n");
-    printf("eye: %f %f %f\n", scene.eye.x, scene.eye.y, scene.eye.z);
-    printf("viewdir: %f %f %f\n", scene.viewDir.x, scene.viewDir.y, scene.viewDir.z);
-    printf("updir: %f %f %f\n", scene.upDir.x, scene.upDir.y, scene.upDir.z);
-    printf("hfov: %f\n", scene.fov.h);
-    printf("imsize: %d %d\n", scene.imSize.width, scene.imSize.height);
-    printf("bkgcolor: %f %f %f\n", scene.bkgColor.color.x, scene.bkgColor.color.y, scene.bkgColor.color.z);
-    printf("parallel: %f\n", scene.parallel.frustumWidth);
-    if (scene.lights != NULL) {
-        for (int lightIdx = 0; lightIdx < scene.lightCount; lightIdx++) {
-            printf("light: %f %f %f %f %f %f %f %f\n", scene.lights[lightIdx].position.x, scene.lights[lightIdx].position.y, scene.lights[lightIdx].position.z, scene.lights[lightIdx].pointOrDirectional, scene.lights[lightIdx].intensity, scene.lights[lightIdx].constantAttenuation, scene.lights[lightIdx].linearAttenuation, scene.lights[lightIdx].quadraticAttenuation);
+    printf("eye: %f %f %f\n", scene->eye.x, scene->eye.y, scene->eye.z);
+    printf("viewdir: %f %f %f\n", scene->viewDir.x, scene->viewDir.y, scene->viewDir.z);
+    printf("updir: %f %f %f\n", scene->upDir.x, scene->upDir.y, scene->upDir.z);
+    printf("hfov: %f\n", scene->fov.h);
+    printf("imsize: %d %d\n", scene->imSize.width, scene->imSize.height);
+    printf("bkgcolor: %f %f %f\n", scene->bkgColor.color.x, scene->bkgColor.color.y, scene->bkgColor.color.z);
+    printf("parallel: %f\n", scene->parallel.frustumWidth);
+    if (scene->lights != NULL) {
+        for (int lightIdx = 0; lightIdx < scene->lightCount; lightIdx++) {
+            printf("light: %f %f %f %f %f %f %f %f\n", scene->lights[lightIdx].position.x, scene->lights[lightIdx].position.y, scene->lights[lightIdx].position.z, scene->lights[lightIdx].pointOrDirectional, scene->lights[lightIdx].intensity, scene->lights[lightIdx].constantAttenuation, scene->lights[lightIdx].linearAttenuation, scene->lights[lightIdx].quadraticAttenuation);
         }
     }
-    if (scene.mtlColors != NULL) {
-        for (int mtlColorIdx = 0; mtlColorIdx < scene.mtlColorCount; mtlColorIdx++) {
+    if (scene->mtlColors != NULL) {
+        for (int mtlColorIdx = 0; mtlColorIdx < scene->mtlColorCount; mtlColorIdx++) {
             printf("mtlcolor: %f %f %f %f %f %f %f %f %f %f\n",
-                   scene.mtlColors[mtlColorIdx].diffuseColor.x,
-                   scene.mtlColors[mtlColorIdx].diffuseColor.y,
-                   scene.mtlColors[mtlColorIdx].diffuseColor.z,
-                   scene.mtlColors[mtlColorIdx].specularColor.x,
-                   scene.mtlColors[mtlColorIdx].specularColor.y,
-                   scene.mtlColors[mtlColorIdx].specularColor.z,
-                   scene.mtlColors[mtlColorIdx].ambientCoefficient,
-                   scene.mtlColors[mtlColorIdx].diffuseCoefficient,
-                   scene.mtlColors[mtlColorIdx].specularCoefficient,
-                   scene.mtlColors[mtlColorIdx].specularExponent
+                   scene->mtlColors[mtlColorIdx].diffuseColor.x,
+                   scene->mtlColors[mtlColorIdx].diffuseColor.y,
+                   scene->mtlColors[mtlColorIdx].diffuseColor.z,
+                   scene->mtlColors[mtlColorIdx].specularColor.x,
+                   scene->mtlColors[mtlColorIdx].specularColor.y,
+                   scene->mtlColors[mtlColorIdx].specularColor.z,
+                   scene->mtlColors[mtlColorIdx].ambientCoefficient,
+                   scene->mtlColors[mtlColorIdx].diffuseCoefficient,
+                   scene->mtlColors[mtlColorIdx].specularCoefficient,
+                   scene->mtlColors[mtlColorIdx].specularExponent
             );
         }
     }
-    if (scene.textures != NULL) {
-        for (int textureIdx = 0; textureIdx < scene.textureCount; textureIdx++) {
-            printf("texture: %d %d %d\n", scene.textures[textureIdx].width, scene.textures[textureIdx].height, scene.textures[textureIdx].maxColor);
+    if (scene->textures != NULL) {
+        for (int textureIdx = 0; textureIdx < scene->textureCount; textureIdx++) {
+            printf("texture: %d %d %d\n", scene->textures[textureIdx].width, scene->textures[textureIdx].height, scene->textures[textureIdx].maxColor);
         }
     }
-    if (scene.spheres != NULL) {
-        for (int sphereIdx = 0; sphereIdx < scene.sphereCount; sphereIdx++) {
-            printf("sphere: %f %f %f %f\n", scene.spheres[sphereIdx].center.x, scene.spheres[sphereIdx].center.y, scene.spheres[sphereIdx].center.z, scene.spheres[sphereIdx].radius);
+    if (scene->spheres != NULL) {
+        for (int sphereIdx = 0; sphereIdx < scene->sphereCount; sphereIdx++) {
+            printf("sphere: %f %f %f %f\n", scene->spheres[sphereIdx].center.x, scene->spheres[sphereIdx].center.y, scene->spheres[sphereIdx].center.z, scene->spheres[sphereIdx].radius);
         }
     }
-    if (scene.ellipsoids != NULL) {
-        for (int ellipsoidIdx = 0; ellipsoidIdx < scene.ellipsoidCount; ellipsoidIdx++) {
+    if (scene->ellipsoids != NULL) {
+        for (int ellipsoidIdx = 0; ellipsoidIdx < scene->ellipsoidCount; ellipsoidIdx++) {
             printf(
                     "ellipse: %f %f %f %f %f %f\n",
-                    scene.ellipsoids[ellipsoidIdx].center.x,
-                    scene.ellipsoids[ellipsoidIdx].center.y,
-                    scene.ellipsoids[ellipsoidIdx].center.z,
-                    scene.ellipsoids[ellipsoidIdx].radius.x,
-                    scene.ellipsoids[ellipsoidIdx].radius.y,
-                    scene.ellipsoids[ellipsoidIdx].radius.z
+                    scene->ellipsoids[ellipsoidIdx].center.x,
+                    scene->ellipsoids[ellipsoidIdx].center.y,
+                    scene->ellipsoids[ellipsoidIdx].center.z,
+                    scene->ellipsoids[ellipsoidIdx].radius.x,
+                    scene->ellipsoids[ellipsoidIdx].radius.y,
+                    scene->ellipsoids[ellipsoidIdx].radius.z
             );
         }
     }
-    if (scene.vertexes != NULL) {
-        for (int vertexIdx = 0; vertexIdx < scene.vertexCount; vertexIdx++) {
-            printf("vertex: %f %f %f\n", scene.vertexes[vertexIdx].x, scene.vertexes[vertexIdx].y, scene.vertexes[vertexIdx].z);
+    if (scene->vertexes != NULL) {
+        for (int vertexIdx = 0; vertexIdx < scene->vertexCount; vertexIdx++) {
+            printf("vertex: %f %f %f\n", scene->vertexes[vertexIdx].x, scene->vertexes[vertexIdx].y, scene->vertexes[vertexIdx].z);
         }
     }
-    if (scene.vertexNormals != NULL) {
-        for (int vertexNormalIdx = 0; vertexNormalIdx < scene.vertexNormalCount; vertexNormalIdx++) {
-            printf("vertex normal: %f %f %f\n", scene.vertexNormals[vertexNormalIdx].x, scene.vertexNormals[vertexNormalIdx].y, scene.vertexNormals[vertexNormalIdx].z);
+    if (scene->vertexNormals != NULL) {
+        for (int vertexNormalIdx = 0; vertexNormalIdx < scene->vertexNormalCount; vertexNormalIdx++) {
+            printf("vertex normal: %f %f %f\n", scene->vertexNormals[vertexNormalIdx].x, scene->vertexNormals[vertexNormalIdx].y, scene->vertexNormals[vertexNormalIdx].z);
         }
     }
-    if (scene.vertexTextures != NULL) {
-        for (int vertexTextureIdx = 0; vertexTextureIdx < scene.vertexTextureCount; vertexTextureIdx++) {
-            printf("vertex texture: %f %f\n", scene.vertexTextures[vertexTextureIdx].u, scene.vertexTextures[vertexTextureIdx].v);
+    if (scene->vertexTextures != NULL) {
+        for (int vertexTextureIdx = 0; vertexTextureIdx < scene->vertexTextureCount; vertexTextureIdx++) {
+            printf("vertex texture: %f %f\n", scene->vertexTextures[vertexTextureIdx].u, scene->vertexTextures[vertexTextureIdx].v);
         }
     }
-    if (scene.faces != NULL) {
-        for (int faceIdx = 0; faceIdx < scene.faceCount; faceIdx++) {
-            printf("face: %d %d %d\n", scene.faces[faceIdx].v1, scene.faces[faceIdx].v2, scene.faces[faceIdx].v3);
+    if (scene->faces != NULL) {
+        for (int faceIdx = 0; faceIdx < scene->faceCount; faceIdx++) {
+            printf("face: %d %d %d\n", scene->faces[faceIdx].v1, scene->faces[faceIdx].v2, scene->faces[faceIdx].v3);
         }
     }
     printf("---------------------------------------------\n\n");
 }
 
-void freeInput(Scene scene) {
-    if (scene.lights != NULL) {
-        free(scene.lights);
+void freeInput(Scene* scene) {
+    if (scene->lights != NULL) {
+        free(scene->lights);
     }
-    if (scene.mtlColors != NULL) {
-        free(scene.mtlColors);
+    if (scene->mtlColors != NULL) {
+        free(scene->mtlColors);
     }
-    if (scene.textures != NULL) {
-        free(scene.textures);
+    if (scene->textures != NULL) {
+        free(scene->textures);
     }
-    if (scene.spheres != NULL) {
-        free(scene.spheres);
+    if (scene->spheres != NULL) {
+        free(scene->spheres);
     }
-    if (scene.ellipsoids != NULL) {
-        free(scene.ellipsoids);
+    if (scene->ellipsoids != NULL) {
+        free(scene->ellipsoids);
     }
-    if (scene.vertexes != NULL) {
-        free(scene.vertexes);
+    if (scene->vertexes != NULL) {
+        free(scene->vertexes);
     }
-    if (scene.vertexNormals != NULL) {
-        free(scene.vertexNormals);
+    if (scene->vertexNormals != NULL) {
+        free(scene->vertexNormals);
     }
-    if (scene.faces != NULL) {
-        free(scene.faces);
+    if (scene->faces != NULL) {
+        free(scene->faces);
     }
 }
 

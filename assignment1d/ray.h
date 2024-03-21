@@ -3,12 +3,12 @@
 
 #include "color.h"
 
-void setViewingWindowValues(Scene scene, ViewParameters* viewParameters, Vector3 viewDirTimesDistance) {
+void setViewingWindowValues(Scene* scene, ViewParameters* viewParameters, Vector3 viewDirTimesDistance) {
     float halfWidth = viewParameters->viewingWindow.width / 2.0f;
     float halfHeight = viewParameters->viewingWindow.height / 2.0f;
     Vector3 widthTimesHorizontal = multiply(viewParameters->u, halfWidth);
     Vector3 heightTimesVertical = multiply(viewParameters->v, halfHeight);
-    Vector3 eyePlusViewVector = add(scene.eye, viewDirTimesDistance);
+    Vector3 eyePlusViewVector = add(scene->eye, viewDirTimesDistance);
     Vector3 perspectiveMinusDimensions = subtract(eyePlusViewVector, widthTimesHorizontal);
     Vector3 perspectivePlusDimensions = add(eyePlusViewVector, widthTimesHorizontal);
 
@@ -18,20 +18,20 @@ void setViewingWindowValues(Scene scene, ViewParameters* viewParameters, Vector3
     viewParameters->viewingWindow.lr = subtract(perspectivePlusDimensions, heightTimesVertical);
 
     viewParameters->dh = divide(subtract(viewParameters->viewingWindow.ur, viewParameters->viewingWindow.ul),
-                                ((float) scene.imSize.width - 1.0f));
+                                ((float) scene->imSize.width - 1.0f));
     viewParameters->dv = divide(subtract(viewParameters->viewingWindow.ll, viewParameters->viewingWindow.ul),
-                                ((float) scene.imSize.height - 1.0f));
+                                ((float) scene->imSize.height - 1.0f));
 }
 
-void setParallelViewingWindow(Scene scene, ViewParameters* viewParameters) {
+void setParallelViewingWindow(Scene* scene, ViewParameters* viewParameters) {
     setViewingWindowValues(scene, viewParameters, viewParameters->n);
 }
 
-void setPerspectiveViewingWindow(Scene scene, ViewParameters* viewParameters) {
+void setPerspectiveViewingWindow(Scene* scene, ViewParameters* viewParameters) {
     setViewingWindowValues(scene, viewParameters, multiply(viewParameters->n, viewParameters->d));
 }
 
-void setViewingWindow(Scene scene, ViewParameters* viewParameters, bool parallel) {
+void setViewingWindow(Scene* scene, ViewParameters* viewParameters, bool parallel) {
     if (parallel) {
         setParallelViewingWindow(scene, viewParameters);
     } else {
@@ -39,16 +39,16 @@ void setViewingWindow(Scene scene, ViewParameters* viewParameters, bool parallel
     }
 }
 
-Vector3 getViewingWindowLocation(ViewParameters viewParameters, int x, int y) {
+Vector3 getViewingWindowLocation(ViewParameters* viewParameters, int x, int y) {
     return add(
             add(
-                    viewParameters.viewingWindow.ul,
+                    viewParameters->viewingWindow.ul,
                     multiply(
-                            viewParameters.dh,
+                            viewParameters->dh,
                             (float) x
                     )
             ),
-            multiply(viewParameters.dv, (float) y)
+            multiply(viewParameters->dv, (float) y)
     );
 }
 
@@ -66,11 +66,11 @@ Ray tracePerspectiveRay(Vector3 eye, Vector3 viewingWindowLocation) {
     };
 }
 
-Ray traceViewingRay(Scene scene, Vector3 viewingWindowLocation, bool parallel) {
+Ray traceViewingRay(Scene* scene, Vector3 viewingWindowLocation, bool parallel) {
     if (parallel) {
-        return traceParallelRay(scene.viewDir, viewingWindowLocation);
+        return traceParallelRay(scene->viewDir, viewingWindowLocation);
     } else {
-        return tracePerspectiveRay(scene.eye, viewingWindowLocation);
+        return tracePerspectiveRay(scene->eye, viewingWindowLocation);
     }
 }
 
@@ -260,11 +260,11 @@ void checkFaceIntersections(int excludeIdx, Ray* ray, Scene* scene, float* close
 
 bool hasTextureData(PPMImage texture) { return texture.height > 0 && texture.width > 0 && texture.maxColor == 255 && texture.data != NULL; }
 
-void handleSphereIntersection(Scene scene, int closestSphereIdx, Vector3 intersectionPoint, MaterialColor* mtlColor, Vector3* surfaceNormal) {
-    Sphere sphere = scene.spheres[closestSphereIdx];
-    (*mtlColor) = scene.mtlColors[sphere.mtlColorIdx];
-    PPMImage texture = scene.textures[sphere.textureIdx];
-    PPMImage normal = scene.normals[sphere.normalIdx];
+void handleSphereIntersection(Scene* scene, int closestSphereIdx, Vector3 intersectionPoint, MaterialColor* mtlColor, Vector3* surfaceNormal) {
+    Sphere sphere = scene->spheres[closestSphereIdx];
+    (*mtlColor) = scene->mtlColors[sphere.mtlColorIdx];
+    PPMImage texture = scene->textures[sphere.textureIdx];
+    PPMImage normal = scene->normals[sphere.normalIdx];
     (*surfaceNormal) = normalize(divide(subtract(intersectionPoint, sphere.center), sphere.radius));
     if (hasTextureData(texture)) {
         float phi = acosf((*surfaceNormal).z);
@@ -299,9 +299,9 @@ void handleSphereIntersection(Scene scene, int closestSphereIdx, Vector3 interse
 }
 
 
-void handleEllipsoidIntersection(Scene scene, int closestEllipsoidIdx, Vector3 intersectionPoint, MaterialColor* mtlColor, Vector3* surfaceNormal) {
-    Ellipsoid ellipsoid = scene.ellipsoids[closestEllipsoidIdx];
-    (*mtlColor) = scene.mtlColors[ellipsoid.mtlColorIdx];
+void handleEllipsoidIntersection(Scene* scene, int closestEllipsoidIdx, Vector3 intersectionPoint, MaterialColor* mtlColor, Vector3* surfaceNormal) {
+    Ellipsoid ellipsoid = scene->ellipsoids[closestEllipsoidIdx];
+    (*mtlColor) = scene->mtlColors[ellipsoid.mtlColorIdx];
     // todo: Calculate the surface normal for the ellipsoid
     (*surfaceNormal) = normalize(divide(subtract(intersectionPoint, ellipsoid.center), ellipsoid.radius.x));
 }
@@ -343,31 +343,31 @@ Vector3 applyBilinearInterpolation(FaceIntersection intersection, RGBColor** tex
     );
 }
 
-void handleFaceIntersection(Scene scene, FaceIntersection closestFaceIntersection, MaterialColor* mtlColor, Vector3* surfaceNormal) {
-    Face face = scene.faces[closestFaceIntersection.faceIdx];
-    PPMImage texture = scene.textures[face.textureIdx];
-    PPMImage normal = scene.normals[face.normalIdx];
-    (*mtlColor) = scene.mtlColors[face.mtlColorIdx];
+void handleFaceIntersection(Scene* scene, FaceIntersection closestFaceIntersection, MaterialColor* mtlColor, Vector3* surfaceNormal) {
+    Face face = scene->faces[closestFaceIntersection.faceIdx];
+    PPMImage texture = scene->textures[face.textureIdx];
+    PPMImage normal = scene->normals[face.normalIdx];
+    (*mtlColor) = scene->mtlColors[face.mtlColorIdx];
 
-    if (scene.vertexNormals == NULL) {
+    if (scene->vertexNormals == NULL) {
         (*surfaceNormal) = normalize(closestFaceIntersection.normalDirection);
     } else {
-        Vector3 n0 = normalize(scene.vertexNormals[scene.faces[closestFaceIntersection.faceIdx].vn1 - 1]);
-        Vector3 n1 = normalize(scene.vertexNormals[scene.faces[closestFaceIntersection.faceIdx].vn2 - 1]);
-        Vector3 n2 = normalize(scene.vertexNormals[scene.faces[closestFaceIntersection.faceIdx].vn3 - 1]);
+        Vector3 n0 = normalize(scene->vertexNormals[scene->faces[closestFaceIntersection.faceIdx].vn1 - 1]);
+        Vector3 n1 = normalize(scene->vertexNormals[scene->faces[closestFaceIntersection.faceIdx].vn2 - 1]);
+        Vector3 n2 = normalize(scene->vertexNormals[scene->faces[closestFaceIntersection.faceIdx].vn3 - 1]);
         Vector3 alphaComponent = multiply(n0, closestFaceIntersection.alpha);
         Vector3 betaComponent = multiply(n1, closestFaceIntersection.beta);
         Vector3 gammaComponent = multiply(n2, closestFaceIntersection.gamma);
         (*surfaceNormal) = normalize(add(alphaComponent, add(betaComponent, gammaComponent)));
     }
 
-    if (scene.vertexTextures != NULL && hasTextureData(texture)) {
-        float u0 = scene.vertexTextures[scene.faces[closestFaceIntersection.faceIdx].vt1 - 1].u;
-        float v0 = scene.vertexTextures[scene.faces[closestFaceIntersection.faceIdx].vt1 - 1].v;
-        float u1 = scene.vertexTextures[scene.faces[closestFaceIntersection.faceIdx].vt2 - 1].u;
-        float v1 = scene.vertexTextures[scene.faces[closestFaceIntersection.faceIdx].vt2 - 1].v;
-        float u2 = scene.vertexTextures[scene.faces[closestFaceIntersection.faceIdx].vt3 - 1].u;
-        float v2 = scene.vertexTextures[scene.faces[closestFaceIntersection.faceIdx].vt3 - 1].v;
+    if (scene->vertexTextures != NULL && hasTextureData(texture)) {
+        float u0 = scene->vertexTextures[scene->faces[closestFaceIntersection.faceIdx].vt1 - 1].u;
+        float v0 = scene->vertexTextures[scene->faces[closestFaceIntersection.faceIdx].vt1 - 1].v;
+        float u1 = scene->vertexTextures[scene->faces[closestFaceIntersection.faceIdx].vt2 - 1].u;
+        float v1 = scene->vertexTextures[scene->faces[closestFaceIntersection.faceIdx].vt2 - 1].v;
+        float u2 = scene->vertexTextures[scene->faces[closestFaceIntersection.faceIdx].vt3 - 1].u;
+        float v2 = scene->vertexTextures[scene->faces[closestFaceIntersection.faceIdx].vt3 - 1].v;
 
         float u = closestFaceIntersection.alpha * u0 + closestFaceIntersection.beta * u1 + closestFaceIntersection.gamma * u2;
         float v = closestFaceIntersection.alpha * v0 + closestFaceIntersection.beta * v1 + closestFaceIntersection.gamma * v2;
@@ -404,7 +404,7 @@ Ray reflectRay(Vector3 intersectionPoint, Vector3 reverseIncidentDirection, Vect
     };
 }
 
-Intersection castRay(Ray ray, Scene scene, Exclusion exclusion) {
+Intersection castRay(Ray ray, Scene* scene, Exclusion exclusion) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     enum ObjectType closestObject;
     int closestSphereIdx = -1;
@@ -420,11 +420,11 @@ Intersection castRay(Ray ray, Scene scene, Exclusion exclusion) {
             .beta = 0.0f,
             .gamma = 0.0f,
     };
-    checkSphereIntersections(exclusion.excludeSphereIdx, &ray, &scene, &closestIntersection, &closestObject, &closestSphereIdx);
+    checkSphereIntersections(exclusion.excludeSphereIdx, &ray, scene, &closestIntersection, &closestObject, &closestSphereIdx);
 
-    checkEllipsoidIntersections(exclusion.excludeEllipsoidIdx, &ray, &scene, &closestIntersection, &closestObject, &closestEllipsoidIdx);
+    checkEllipsoidIntersections(exclusion.excludeEllipsoidIdx, &ray, scene, &closestIntersection, &closestObject, &closestEllipsoidIdx);
 
-    checkFaceIntersections(exclusion.excludeFaceIdx, &ray, &scene, &closestIntersection, &closestObject, &closestFaceIntersection);
+    checkFaceIntersections(exclusion.excludeFaceIdx, &ray, scene, &closestIntersection, &closestObject, &closestFaceIntersection);
 
     Vector3 intersectionPoint = add(
             ray.origin,
