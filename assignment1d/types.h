@@ -215,6 +215,7 @@ typedef struct {
     Exclusion exclusion;
     int reflectionDepth;
     float shadow;
+    float previousRefractionIndex;
 } RayState;
 
 #endif

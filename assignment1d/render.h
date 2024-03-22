@@ -29,8 +29,7 @@ Illumination applyLights(Scene* scene, Intersection intersection, float shadow) 
             Vector3 lightDirection = light.pointOrDirectional == 1.0f
                                      ? normalize(subtract(light.position, intersection.intersectionPoint))
                                      : normalize(multiply(light.position, -1.0f));
-            Vector3 intersectionToOrigin = normalize(subtract(scene->eye, intersection.intersectionPoint));
-            Vector3 halfwayLightDirection = normalize(add(lightDirection, intersectionToOrigin));
+            Vector3 halfwayLightDirection = normalize(add(lightDirection, multiply(intersection.incidentDirection, -1.0f)));
             float lightIntensity = light.intensity;
             Vector3 diffuse = (Vector3) {
                     .x = intersection.mtlColor.diffuseColor.x * intersection.mtlColor.diffuseCoefficient * max(dot(intersection.surfaceNormal, lightDirection), 0.0f),
@@ -59,7 +58,6 @@ Illumination applyLights(Scene* scene, Intersection intersection, float shadow) 
                          powf(max(dot(intersection.surfaceNormal, halfwayLightDirection), 0.0f), intersection.mtlColor.specularExponent),
             };
 
-            // shadows
             if (scene->softShadows) {
                 float softShadow = 0.0f;
                 int numShadowRays = 50;
@@ -102,7 +100,6 @@ Illumination applyLights(Scene* scene, Intersection intersection, float shadow) 
                 }
             }
 
-            // depth cueing
             if (scene->depthCueing.distMax > 0.0f) {
                 float distanceToCamera = distance(scene->eye, intersection.intersectionPoint);
                 float depthCueFactor = normalizef(distanceToCamera, scene->depthCueing.distMin, scene->depthCueing.distMax);
@@ -114,7 +111,6 @@ Illumination applyLights(Scene* scene, Intersection intersection, float shadow) 
                 depthCueingAmbient = multiply(depthCueingAmbient, depthCueFactor);
             }
 
-            // attenuation
             float attenuationFactor = 1.0f;
             if (light.constantAttenuation > 0.0f || light.linearAttenuation > 0.0f || light.quadraticAttenuation > 0.0f) {
                 attenuationFactor = 1.0f / (light.constantAttenuation + light.linearAttenuation * distance(intersection.intersectionPoint, light.position) + light.quadraticAttenuation * powf(distance(
@@ -143,7 +139,7 @@ Reflection applyReflections(
         Intersection intersection,
         Illumination illumination,
         RayState rayState,
-        float intersectionPointReflectionCoefficient
+        float Fr
 ) {
     Vector3 baseColor = illumination.color;
     Vector3 reflectionColor = (Vector3) {
@@ -168,13 +164,14 @@ Reflection applyReflections(
                 (RayState) {
                     .exclusion = rayState.exclusion,
                     .shadow = rayState.shadow,
-                    .reflectionDepth = rayState.reflectionDepth + 1
+                    .reflectionDepth = rayState.reflectionDepth + 1,
+                    .previousRefractionIndex = rayState.previousRefractionIndex
                 }
         );
-        reflection = multiply(reflectionColor, intersectionPointReflectionCoefficient);
+        reflection = multiply(reflectionColor, Fr);
         baseColor = clamp(add(
-            multiply(illumination.ambient, 1.0f - intersectionPointReflectionCoefficient),
-            multiply(illumination.depthCueingAmbient, 1.0f - intersectionPointReflectionCoefficient)
+            multiply(illumination.ambient, 1.0f - Fr),
+            multiply(illumination.depthCueingAmbient, 1.0f - Fr)
         ));
     }
 
@@ -220,7 +217,12 @@ Vector3 applyTransparency(Scene* scene, Intersection intersection, RayState rayS
             )
     };
 
-    Vector3 transparencyColor = shadeRay(nextIncident, scene, rayState);
+    Vector3 transparencyColor = shadeRay(nextIncident, scene, (RayState) {
+        .exclusion = rayState.exclusion,
+        .shadow = rayState.shadow,
+        .reflectionDepth = rayState.reflectionDepth,
+        .previousRefractionIndex = currentRefractionIndex
+    });
 
     float distanceTraveled = magnitude(subtract(nextIncident.origin, intersection.intersectionPoint));
 
@@ -240,7 +242,7 @@ Vector3 applyBlinnPhongIllumination(
 ) {
     Illumination illumination = applyLights(scene, intersection,  rayState.shadow);
 
-    float currentRefractionIndex = scene->bkgColor.refractionIndex;
+    float currentRefractionIndex = rayState.previousRefractionIndex;
     float nextRefractionIndex = intersection.mtlColor.refractionIndex;
 
     Exclusion newExclusion = rayState.exclusion;
@@ -257,7 +259,7 @@ Vector3 applyBlinnPhongIllumination(
         };
     }
 
-    float F0 = powf(((nextRefractionIndex - 1.0f) / (nextRefractionIndex + 1.0f)), 2);
+    float F0 = powf(((nextRefractionIndex - currentRefractionIndex) / (nextRefractionIndex + currentRefractionIndex)), 2);
     float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), 5));
     Reflection reflection = applyReflections(scene, intersection, illumination, rayState, Fr);
 

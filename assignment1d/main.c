@@ -33,8 +33,9 @@ void render(FILE* outputFilePtr, Scene* scene, ViewParameters* viewParameters, b
                 },
                 .reflectionDepth = 0,
                 .shadow = 1.0f,
+                .previousRefractionIndex = scene->bkgColor.refractionIndex
             };
-            if (x == 132 && y == 184) {
+            if (x == 210 && y == 294) {
                 int test = 1234;
             }
             writePixel(outputFilePtr, convertColorToRGBColor(shadeRay(viewingRay, scene, rayState)), x, scene->imSize.width);

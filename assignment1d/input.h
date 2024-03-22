@@ -445,7 +445,6 @@ PPMImage readPPM(const char *filename) {
 }
 
 void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
-    // Q: is this the best way to keep track of the allocations?
     int mtlColorAllocationCount = 1;
     int textureAllocationCount = 1;
     int normalAllocationCount = 1;
@@ -649,8 +648,9 @@ void printScene(Scene* scene) {
     printf("viewdir: %f %f %f\n", scene->viewDir.x, scene->viewDir.y, scene->viewDir.z);
     printf("updir: %f %f %f\n", scene->upDir.x, scene->upDir.y, scene->upDir.z);
     printf("hfov: %f\n", scene->fov.h);
+    printf("vfov: %f\n", scene->fov.v);
     printf("imsize: %d %d\n", scene->imSize.width, scene->imSize.height);
-    printf("bkgcolor: %f %f %f\n", scene->bkgColor.color.x, scene->bkgColor.color.y, scene->bkgColor.color.z);
+    printf("bkgcolor: %f %f %f %f\n", scene->bkgColor.color.x, scene->bkgColor.color.y, scene->bkgColor.color.z, scene->bkgColor.refractionIndex);
     printf("parallel: %f\n", scene->parallel.frustumWidth);
     if (scene->lights != NULL) {
         for (int lightIdx = 0; lightIdx < scene->lightCount; lightIdx++) {
@@ -659,7 +659,7 @@ void printScene(Scene* scene) {
     }
     if (scene->mtlColors != NULL) {
         for (int mtlColorIdx = 0; mtlColorIdx < scene->mtlColorCount; mtlColorIdx++) {
-            printf("mtlcolor: %f %f %f %f %f %f %f %f %f %f\n",
+            printf("mtlcolor: %f %f %f %f %f %f %f %f %f %f %f %f\n",
                    scene->mtlColors[mtlColorIdx].diffuseColor.x,
                    scene->mtlColors[mtlColorIdx].diffuseColor.y,
                    scene->mtlColors[mtlColorIdx].diffuseColor.z,
@@ -669,13 +669,20 @@ void printScene(Scene* scene) {
                    scene->mtlColors[mtlColorIdx].ambientCoefficient,
                    scene->mtlColors[mtlColorIdx].diffuseCoefficient,
                    scene->mtlColors[mtlColorIdx].specularCoefficient,
-                   scene->mtlColors[mtlColorIdx].specularExponent
+                   scene->mtlColors[mtlColorIdx].specularExponent,
+                   scene->mtlColors[mtlColorIdx].alpha,
+                   scene->mtlColors[mtlColorIdx].refractionIndex
             );
         }
     }
     if (scene->textures != NULL) {
         for (int textureIdx = 0; textureIdx < scene->textureCount; textureIdx++) {
             printf("texture: %d %d %d\n", scene->textures[textureIdx].width, scene->textures[textureIdx].height, scene->textures[textureIdx].maxColor);
+        }
+    }
+    if (scene->bvhSpheres != NULL) {
+        for (int sphereIdx = 0; sphereIdx < scene->bvhSphereCount; sphereIdx++) {
+            printf("bvhsphere: %f %f %f %f\n", scene->bvhSpheres[sphereIdx].center.x, scene->bvhSpheres[sphereIdx].center.y, scene->bvhSpheres[sphereIdx].center.z, scene->bvhSpheres[sphereIdx].radius);
         }
     }
     if (scene->spheres != NULL) {
@@ -725,6 +732,9 @@ void freeInput(Scene* scene) {
     }
     if (scene->mtlColors != NULL) {
         free(scene->mtlColors);
+    }
+    if (scene->bvhSpheres != NULL) {
+        free(scene->bvhSpheres);
     }
     if (scene->textures != NULL) {
         free(scene->textures);
