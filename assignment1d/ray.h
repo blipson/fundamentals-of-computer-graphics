@@ -74,9 +74,9 @@ Ray traceViewingRay(Scene* scene, Vector3 viewingWindowLocation, bool parallel) 
     }
 }
 
-void checkSphereIntersection(Ray* ray, Scene* scene, int excludeIdx, int sphereIdx, float* closestIntersection, enum ObjectType* closestObject, int* closestSphereIdx) {
+void checkSphereIntersection(Ray* ray, Scene* scene, int excludeIdx, int sphereIdx, float* closestIntersection, enum ObjectType* closestObject, int* closestSphereIdx, bool bvh) {
     if (sphereIdx != excludeIdx) {
-        Sphere sphere = (*scene).spheres[sphereIdx];
+        Sphere sphere = bvh ? (*scene).bvhSpheres[sphereIdx] : (*scene).spheres[sphereIdx];
         float A = dot((*ray).direction, (*ray).direction);
         float B = 2.0f * dot((*ray).direction, subtract((*ray).origin, sphere.center));
         float C = dot(subtract((*ray).origin, sphere.center), subtract((*ray).origin, sphere.center)) -
@@ -107,9 +107,10 @@ void checkSphereIntersection(Ray* ray, Scene* scene, int excludeIdx, int sphereI
 
 
 
-void checkSphereIntersections(int excludeIdx, Ray* ray, Scene* scene, float* closestIntersection, enum ObjectType* closestObject, int* closestSphereIdx) {
-    for (int sphereIdx = 0; sphereIdx < (*scene).sphereCount; sphereIdx++) {
-        checkSphereIntersection(ray, scene, excludeIdx, sphereIdx, closestIntersection, closestObject, closestSphereIdx);
+void checkSphereIntersections(int excludeIdx, Ray* ray, Scene* scene, float* closestIntersection, enum ObjectType* closestObject, int* closestSphereIdx, bool bvh) {
+    int sphereCount = bvh ? (*scene).bvhSphereCount : (*scene).sphereCount;
+    for (int sphereIdx = 0; sphereIdx < sphereCount; sphereIdx++) {
+        checkSphereIntersection(ray, scene, excludeIdx, sphereIdx, closestIntersection, closestObject, closestSphereIdx, bvh);
     }
 }
 
@@ -404,6 +405,30 @@ Ray reflectRay(Vector3 intersectionPoint, Vector3 reverseIncidentDirection, Vect
     };
 }
 
+Intersection castBvhRay(Ray ray, Scene* scene) {
+    float closestIntersection = FLT_MAX; // Initialize with a large value
+    enum ObjectType closestObject;
+    int closestBvhSphereIdx = -1;
+    checkSphereIntersections(-1, &ray, scene, &closestIntersection, &closestObject, &closestBvhSphereIdx, true);
+    return (Intersection) {
+            .closestIntersection = closestIntersection,
+            .closestSphereIdx = closestBvhSphereIdx,
+            .closestEllipsoidIdx = -1,
+            .closestFaceIntersection = (FaceIntersection) {
+                .faceIdx = -1,
+                .normalDirection = (Vector3) {
+                        .x = 0.0f,
+                        .y = 0.0f,
+                        .z = 0.0f,
+                },
+                .alpha = 0.0f,
+                .beta = 0.0f,
+                .gamma = 0.0f,
+            },
+            .closestObject = closestObject,
+    };
+}
+
 Intersection castRay(Ray ray, Scene* scene, Exclusion exclusion) {
     float closestIntersection = FLT_MAX; // Initialize with a large value
     enum ObjectType closestObject;
@@ -420,7 +445,7 @@ Intersection castRay(Ray ray, Scene* scene, Exclusion exclusion) {
             .beta = 0.0f,
             .gamma = 0.0f,
     };
-    checkSphereIntersections(exclusion.excludeSphereIdx, &ray, scene, &closestIntersection, &closestObject, &closestSphereIdx);
+    checkSphereIntersections(exclusion.excludeSphereIdx, &ray, scene, &closestIntersection, &closestObject, &closestSphereIdx, false);
 
     checkEllipsoidIntersections(exclusion.excludeEllipsoidIdx, &ray, scene, &closestIntersection, &closestObject, &closestEllipsoidIdx);
 

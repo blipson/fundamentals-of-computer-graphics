@@ -14,12 +14,13 @@
 #define MAX_INPUT_LINE_LENGTH 5000
 #define MAX_TEXTURE_LINE_LENGTH 50000
 #define MAX_TEXTURE_WORDS_PER_LINE 10000
-#define KEYWORD_COUNT 20
+#define KEYWORD_COUNT 21
 #define INITIAL_LIGHT_COUNT 10
 #define INITIAL_MTLCOLOR_COUNT 10
 #define INITIAL_TEXTURE_COUNT 10
 #define INITIAL_NORMAL_COUNT 10
 #define INITIAL_SPHERE_COUNT 10
+#define INITIAL_BVH_SPHERE_COUNT 10
 #define INITIAL_ELLIPSOID_COUNT 10
 #define INITIAL_VERTEX_COUNT 10000
 #define INITIAL_VERTEX_NORMAL_COUNT 10000
@@ -79,7 +80,7 @@ bool isKeyword(const char* target) {
             "imsize", "bkgcolor", "mtlcolor", "sphere",
             "parallel", "ellipse", "light", "depthcueing",
             "attlight", "v", "vn", "f", "texture",
-            "vt", "bump",
+            "vt", "bump", "bvhsphere"
     };
     for (size_t i = 0; i < KEYWORD_COUNT; i++) {
         if (target == NULL || strcmp(target, keywords[i]) == 0) {
@@ -448,6 +449,7 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
     int mtlColorAllocationCount = 1;
     int textureAllocationCount = 1;
     int normalAllocationCount = 1;
+    int bvhSphereAllocationCount = 1;
     int sphereAllocationCount = 1;
     int vertexAllocationCount = 1;
     int vertexNormalAllocationCount = 0;
@@ -534,6 +536,29 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
             scene->spheres[scene->sphereCount].textureIdx = scene->textureCount - 1;
             scene->spheres[scene->sphereCount].normalIdx = scene->normalCount - 1;
             scene->sphereCount++;
+        } else if (strcmp(inputFileWordsByLine[*line][0], "bvhsphere") == 0) {
+            if (scene->bvhSphereCount >= INITIAL_BVH_SPHERE_COUNT * bvhSphereAllocationCount) {
+                // todo, bumps apply to other textures below it...
+                bvhSphereAllocationCount++;
+                Sphere* newBvhSpheres = (Sphere*) realloc(scene->bvhSpheres, (INITIAL_BVH_SPHERE_COUNT * bvhSphereAllocationCount) * sizeof(Sphere));
+                if (newBvhSpheres == NULL) {
+                    fprintf(stderr, "Memory allocation failed for BVH spheres.");
+                    exit(-1);
+                }
+                scene->bvhSpheres = newBvhSpheres;
+            }
+            checkValues(inputFileWordsByLine[*line], 4, "bvhSphere");
+            Vector3 spherePosition = {
+                    .x = convertStringToFloat(inputFileWordsByLine[*line][1]),
+                    .y = convertStringToFloat(inputFileWordsByLine[*line][2]),
+                    .z = convertStringToFloat(inputFileWordsByLine[*line][3])
+            };
+            scene->bvhSpheres[scene->bvhSphereCount].center = spherePosition;
+            scene->bvhSpheres[scene->bvhSphereCount].radius = convertStringToFloat(inputFileWordsByLine[*line][4]);
+            scene->bvhSpheres[scene->bvhSphereCount].mtlColorIdx = scene->mtlColorCount - 1;
+            scene->bvhSpheres[scene->bvhSphereCount].textureIdx = scene->textureCount - 1;
+            scene->bvhSpheres[scene->bvhSphereCount].normalIdx = scene->normalCount - 1;
+            scene->bvhSphereCount++;
         } else if (strcmp(inputFileWordsByLine[*line][0], "ellipse") == 0) {
             if (scene->ellipsoidCount >= INITIAL_ELLIPSOID_COUNT * ellipsoidAllocationCount) {
                 ellipsoidAllocationCount++;

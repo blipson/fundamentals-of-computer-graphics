@@ -120,6 +120,8 @@ typedef struct {
     Parallel parallel;
     MaterialColor* mtlColors;
     int mtlColorCount;
+    Sphere* bvhSpheres;
+    int bvhSphereCount;
     Sphere* spheres;
     int sphereCount;
     Ellipsoid* ellipsoids;

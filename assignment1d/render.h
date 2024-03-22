@@ -273,6 +273,11 @@ Vector3 shadeRay(Ray ray, Scene* scene, RayState rayState) {
         return scene->bkgColor.color;
     }
 
+    Intersection bvhIntersection = castBvhRay(ray, scene);
+    if (scene->bvhSphereCount > 0 && !intersectionExists(bvhIntersection)) {
+        return scene->bkgColor.color;
+    }
+
     Intersection intersection = castRay(ray, scene, rayState.exclusion);
     if (!intersectionExists(intersection)) {
         return scene->bkgColor.color;

@@ -34,6 +34,9 @@ void render(FILE* outputFilePtr, Scene* scene, ViewParameters* viewParameters, b
                 .reflectionDepth = 0,
                 .shadow = 1.0f,
             };
+            if (x == 132 && y == 184) {
+                int test = 1234;
+            }
             writePixel(outputFilePtr, convertColorToRGBColor(shadeRay(viewingRay, scene, rayState)), x, scene->imSize.width);
             progressBar(scene->imSize.width * scene->imSize.height, i);
             i++;
@@ -60,6 +63,8 @@ int main(int argc, char* argv[]) {
             .parallel = {.frustumWidth = 0.0f},
             .mtlColors = (MaterialColor*) malloc(INITIAL_MTLCOLOR_COUNT * sizeof(MaterialColor)),
             .mtlColorCount = 0,
+            .bvhSpheres = (Sphere*) malloc(INITIAL_BVH_SPHERE_COUNT * sizeof(Sphere)),
+            .bvhSphereCount = 0,
             .spheres = (Sphere*) malloc(INITIAL_SPHERE_COUNT * sizeof(Sphere)),
             .sphereCount = 0,
             .ellipsoids = (Ellipsoid*) malloc(INITIAL_ELLIPSOID_COUNT * sizeof(Ellipsoid)),
