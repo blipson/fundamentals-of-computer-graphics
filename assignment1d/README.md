@@ -154,7 +154,7 @@ This is a program to render a scene containing ellipsoids, spheres, and triangle
     to when computing the colors at the surface boundaries.
   - Visibility attenuation is implemented in [render.h](render.h#L229)
     - ```c
-      float attenuationCoefficient = 5;
+      float attenuationCoefficient = intersection.mtlColor.attenuationCoefficient;
       float attenuationFactor = expf(-attenuationCoefficient * distanceTraveled);
       Vector3 attenuatedTransparencyColor = multiply(transparencyColor, attenuationFactor);
       Vector3 transparency = multiply(attenuatedTransparencyColor, (1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha));
@@ -173,6 +173,13 @@ This is a program to render a scene containing ellipsoids, spheres, and triangle
 - The program accepts values for both hfov and vfov. If both are provided then hfov will be used.
 - The `-s` flag is optional. If included, the scene will render using soft shadows instead of hard shadows. _This will take a lot longer._
 - Faces can be given as `f v1 v2 v3` `f v1/vt1 v2/vt2 v3/vt3` or `f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3`.
+- Input files must be `.txt` files.
+- The RGB scale is from 0-1.
+- Field of view accepts the value v in degrees, not radians.
+- Parallel is an optional parameter that accepts frustum width as its value v.
+- Lights are optional, if none are specified then the scene will render without lighting.
+- All entries in the header, including lights, _must come before_ entries in the body.
+- The attenuation coefficient μ on a mtlcolor is optional.
 
 To run individual files:
 
@@ -184,14 +191,6 @@ To run all the provided examples in the `tests/` directory, included all of the 
 
 # Input File Format
 Sample input files are provided in the `tests/` directory this repo.
-
-### General Notes
-- Input files must be `.txt` files.
-- The RGB scale is from 0-1.
-- Field of view accepts the value v in degrees, not radians.
-- Parallel is an optional parameter that accepts frustum width as its value v.
-- Lights are optional, if none are specified then the scene will render without lighting.
-- All entries in the header, including lights, _must come before_ entries in the body.
 
 ### Header
 This section defines the scene's general viewing parameters. The individual values can appear in any order, but this section must be at the top.
@@ -213,15 +212,15 @@ This section defines the objects within the scene and their colors. `mtlcolor` m
 ```
 bvsphere x y z r
 
-mtlcolor Dr Dg Db Sr Sg Sb ka kd ks n α η
+mtlcolor Dr Dg Db Sr Sg Sb ka kd ks n α η μ
 sphere x y z r
 ellipse x y z rx ry rz
 
-mtlcolor Dr Dg Db Sr Sg Sb ka kd ks n α η
+mtlcolor Dr Dg Db Sr Sg Sb ka kd ks n α η μ
 sphere x y z r
 ellipse x y z rx ry rz
 
-mtlcolor Dr Dg Db Sr Sg Sb ka kd ks n α η
+mtlcolor Dr Dg Db Sr Sg Sb ka kd ks n α η μ
 v x y z
 v x y z
 v x y z

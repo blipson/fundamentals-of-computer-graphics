@@ -39,6 +39,7 @@ typedef struct {
     float specularExponent;
     float alpha;
     float refractionIndex;
+    float attenuationCoefficient;
 } MaterialColor;
 
 typedef struct {

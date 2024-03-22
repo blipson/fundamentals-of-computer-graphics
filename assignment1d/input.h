@@ -179,6 +179,10 @@ float convertUnsignedCharToFloat(unsigned char value) {
 }
 
 void checkValues(char** line, int expectedNumber, char* type) {
+    // TODO: handle optional attenuation coefficient better
+    if (strcmp(type, "mtlcolor") == 0) {
+        return;
+    }
     if (line[expectedNumber + 1] != NULL) {
         fprintf(stderr, "Too many values given for '%s', it expects %d\n", type, expectedNumber);
         exit(-1);
@@ -485,6 +489,9 @@ void readSceneObjects(char*** inputFileWordsByLine, int* line, Scene* scene) {
             scene->mtlColors[scene->mtlColorCount].specularExponent = convertStringToFloat(inputFileWordsByLine[*line][10]);
             scene->mtlColors[scene->mtlColorCount].alpha = convertStringToFloat(inputFileWordsByLine[*line][11]);
             scene->mtlColors[scene->mtlColorCount].refractionIndex = convertStringToFloat(inputFileWordsByLine[*line][12]);
+            if (inputFileWordsByLine[*line][13] != NULL) {
+                scene->mtlColors[scene->mtlColorCount].attenuationCoefficient = convertStringToFloat(inputFileWordsByLine[*line][13]);
+            }
             scene->mtlColorCount++;
         } else if (strcmp(inputFileWordsByLine[*line][0], "texture") == 0) {
             if (scene->textureCount >= INITIAL_TEXTURE_COUNT * textureAllocationCount) {

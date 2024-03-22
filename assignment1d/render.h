@@ -226,8 +226,7 @@ Vector3 applyTransparency(Scene* scene, Intersection intersection, RayState rayS
 
     float distanceTraveled = magnitude(subtract(nextIncident.origin, intersection.intersectionPoint));
 
-    /* Provide attenuation coefficient for the medium */
-    float attenuationCoefficient = 5;
+    float attenuationCoefficient = intersection.mtlColor.attenuationCoefficient;
     float attenuationFactor = expf(-attenuationCoefficient * distanceTraveled);
     Vector3 attenuatedTransparencyColor = multiply(transparencyColor, attenuationFactor);
     Vector3 transparency = multiply(attenuatedTransparencyColor, (1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha));
