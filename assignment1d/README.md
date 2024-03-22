@@ -11,12 +11,12 @@ This is a program to render a scene containing ellipsoids, spheres, and triangle
   calculates the direction of reflection R.
   - Handled in [ray.h](ray.h#L401).
     - ```c
-        Ray reflectRay(Vector3 intersectionPoint, Vector3 reverseIncidentDirection, Vector3 surfaceNormal) {
-            return (Ray) {
-                .origin = intersectionPoint,
-                .direction = subtract((multiply(surfaceNormal, (2.0f * dot(surfaceNormal, reverseIncidentDirection)))), reverseIncidentDirection)
-            };
-        }
+      Ray reflectRay(Vector3 intersectionPoint, Vector3 reverseIncidentDirection, Vector3 surfaceNormal) {
+          return (Ray) {
+              .origin = intersectionPoint,
+              .direction = subtract((multiply(surfaceNormal, (2.0f * dot(surfaceNormal, reverseIncidentDirection)))), reverseIncidentDirection)
+          };
+      }
       ```
 - At each relevant ray/surface intersection point on a transparent surface, the program accurately
   calculates the direction of transmission T. In particular, the program always uses the correct direction of
@@ -25,75 +25,75 @@ This is a program to render a scene containing ellipsoids, spheres, and triangle
   indices of refraction of the materials the incident ray has been traveling through, so that the correct indices
   of refraction are used to calculate the direction of the transmitted ray when that ray is exiting a transparent
   object as well as when entering.
-  - Direction calculation handled in [render.h](render.h#L215).
+  - Direction calculation handled in [render.h](render.h#L212).
     - ```c
-        Ray nextIncident = (Ray) {
-            .origin = intersection.intersectionPoint,
-            .direction = add(
-                multiply(multiply(intersection.surfaceNormal, -1.0f),cosThetaExiting),
-                multiply(refractionDirToMultiply, refractionCoefficient)
-            )
+      Ray nextIncident = (Ray) {
+          .origin = intersection.intersectionPoint,
+          .direction = add(
+              multiply(multiply(intersection.surfaceNormal, -1.0f),cosThetaExiting),
+              multiply(refractionDirToMultiply, refractionCoefficient)
+          )
         };
-      ```
-  - Surface normal, enter/exit, and indices of refraction calculation handled in [render.h](render.h#L243)
+        ```
+  - Surface normal, enter/exit, and indices of refraction calculation handled in [render.h](render.h#L245)
     - ```c
-        float currentRefractionIndex = rayState.previousRefractionIndex;
-            float nextRefractionIndex = intersection.mtlColor.refractionIndex;
+      float currentRefractionIndex = rayState.previousRefractionIndex;
+      float nextRefractionIndex = intersection.mtlColor.refractionIndex;
   
-            Exclusion newExclusion = rayState.exclusion;
-            bool exiting = dot(intersection.surfaceNormal, intersection.incidentDirection) >= 0;
-            if (exiting) {
-                float tempRefractionIndex = currentRefractionIndex;
-                currentRefractionIndex = nextRefractionIndex;
-                nextRefractionIndex = tempRefractionIndex;
-                intersection.surfaceNormal = multiply(intersection.surfaceNormal, -1.0f);
-                newExclusion = (Exclusion) {
-                    .excludeSphereIdx = -1,
-                    .excludeEllipsoidIdx = -1,
-                    .excludeFaceIdx = intersection.exclusion.excludeFaceIdx
-                };
-            }
+      Exclusion newExclusion = rayState.exclusion;
+      bool exiting = dot(intersection.surfaceNormal, intersection.incidentDirection) >= 0;
+      if (exiting) {
+          float tempRefractionIndex = currentRefractionIndex;
+          currentRefractionIndex = nextRefractionIndex;
+          intersection.surfaceNormal = multiply(intersection.surfaceNormal, -1.0f);
+          nextRefractionIndex = tempRefractionIndex;
+          newExclusion = (Exclusion) {
+              .excludeSphereIdx = -1,
+              .excludeEllipsoidIdx = -1,
+              .excludeFaceIdx = intersection.exclusion.excludeFaceIdx
+          };
+      }
       ```
       as well as
     - ```c
-        Vector3 transparencyColor = shadeRay(nextIncident, scene, (RayState) {
-            .exclusion = rayState.exclusion,
-            .shadow = rayState.shadow,
-            .reflectionDepth = rayState.reflectionDepth,
-            .previousRefractionIndex = currentRefractionIndex
-        });
-      ```
+      Vector3 transparencyColor = shadeRay(nextIncident, scene, (RayState) {
+          .exclusion = rayState.exclusion,
+          .shadow = rayState.shadow,
+          .reflectionDepth = rayState.reflectionDepth,
+          .previousRefractionIndex = currentRefractionIndex
+      });
+    ```
 - At each relevant ray/surface intersection point on a reflective surface, the program recursively
   traces a ray in the reflected direction R and correctly uses Schlick’s method to define an appropriate
   weighting factor to apply to the color returned by the reflected ray, depending on the index of refraction of
   the reflective material and the angle of incidence of the incident ray.
-  - Schlick's method calculation handled in [render.h](render.h#L266)
+  - Schlick's method calculation handled in [render.h](render.h#L262)
     - ```c
-        float F0 = powf(((nextRefractionIndex - currentRefractionIndex) / (nextRefractionIndex + currentRefractionIndex)), 2);
-        float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), 5));
-        Reflection reflection = applyReflections(scene, intersection, illumination, rayState, Fr);
+      float F0 = powf(((nextRefractionIndex - currentRefractionIndex) / (nextRefractionIndex + currentRefractionIndex)), 2);
+      float Fr = F0 + ((1.0f - F0) * powf(1.0f - dot(multiply(intersection.incidentDirection, -1.0f), intersection.surfaceNormal), 5));
+      Reflection reflection = applyReflections(scene, intersection, illumination, rayState, Fr);
       ```
-  - Reflection calculation handled in [render.h](render.h#L161)
+  - Reflection calculation handled in [render.h](render.h#L157)
     - ```c
-        reflectionColor = shadeRay(
-            reflectRay(
-                    intersection.intersectionPoint,
-                    multiply(intersection.incidentDirection, -1.0f),
-                    intersection.surfaceNormal
-                ),
-                scene,
-                (RayState) {
-                    .exclusion = rayState.exclusion,
-                    .shadow = rayState.shadow,
-                    .reflectionDepth = rayState.reflectionDepth + 1,
-                    .previousRefractionIndex = rayState.previousRefractionIndex
-                }
-        );
-        reflection = multiply(reflectionColor, Fr);
-        baseColor = clamp(add(
-            multiply(illumination.ambient, 1.0f - Fr),
-            multiply(illumination.depthCueingAmbient, 1.0f - Fr)
-        ));
+      reflectionColor = shadeRay(
+          reflectRay(
+              intersection.intersectionPoint,
+                  multiply(intersection.incidentDirection, -1.0f),
+                  intersection.surfaceNormal
+          ),
+          scene,
+          (RayState) {
+              .exclusion = rayState.exclusion,
+              .shadow = rayState.shadow,
+              .reflectionDepth = rayState.reflectionDepth + 1,
+              .previousRefractionIndex = rayState.previousRefractionIndex
+          }
+      );
+      reflection = multiply(reflectionColor, Fr);
+      baseColor = clamp(add(
+          multiply(illumination.ambient, 1.0f - Fr),
+          multiply(illumination.depthCueingAmbient, 1.0f - Fr)
+      ));
       ```
 - At each relevant ray/surface intersection point on a transparent surface, the program recursively
   traces a ray in the transmitted direction T as well as in the reflected direction R, and correctly uses
@@ -102,7 +102,7 @@ This is a program to render a scene containing ellipsoids, spheres, and triangle
   through, and the index of refraction of the material that the transmitted ray will be passing through, and
   the angle of incidence of the incident ray. The opacity of the intersected object is also correctly used in
   weighting the contribution of the transmitted ray.
-  - Opacity handled in [render.h](render.h#L237). The rest has been described above.
+  - Opacity handled in [render.h](render.h#L233). The rest has been described above.
     - ```c
       Vector3 transparency = multiply(attenuatedTransparencyColor, (1.0f - intersectionPointReflectionCoefficient) * (1.0f - intersection.mtlColor.alpha));
       ```
@@ -152,7 +152,7 @@ This is a program to render a scene containing ellipsoids, spheres, and triangle
     behind them to a greater extent than thinner partially transparent objects. Specifically, the program
     keeps track of the distance a ray has traveled through a transparent medium and uses that information
     to when computing the colors at the surface boundaries.
-  - Visibility attenuation is implemented in [render.h](render.h#L228)
+  - Visibility attenuation is implemented in [render.h](render.h#L229)
     - ```c
       float attenuationCoefficient = 5;
       float attenuationFactor = expf(-attenuationCoefficient * distanceTraveled);
@@ -161,7 +161,7 @@ This is a program to render a scene containing ellipsoids, spheres, and triangle
       ```
 - The program has been extended to incorporate the use of bounding volumes to reduce the
   number of ray/surface intersection tests required to render a scene.
-  - Bound volume hierarchy has been implemented in [render.h](render.h#278) with the use of `bvhsphere` in your scene description file. If none are included, then the scene will render as normal.
+  - Bound volume hierarchy has been implemented in [render.h](render.h#L278) with the use of `bvhsphere` in your scene description file. If none are included, then the scene will render as normal.
     - ```c
       Intersection bvhIntersection = castBvhRay(ray, scene);
       if (scene->bvhSphereCount > 0 && !intersectionExists(bvhIntersection)) {
