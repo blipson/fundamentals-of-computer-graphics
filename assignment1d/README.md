@@ -1,6 +1,9 @@
 # Assignment 1d
 This is a program to render a scene containing ellipsoids, spheres, and triangles in 3D space.
 
+# Showcase
+![showcase](showcase/showcase.png "Showcase")
+
 # Building
 `$ make`
 
