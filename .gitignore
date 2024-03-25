@@ -31,3 +31,4 @@ assignment1d/raytracer1d
 assignment1d/*.ppm
 assignment1d/tests/*.ppm
 assignment1d/*.png
+assignment1d/showcase/showcase.ppm
