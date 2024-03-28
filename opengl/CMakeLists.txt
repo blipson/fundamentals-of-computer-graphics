@@ -49,17 +49,17 @@ add_definitions(
         -D_CRT_SECURE_NO_WARNINGS
 )
 
-add_executable(assignment2a
+add_executable(opengl
         main.cpp
         common/shader.cpp
         common/shader.hpp
 )
-target_link_libraries(assignment2a
+target_link_libraries(opengl
         ${ALL_LIBS}
 )
 
-set_target_properties(assignment2a PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
-create_target_launcher(assignment2a WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/")
+set_target_properties(opengl PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
+create_target_launcher(opengl WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/")
 
 
 SOURCE_GROUP(common REGULAR_EXPRESSION ".*/common/.*" )
@@ -68,7 +68,7 @@ SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
 
 if (NOT ${CMAKE_GENERATOR} MATCHES "Xcode" )
     add_custom_command(
-            TARGET assignment2a POST_BUILD
+            TARGET opengl POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_SOURCE_DIR}/"
     )
 

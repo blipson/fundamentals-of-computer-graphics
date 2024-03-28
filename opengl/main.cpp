@@ -18,7 +18,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make macOS happy
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(512, 512, "Assignment 2A", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(512, 512, "OpenGL", nullptr, nullptr);
     if (window == nullptr) {
         fprintf(stderr, "Failed to open GLFW window.\n");
         getchar();
