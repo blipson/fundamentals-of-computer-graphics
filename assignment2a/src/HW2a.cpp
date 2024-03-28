@@ -26,6 +26,11 @@ typedef struct {
     GLfloat r, g, b;
 } ColorType3D;
 
+enum State {
+    BASE,
+    ROTATE
+};
+
 GLfloat M[16]; // general transformation matrix
 
 // define some assorted global variables, to make life easier
@@ -38,6 +43,27 @@ GLdouble pi = 4.0*atan(1.0);
 GLFWcursor *hand_cursor, *arrow_cursor; // some different cursors
 
 GLint NVERTICES = 9; // part of the hard-coded model
+
+State state = BASE;
+double previous_xpos = 0.0;
+double rotation_angle = 0.0;
+
+double scale_factor_x = 1.0;
+double scale_factor_y = 1.0;
+
+void updateMatrix() {
+    // Reset to identity matrix
+    for (int i = 0; i < 16; ++i)
+        M[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+
+    // Apply transformations
+    M[0] = cos(rotation_angle) * scale_factor_x;
+    M[1] = -sin(rotation_angle) * scale_factor_y;
+    M[4] = sin(rotation_angle) * scale_factor_x;
+    M[5] = cos(rotation_angle) * scale_factor_y;
+//    M[12] = translate_x;
+//    M[13] = translate_y;
+}
 
 
 //----------------------------------------------------------------------------
@@ -56,16 +82,16 @@ key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
     switch (key) {
         case GLFW_KEY_LEFT:
-            M[0] *= 0.9;
+            scale_factor_x *= 0.9;
             break;
         case GLFW_KEY_RIGHT:
-            M[0] *= 1.1;
+            scale_factor_x *= 1.1;
             break;
         case GLFW_KEY_UP:
-            M[5] *= 1.1;
+            scale_factor_y *= 1.1;
             break;
         case GLFW_KEY_DOWN:
-            M[5] *= 0.9;
+            scale_factor_y *= 0.9;
             break;
         default:
             break;
@@ -77,6 +103,11 @@ key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 static void
 mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        state = ROTATE;
+    } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        state = BASE;
+    }
     
     // Check which mouse button triggered the event, e.g. GLFW_MOUSE_BUTTON_LEFT, etc.
     // and what the button action was, e.g. GLFW_PRESS, GLFW_RELEASE, etc.
@@ -90,12 +121,17 @@ mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 // function that is called whenever a cursor motion event occurs
 static void
 cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
-    
-    // determine the direction of the mouse or cursor motion
-    // update the current mouse or cursor location
-    //  (necessary to quantify the amount and direction of cursor motion)
-    // take the appropriate action
-    
+    if (state == ROTATE) {
+        double dx = xpos - previous_xpos;
+        dx *= M_PI / 180.0;
+        rotation_angle = dx;
+//        double cos_dx = cos(dx);
+//        double sin_dx = sin(dx);
+//        M[0] = cos_dx;
+//        M[1] = sin_dx;
+//        M[4] = -sin_dx;
+//        M[5] = cos_dx;
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -175,10 +211,10 @@ int main(int argc, char** argv) {
 
     // Define the error callback function
     glfwSetErrorCallback(error_callback);
-    
+
     // Initialize GLFW (performs platform-specific initialization)
     if (!glfwInit()) exit(EXIT_FAILURE);
-    
+
     // Ask for OpenGL 3.2
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -187,7 +223,7 @@ int main(int argc, char** argv) {
 
     // Use GLFW to open a window within which to display your graphics
 	window = glfwCreateWindow(window_width, window_height, "HW2a", NULL, NULL);
-	
+
     // Verify that the window was successfully created; if not, print error message and terminate
     if (!window)
 	{
@@ -195,16 +231,16 @@ int main(int argc, char** argv) {
         glfwTerminate();
         exit(EXIT_FAILURE);
 	}
-    
+
 	glfwMakeContextCurrent(window); // makes the newly-created context current
-    
+
     // Load all OpenGL functions (needed if using Windows)
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("gladLoadGLLoader failed; terminating\n");
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
-    
+
 	glfwSwapInterval(1);  // tells the system to wait for the rendered frame to finish updating before swapping buffers; can help to avoid tearing
 
     // Define the keyboard callback function
@@ -225,13 +261,13 @@ int main(int argc, char** argv) {
 
         // fill/re-fill the window with the background color
 		glClear( GL_COLOR_BUFFER_BIT );
-        
-        // define/re-define the modelview matrix. In this template, we define M to be the identity matrix; you will need define M according to the user's actions.
 
-        
+        // define/re-define the modelview matrix. In this template, we define M to be the identity matrix; you will need define M according to the user's actions.
+        updateMatrix();
+
         // sanity check that your matrix contents are what you expect them to be
-        printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n",M[0],M[4],M[8],M[12], M[1],M[5],M[9],M[13], M[2],M[6],M[10],M[14], M[3],M[7],M[11],M[15]);
-        
+        if (DEBUG_ON) printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n",M[0],M[4],M[8],M[12], M[1],M[5],M[9],M[13], M[2],M[6],M[10],M[14], M[3],M[7],M[11],M[15]);
+
         glUniformMatrix4fv( m_location, 1, GL_FALSE, M );   // send the updated model transformation matrix to the GPU
 		glDrawArrays( GL_TRIANGLES, 0, NVERTICES );    // draw a triangle between the first vertex and each successive vertex pair in the hard-coded model
 		glFlush();	// ensure that all OpenGL calls have executed before swapping buffers
