@@ -47,7 +47,6 @@ GLint NVERTICES = 9; // part of the hard-coded model
 
 State state = BASE;
 double previous_xpos = 0.0;
-double previous_ypos = 0.0;
 
 double rotation_angle = 0.0;
 
@@ -55,6 +54,17 @@ double scale_factor_x = 1.0;
 double scale_factor_y = 1.0;
 double translate_x = 0.0;
 double translate_y = 0.0;
+
+void resetMatrix() {
+    previous_xpos = 0.0;
+
+    rotation_angle = 0.0;
+
+    scale_factor_x = 1.0;
+    scale_factor_y = 1.0;
+    translate_x = 0.0;
+    translate_y = 0.0;
+}
 
 void updateMatrix() {
     // Reset to identity matrix
@@ -88,7 +98,9 @@ key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
     switch (key) {
         case GLFW_KEY_LEFT:
-            scale_factor_x *= 0.9;
+            if (scale_factor_x > 0.01) {
+                scale_factor_x *= 0.9;
+            }
             break;
         case GLFW_KEY_RIGHT:
             scale_factor_x *= 1.1;
@@ -97,7 +109,15 @@ key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
             scale_factor_y *= 1.1;
             break;
         case GLFW_KEY_DOWN:
-            scale_factor_y *= 0.9;
+            if (scale_factor_y > 0.01) {
+                scale_factor_y *= 0.9;
+            }
+            break;
+        case GLFW_KEY_R:
+            resetMatrix();
+            break;
+        case GLFW_KEY_Q:
+            glfwSetWindowShouldClose(window, GL_TRUE);
             break;
         default:
             break;
@@ -256,9 +276,6 @@ int main(int argc, char** argv) {
 
 	// Create the shaders and perform other one-time initializations
 	init();
-    for (i=0; i<16; i++) {
-        M[i] = (i%5==0);
-    }
 
 	// event loop
     while (!glfwWindowShouldClose(window)) {
