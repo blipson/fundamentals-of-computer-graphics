@@ -28,7 +28,8 @@ typedef struct {
 
 enum State {
     BASE,
-    ROTATE
+    ROTATE,
+    TRANSLATE
 };
 
 GLfloat M[16]; // general transformation matrix
@@ -46,23 +47,28 @@ GLint NVERTICES = 9; // part of the hard-coded model
 
 State state = BASE;
 double previous_xpos = 0.0;
+double previous_ypos = 0.0;
+
 double rotation_angle = 0.0;
 
 double scale_factor_x = 1.0;
 double scale_factor_y = 1.0;
+double translate_x = 0.0;
+double translate_y = 0.0;
 
 void updateMatrix() {
     // Reset to identity matrix
-    for (int i = 0; i < 16; ++i)
+    for (int i = 0; i < 16; i++) {
         M[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+    }
 
     // Apply transformations
     M[0] = cos(rotation_angle) * scale_factor_x;
     M[1] = -sin(rotation_angle) * scale_factor_y;
     M[4] = sin(rotation_angle) * scale_factor_x;
     M[5] = cos(rotation_angle) * scale_factor_y;
-//    M[12] = translate_x;
-//    M[13] = translate_y;
+    M[12] = translate_x;
+    M[13] = translate_y;
 }
 
 
@@ -103,10 +109,12 @@ key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 static void
 mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && mods != GLFW_MOD_CONTROL) {
         state = ROTATE;
     } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
         state = BASE;
+    } else if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_CONTROL) {
+        state = TRANSLATE;
     }
     
     // Check which mouse button triggered the event, e.g. GLFW_MOUSE_BUTTON_LEFT, etc.
@@ -123,14 +131,10 @@ static void
 cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
     if (state == ROTATE) {
         double dx = xpos - previous_xpos;
-        dx *= M_PI / 180.0;
-        rotation_angle = dx;
-//        double cos_dx = cos(dx);
-//        double sin_dx = sin(dx);
-//        M[0] = cos_dx;
-//        M[1] = sin_dx;
-//        M[4] = -sin_dx;
-//        M[5] = cos_dx;
+        rotation_angle = dx * M_PI / 180.0;
+    } else if (state == TRANSLATE) {
+        translate_x = (xpos / window_width) - (scale_factor_x / 2);
+        translate_y = (-ypos / window_height) + (scale_factor_y / 2);
     }
 }
 
