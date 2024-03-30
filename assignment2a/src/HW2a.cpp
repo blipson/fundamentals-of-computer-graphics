@@ -9,6 +9,10 @@
 #include <math.h>
 #include <iostream>
 #include <sstream>
+#include <fstream> // For file input
+#include <string> // For string manipulation
+#include <cfloat>
+
 
 #define DEBUG_ON 0  // repetitive of the debug flag in the shader loading code, included here for clarity only
 
@@ -29,6 +33,7 @@ typedef struct {
 enum State {
     BASE,
     ROTATE,
+    ROTATE_RIGHT,
     TRANSLATE
 };
 
@@ -43,10 +48,11 @@ GLdouble pi = 4.0*atan(1.0);
 
 GLFWcursor *hand_cursor, *arrow_cursor; // some different cursors
 
-GLint NVERTICES = 9; // part of the hard-coded model
+GLint NVERTICES = 90000; // part of the hard-coded model
 
 State state = BASE;
 double previous_xpos = 0.0;
+double previous_ypos = 0.0;
 
 double rotation_angle = 0.0;
 
@@ -57,6 +63,7 @@ double translate_y = 0.0;
 
 void resetMatrix() {
     previous_xpos = 0.0;
+    previous_ypos = 0.0;
 
     rotation_angle = 0.0;
 
@@ -72,11 +79,16 @@ void updateMatrix() {
         M[i] = (i % 5 == 0) ? 1.0f : 0.0f;
     }
 
+    double cosTheta = cos(rotation_angle);
+    double sinTheta = sin(rotation_angle);
+
     // Apply transformations
     M[0] = cos(rotation_angle) * scale_factor_x;
     M[1] = -sin(rotation_angle) * scale_factor_y;
     M[4] = sin(rotation_angle) * scale_factor_x;
     M[5] = cos(rotation_angle) * scale_factor_y;
+    M[8] = cos(rotation_angle) * scale_factor_x;
+
     M[12] = translate_x;
     M[13] = translate_y;
 }
@@ -135,8 +147,10 @@ mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
         state = BASE;
     } else if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_CONTROL) {
         state = TRANSLATE;
+    } else if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_ALT) {
+        state = ROTATE_RIGHT;
     }
-    
+
     // Check which mouse button triggered the event, e.g. GLFW_MOUSE_BUTTON_LEFT, etc.
     // and what the button action was, e.g. GLFW_PRESS, GLFW_RELEASE, etc.
     // (Note that ordinary trackpad click = mouse left button)
@@ -149,14 +163,80 @@ mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 // function that is called whenever a cursor motion event occurs
 static void
 cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
+    double dx = xpos - previous_xpos;
+    double dy = ypos - previous_ypos;
+    previous_xpos = xpos;
+    previous_ypos = ypos;
+    if (xpos < 0 || xpos > window_width || ypos < 0 || ypos > window_height) {
+        return;
+    }
     if (state == ROTATE) {
-        double dx = xpos - previous_xpos;
-        rotation_angle = dx * M_PI / 180.0;
+        rotation_angle += 2 * dx / window_width * pi;
+        if (rotation_angle > 2 * pi)
+            rotation_angle -= 2 * pi;
+        else if (rotation_angle < - 2 * pi)
+            rotation_angle += 2 * pi;
     } else if (state == TRANSLATE) {
-        translate_x = (xpos / window_width) - (scale_factor_x / 2);
-        translate_y = (-ypos / window_height) + (scale_factor_y / 2);
+        if ((dx > 0 && translate_x < 0.99) || (dx < 0 && translate_x > -0.99)) {
+            translate_x += dx / (window_width / 2);
+        }
+        if ((dy < 0 && translate_y < 0.99) || (dy > 0 && translate_y > -0.99)) {
+            translate_y += -dy / (window_height / 2);
+        }
+    } else if (state == ROTATE_RIGHT) {
+
     }
 }
+
+// Function to read 3D object or scene description from file
+void readFile(const std::string& filename, FloatType2D vertices[], ColorType3D colors[], int& numVertices) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Unable to open file: " << filename << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    std::string line;
+    numVertices = 0;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        char type;
+        iss >> type;
+        float z;
+
+        if (type == 'v') {
+            iss >> vertices[numVertices].x >> vertices[numVertices].y >> z >> colors[numVertices].r >> colors[numVertices].g >> colors[numVertices].b;
+//            vertices[numVertices].x /= 300;
+//            vertices[numVertices].y /= 300;
+            numVertices++;
+        }
+    }
+
+    file.close();
+}
+
+void scaleAndTranslate(FloatType2D vertices[], int numVertices) {
+    // Calculate object bounds
+    FloatType2D minCoords = {FLT_MAX, FLT_MAX};
+    FloatType2D maxCoords = {-FLT_MAX, -FLT_MAX};
+    for (int i = 0; i < numVertices; ++i) {
+        minCoords.x = std::min(minCoords.x, vertices[i].x);
+        minCoords.y = std::min(minCoords.y, vertices[i].y);
+        maxCoords.x = std::max(maxCoords.x, vertices[i].x);
+        maxCoords.y = std::max(maxCoords.y, vertices[i].y);
+    }
+
+    // Calculate scale factors and translation values
+    FloatType2D scaleFactors = {2.0f / (maxCoords.x - minCoords.x), 2.0f / (maxCoords.y - minCoords.y)};
+    FloatType2D translation = {-(maxCoords.x + minCoords.x) / 2.0f, -(maxCoords.y + minCoords.y) / 2.0f};
+
+    // Apply transformation to object coordinates
+    for (int i = 0; i < numVertices; ++i) {
+        vertices[i].x = (vertices[i].x + translation.x) * scaleFactors.x;
+        vertices[i].y = (vertices[i].y + translation.y) * scaleFactors.y;
+    }
+}
+
 
 //----------------------------------------------------------------------------
 
@@ -164,30 +244,15 @@ void init( void )
 {
     ColorType3D colors[NVERTICES];
     FloatType2D vertices[NVERTICES];
+    int numVertices = 0;
     GLuint vao[1], buffer, program, location1, location2;
-  
-    // set up some hard-coded colors and geometry
-    // this part can be customized to read in an object description from a file
-    colors[0].r = 1;  colors[0].g = 1;  colors[0].b = 1;  // white
-    colors[1].r = 1;  colors[1].g = 0;  colors[1].b = 0;  // red
-    colors[2].r = 1;  colors[2].g = 0;  colors[2].b = 0;  // red
-    colors[3].r = 1;  colors[3].g = 1;  colors[3].b = 1;  // white
-    colors[4].r = 0;  colors[4].g = 0;  colors[4].b = 1;  // blue
-    colors[5].r = 0;  colors[5].g = 0;  colors[5].b = 1;  // blue
-    colors[6].r = 1;  colors[6].g = 1;  colors[6].b = 1;  // white
-    colors[7].r = 0;  colors[7].g = 1;  colors[7].b = 1;  // cyan
-    colors[8].r = 0;  colors[8].g = 1;  colors[8].b = 1;  // cyan
-    
-    vertices[0].x =  0;     vertices[0].y =  0.25; // center
-    vertices[1].x =  0.25;  vertices[1].y =  0.5; // upper right
-    vertices[2].x = -0.25;  vertices[2].y =  0.5; // upper left
-    vertices[3].x =  0;     vertices[3].y =  0.25; // center (again)
-    vertices[4].x =  0.25;  vertices[4].y = -0.5; // low-lower right
-    vertices[5].x =  0.5;   vertices[5].y = -0.25; // mid-lower right
-    vertices[6].x =  0;     vertices[6].y =  0.25; // center (again)
-    vertices[7].x = -0.5;   vertices[7].y = -0.25; // low-lower left
-    vertices[8].x = -0.25;  vertices[8].y = -0.5; // mid-lower left
-    
+
+    // Read object description from file
+    readFile("/Users/Z003YW4/github.com/fundamentals-of-computer-graphics/assignment2a/src/cow-nonormals.obj", vertices, colors, numVertices);
+
+    // needed for .obj files
+    scaleAndTranslate(vertices, numVertices);
+
     // Create and bind a vertex array object
     glGenVertexArrays( 1, vao );
     glBindVertexArray( vao[0] );
@@ -223,7 +288,6 @@ void init( void )
     // If you want, you can add more cursors, or even define your own cursor appearance
     arrow_cursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
     hand_cursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
-    
 }
 
 //----------------------------------------------------------------------------
