@@ -139,7 +139,7 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
         state.operation = BASE;
     } else if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_CONTROL) {
         state.operation = TRANSLATE;
-    } else if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_ALT) {
+    } else if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_SHIFT) {
         state.operation = ROTATE_RIGHT;
     }
 }
@@ -178,6 +178,9 @@ void readVerticesFromFile(const std::string& filename, FloatType2D vertices[], C
     std::string line;
     numVertices = 0;
     while (std::getline(file, line)) {
+        if (line.empty()) {
+            continue;
+        }
         std::istringstream iss(line);
         char type;
         iss >> type;
@@ -229,13 +232,13 @@ void init(GLint* transformationMatrixLocation)
     glBufferData( GL_ARRAY_BUFFER, sizeof(vertices)+sizeof(colors), vertices, GL_STATIC_DRAW );
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices), sizeof(colors), colors);
-    
+
     std::stringstream vshader, fshader;
     vshader << SRC_DIR << "/vshader2a.glsl";
     fshader << SRC_DIR << "/fshader2a.glsl";
-    
+
     program = InitShader( vshader.str().c_str(), fshader.str().c_str() );
-    
+
     location1 = glGetAttribLocation( program, "vertex_position" );
     glEnableVertexAttribArray( location1 );
     glVertexAttribPointer( location1, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
