@@ -625,7 +625,7 @@ the corresponding direction.
 @code
 if (hats[2] & GLFW_HAT_RIGHT)
 {
-    // State of hat 2 could be right-up, right or right-down
+    // Operation of hat 2 could be right-up, right or right-down
 }
 @endcode
 

@@ -1,10 +1,10 @@
-2008-02-07  Steve M. Robbins  <smr@sumost.ca>
+2008-02-07  Steve transformationMatrix. Robbins  <smr@sumost.ca>
 
 	* src/qttestrunner/MostRecentTests.h: 
 	* src/qttestrunner/TestRunnerModel.h: Change from <qlist.h> to
 	replacment <qptrlist.h>; avoids use of compatibility headers.
 
-2007-03-04  Steve M. Robbins  <smr@sumost.ca>
+2007-03-04  Steve transformationMatrix. Robbins  <smr@sumost.ca>
 
 	* include/cppunit/portability/FloatingPoint.h (floatingPointIsFinite): Change
 	return type to int, following the convention of isfinite(), finite(), etc.
@@ -14,7 +14,7 @@
    * doc/cookbook.dox: changed suite() to return a TestSuite instead
      of a Test to avoid introducing unnecessary complexity.
 
-2007-02-24  Steve M. Robbins  <smr@sumost.ca>
+2007-02-24  Steve transformationMatrix. Robbins  <smr@sumost.ca>
 
 	* include/cppunit/portability/FloatingPoint.h: Include Portability.h.
 
@@ -37,7 +37,7 @@
    * include/cppunit/config-evc4:
    * include/cppunit/config-msvc6: Added support for _finite().
 
-2007-01-30  Steve M. Robbins  <smr@sumost.ca>
+2007-01-30  Steve transformationMatrix. Robbins  <smr@sumost.ca>
 
 	* examples/cppunittest/assertion_traitsTest.h:
 	* examples/cppunittest/assertion_traitsTest.cpp: New.  Test
@@ -51,7 +51,7 @@
 	testAssertDoubleEqualsPrecision() to test precision of failure
 	message.
 
-2007-01-27  Steve M. Robbins  <smr@sumost.ca>
+2007-01-27  Steve transformationMatrix. Robbins  <smr@sumost.ca>
 
 	* examples/cppunittest/TestAssertTest.cpp:
 	* examples/cppunittest/TestAssertTest.h: Remove declaration of
@@ -63,7 +63,7 @@
 	Unconditionally use ANSI version of LoadLibrary() and other
 	functions with string arguments.
 
-2007-01-26  Steve M. Robbins  <smr@sumost.ca>
+2007-01-26  Steve transformationMatrix. Robbins  <smr@sumost.ca>
 
 	* config/ax_cxx_have_isfinite.m4: New.  Autoconf macro that tests
 	for finite() in C++ mode.
@@ -73,7 +73,7 @@
 	* src/cppunit/TestAssert.cpp (assertDoubleEquals): Account for
 	non-finite values.
 
-2007-01-11  Steve M. Robbins  <smr@sumost.ca>
+2007-01-11  Steve transformationMatrix. Robbins  <smr@sumost.ca>
 
 	* examples/cppunittest/MockFunctor.h:
 	* examples/cppunittest/MockProtector.h:
@@ -250,7 +250,7 @@
 
   * src/cppunit/Makefile.am:
   * configure.in: MinGW, cygwin: enable build of shared library when using 
-    libtool. patch #1194394 contributed by Stéphane Fillod.
+    libtool. patch #1194394 contributed by Stï¿½phane Fillod.
 
   * cppunit.m4: applied patch #1076398 contributed by Henner Sudek. Fix 
     version number comparison in AM_PATH_CPPUNIT.
@@ -671,7 +671,7 @@
   * src/msvc6/testrunner/TestRunnerDlg.cpp: bug fix, disabled Browse
     button while running tests.
 
-2002-08-22  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2002-08-22  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* cppunit.m4: Doc fix: MINIMUM-VERSION is not optional when using
 	this macro.
@@ -1130,7 +1130,7 @@
   * src/cppunit/CompilerOutputter.cpp: fixed bug #549762 (line wrap).
 
   * src/msvc6/testrunner/DynamicWindow/*: added. Dynamic Window library
-    from Hans Bühler (hans.buehler@topmail.de) to resize window.
+    from Hans Bï¿½hler (hans.buehler@topmail.de) to resize window.
 
   * src/msvc6/testrunner/TestRunnerModel.h:
   * src/msvc6/testrunner/TestRunnerModel.cpp: removed dialog bounds from
@@ -1143,7 +1143,7 @@
 
   * src/msvc6/testrunner/TestRunnerDlg.h:
   * src/msvc6/testrunner/TestRunnerDlg.cpp: replaced dialog resizing code
-    by usage of Hans Bühler's Dynamic Window library. Dialog placement
+    by usage of Hans Bï¿½hler's Dynamic Window library. Dialog placement
     is stored/restored by that library. ProgressBar is now a child window.
     Added edit field to see the details of the failure. List on show
     the short description of the failure.
@@ -1812,7 +1812,7 @@
 
 	* release 1.8.0
 
-2002-04-11  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2002-04-11  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* include/cppunit/ui/mfc/Makefile.am:
 	* include/cppunit/ui/qt/Makefile.am:
@@ -2319,7 +2319,7 @@
 	* examples/cppunittest/XmlOutputterTest.cpp: Updated against TestResult change.
 	Added some utility methods to make the update easier.
 
-2001-10-28  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-10-28  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* INSTALL-unix: Add note about cygwin.
 
@@ -2346,7 +2346,7 @@
 
 	* THANKS: added Gigi Sayfan to the list.
 
-2001-10-21  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-10-21  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* configure.in: Bump version to 1.7.2.
 
@@ -2366,7 +2366,7 @@
 	the conditional, and move "dox" target into both branches of the
 	conditional.
 
-2001-10-20  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-10-20  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* examples/cppunittest/Makefile.am (cppunittestmain_SOURCES):
 	Include XmlUnformiserTest files.
@@ -2387,7 +2387,7 @@
 
 	* src/qttestrunner : added, source of the Qt TestRunner DLL.
 
-2001-10-08  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-10-08  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* src/cppunit/Exception.cpp (what): Remove "throw()" qualifier, to
 	match earlier change to header.
@@ -2696,11 +2696,11 @@
 	* include/cppunit/TestAssert.h : added macro CPPUNIT_FAIL as a 
 	shortcut for CPPUNIT_ASSERT_MESSAGE( message, false ).
 
-2001-09-30  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-09-30  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* configure.in: Set version to 1.7.0.
 
-2001-09-30  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-09-30  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* Release 1.6.1.
 
@@ -2736,7 +2736,7 @@
 	CPPUNIT_TEST_SUITE where the Fixture class name is available from
 	the macro parameter.
 
-2001-09-30  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-09-30  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* include/cppunit/config-mac.h: New.  Macintosh configuration,
 	courtesy of Duane Murphy.
@@ -2756,7 +2756,7 @@
 
 	* cppunit-config.in (Usage): Remove "[LIBRARIES]" from help string.
 
-2001-09-29  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-09-29  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* configure.in: Set version to 1.6.1.
 
@@ -2766,7 +2766,7 @@
 	TestCaller exception catching features is now tested correctly.
 	Previous test tested nothing!
 
-2001-09-23  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-09-23  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* configure.in: Set version to 1.6.0.
 
@@ -2786,7 +2786,7 @@
 	* include/cppunit/TestCaller.h : bugfix: threw 'new Exception'
 	instead of 'Exception'.
 
-2001-09-23  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-09-23  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* doc/footer.html: Put devel list in mailto tag.
 
@@ -2827,7 +2827,7 @@
 	copy the dll to the lib/ directory. This prevent a blocking 
 	compilation error if the DLL is in use by VC++.
 
-2001-09-20  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-09-20  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* Makefile.am (snapshot): Replace "date -I" GNUism with portable
 	specification for ISO date format.
@@ -2856,7 +2856,7 @@
 	* INSTALL-WIN32.txt : detailed what was in each project. Added a FAQ 
 	about the failing test case in cppunittest.
 
-2001-09-19  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-09-19  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* README: Describe how to check if libtool is fixed.
 
@@ -2865,7 +2865,7 @@
 	(snapshot): Use ISO-8601 compliant date for filename.
 	(ACLOCAL_AMFLAGS): Specify local directory.
 
-2001-09-18  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-09-18  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* include/cppunit/TextTestResult.h: Change include from <iosfwd>
 	to <iostream>.  Sugggested by Peer Sommerlund.
@@ -2914,7 +2914,7 @@
 	* src/msvc6/testpluginrunner/TestPlugInRunner.dsw: added dependency to
 	cppunit.dsp and TestRunner.dsp.
 
-2001-09-16  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-09-16  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* Revert TestFixture-related changes from 2001-07-15:
 
@@ -2972,7 +2972,7 @@
 	* include/cppunit/config-msvc6.h: removed pragma once (useless, should 
 	be put in each header to have an effect).
 
-2001-08-07  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-08-07  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* doc/Makefile.am: Add workaround for broken Doxygen.
 
@@ -3001,7 +3001,7 @@
 	* Makefile.am (EXTRA_DIST): Distribute config/*.m4.
 	(SUBDIRS): Do not descend into config.
 
-2001-07-15  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-07-15  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* include/cppunit/TestFixture.h: New.  Declare class TextFixture.
 
@@ -3010,7 +3010,7 @@
 	* src/cppunit/TestCase.cpp: 
 	* include/cppunit/Makefile.am: Subclass TestCase from TestFixture.
 
-2001-07-14  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-07-14  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* include/cppunit/Exception.h:
 	* include/cppunit/Test.h:
@@ -3023,13 +3023,13 @@
 	* include/cppunit/extensions/TestDecorator.h:
 	* src/cppunit/TestCase.cpp:  Add documentation.
 
-2001-07-13  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-07-13  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* examples/cppunittest/TestAssertTest.h:
 	* examples/cppunittest/TestAssertTest.cpp: Add tests 
 	for CPPUNIT_ASSERT_EQUAL.
 
-2001-07-12  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-07-12  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* configure.in: Set to version 1.5.6.  On the assumption that
 	backwards compatibility has been broken (though I'm not certain),
@@ -3042,7 +3042,7 @@
 	* src/cppunit/NotEqualException.cpp: Add "throw()" to overridden
 	std::exception destructors; required for GCC 3.0.
 
-2001-07-07  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-07-07  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* include/cppunit/Makefile.am: Clean config-auto.h using
 	DISTCLEANFILES.
@@ -3080,7 +3080,7 @@
 	by CppUnit::OStringStream.
 
 
-2001-07-06  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-07-06  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* configure.in: Add --disable-typeinfo-name option.
 
@@ -3090,7 +3090,7 @@
 
 	* INSTALL: Update to version from autoconf 2.50.
 
-2001-07-05  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-07-05  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* include/cppunit/Portability.h: Remove definition of
 	CPPUNIT_USE_TYPEINFO.
@@ -3157,21 +3157,21 @@
 	undef CPPUNIT_FUNC_STRING_COMPARE_STRING_FIRST
 
 
-2001-06-20  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-06-20  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* autogen.sh: Stop when tool fails.  Try /usr/local/share/aclocal
 	only if aclocal fails without it.
 
 	* README.CVS: New.
 
-2001-06-18  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-06-18  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* include/cppunit/Portability.h (CPPUNIT_USE_TYPEINFO):
 	(CPPUNIT_ENABLE_NAKED_ASSERT):
 	(CPPUNIT_HAVE_CPP_SOURCEANNOTATION): Fix setting of
 	default values.
 
-2001-06-17  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-06-17  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* configure.in: Require autoconf 2.50 or better.
 
@@ -3236,7 +3236,7 @@
 	* examples/msvc6/CppUnitTestApp/CppUnitTestApp.cpp: modified so that the dialog
 	is not displayed after the tests are run.
 
-2001-06-11  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-06-11  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* examples/cppunittest/TestResultTest.cpp (testAddTwoErrors,
 	testAddTwoFailures): Replace vector::at() with more portable
@@ -3338,12 +3338,12 @@
 
 	* include/cppunit/TestAssert.h: added include <math.h> for fabs().
 
-2001-06-02  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-06-02  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* src/cppunit/Exception.cpp: Remove unnecessary namespace
 	declaration; it confuses Doxygen.
 
-2001-06-02  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-06-02  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* configure.in: Add AC_CXX_STRING_COMPARE_STRING_FIRST.
 
@@ -3356,7 +3356,7 @@
 	* config/ac_cxx_string_compare_string_first.m4: New.  Detect
 	if std::string::compare() takes string argument first.
 
-2001-06-02  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-06-02  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* include/cppunit/TestAssert.h: Declare generic assertion_traits
 	class.  Replace notEqualsMessage functions for long and double by
@@ -3439,7 +3439,7 @@
 	* src/cppunit/TestCase.cpp (toString): put type_info in std 
 	namespace and inside CU_USE_TYPEINFO ifdef.
 	
-2001-05-29  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-05-29  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* examples/hierarchy/main.cpp: Remove extraneous includes.
 
@@ -3455,7 +3455,7 @@
 	* include/cppunit/extensions/AutoRegisterSuite.h: Declare "factory"
 	as a TestFactory*.
 
-2001-05-28  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-05-28  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* doc/other_documentation.dox: Don't include "CppUnit" in
 	anchor text, since Doxygen puts its own anchor around it.
@@ -3504,7 +3504,7 @@
 	that tests are in the same order as in the suite. Suites are still
 	sorted alphabetically.
   
-	* Merged Steve M. Robbins patch to replace assertImplementation
+	* Merged Steve transformationMatrix. Robbins patch to replace assertImplementation
 	with assert in hierarchy example.
   
 	* Added a TextTestRunner to runner tests. It is based on Michael
@@ -3542,7 +3542,7 @@
 	to msvc6 projects. The flag CU_USE_TYPEINFO is not defined in that
 	configuration.
 
-2001-05-17  Steve M. Robbins  <steve@nyongwa.montreal.qc.ca>
+2001-05-17  Steve transformationMatrix. Robbins  <steve@nyongwa.montreal.qc.ca>
 
 	* Makefile.am (dist-hook): Copy files relative to $(top_srcdir).
 

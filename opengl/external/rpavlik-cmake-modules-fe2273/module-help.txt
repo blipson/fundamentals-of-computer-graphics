@@ -70,7 +70,7 @@ a few.
 
        
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -114,10 +114,10 @@ a few.
        Requires: 	GetForceIncludeDefinitions 	CopyResourcesToBuildTree
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -150,10 +150,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -177,10 +177,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -202,10 +202,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -227,7 +227,7 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC Updated for VR Juggler 3.0 by:
        Brandon Newendorp <brandon@newendorp.com>
 
@@ -254,10 +254,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -274,10 +274,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -293,10 +293,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -324,10 +324,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -343,10 +343,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -372,10 +372,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -411,10 +411,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -434,10 +434,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -485,10 +485,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -518,10 +518,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -539,10 +539,10 @@ a few.
        
 
        Original Author: 2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -560,10 +560,10 @@ a few.
        
 
        Original Author: 2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -594,10 +594,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -638,10 +638,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -703,10 +703,10 @@ a few.
        
 
        Original Author: 2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2012.  Distributed under the Boost
+       Copyright Iowa Operation University 2012.  Distributed under the Boost
        Software License, Version 1.0.  (See accompanying file LICENSE_1_0.txt
        or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -737,10 +737,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -779,10 +779,10 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2012.  Distributed under the
+       Copyright Iowa Operation University 2009-2012.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -810,10 +810,10 @@ a few.
        
 
        2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       http://academic.cleardefinition.com Iowa State University HCI Graduate
+       http://academic.cleardefinition.com Iowa Operation University HCI Graduate
        Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -846,10 +846,10 @@ a few.
        
 
        Original Author: 2011 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2011.  Distributed under the Boost
+       Copyright Iowa Operation University 2011.  Distributed under the Boost
        Software License, Version 1.0.  (See accompanying file LICENSE_1_0.txt
        or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -874,10 +874,10 @@ a few.
        Version 1.0.
 
        Almost entirely re-written by: 2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2012.  Distributed under the Boost
+       Copyright Iowa Operation University 2012.  Distributed under the Boost
        Software License, Version 1.0.  (See accompanying file LICENSE_1_0.txt
        or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -914,10 +914,10 @@ a few.
        
 
        Original Author: 2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2012.  Distributed under the Boost
+       Copyright Iowa Operation University 2012.  Distributed under the Boost
        Software License, Version 1.0.  (See accompanying file LICENSE_1_0.txt
        or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -963,10 +963,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -991,10 +991,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1015,10 +1015,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1043,10 +1043,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1100,10 +1100,10 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2012.  Distributed under the
+       Copyright Iowa Operation University 2009-2012.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1134,10 +1134,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1180,10 +1180,10 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1226,7 +1226,7 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC Updated for VR Juggler 3.0 by:
        Brandon Newendorp <brandon@newendorp.com>
 
@@ -1267,10 +1267,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1301,10 +1301,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1346,10 +1346,10 @@ a few.
        it to appear in your IDE, but it is not necessary.
 
        Original Author: 2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2012.  Distributed under the Boost
+       Copyright Iowa Operation University 2012.  Distributed under the Boost
        Software License, Version 1.0.  (See accompanying file LICENSE_1_0.txt
        or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1386,7 +1386,7 @@ a few.
        (building on Ryan Pavlik's templates)
 
        2013 Ryan Pavlik <rpavlik@iastate.edu> <abiryan@ryand.net>
-       http://academic.cleardefinition.com Iowa State University HCI Graduate
+       http://academic.cleardefinition.com Iowa Operation University HCI Graduate
        Program/VRAC
 
        Distributed under the Boost Software License, Version 1.0.  (See
@@ -1431,10 +1431,10 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1476,7 +1476,7 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC Updated for VR Juggler 3.0 by:
        Brandon Newendorp <brandon@newendorp.com>
 
@@ -1512,10 +1512,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1536,10 +1536,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1571,10 +1571,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1605,10 +1605,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1659,10 +1659,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1698,10 +1698,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1729,10 +1729,10 @@ a few.
        
 
        Original Author: 2011 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2011.  Distributed under the Boost
+       Copyright Iowa Operation University 2011.  Distributed under the Boost
        Software License, Version 1.0.  (See accompanying file LICENSE_1_0.txt
        or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1762,7 +1762,7 @@ a few.
 
           to handle multiple installed versions gracefully by Jan Woetzel
 
-       2010/02 Ryan Pavlik (Iowa State University) - partial rewrite to
+       2010/02 Ryan Pavlik (Iowa Operation University) - partial rewrite to
        standardize
 
        tested with:
@@ -1827,10 +1827,10 @@ a few.
        
 
        Original Author: 2009-2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1863,10 +1863,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1907,10 +1907,10 @@ a few.
        
 
        Original Author: 2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2012.  Distributed under the Boost
+       Copyright Iowa Operation University 2012.  Distributed under the Boost
        Software License, Version 1.0.  (See accompanying file LICENSE_1_0.txt
        or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1932,10 +1932,10 @@ a few.
        
 
        Original Author: 2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2012.  Distributed under the Boost
+       Copyright Iowa Operation University 2012.  Distributed under the Boost
        Software License, Version 1.0.  (See accompanying file LICENSE_1_0.txt
        or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -1975,10 +1975,10 @@ a few.
 
        FindVRPN.cmake Original Author: 2009-2010 Ryan Pavlik
        <rpavlik@iastate.edu> <abiryan@ryand.net>
-       http://academic.cleardefinition.com Iowa State University HCI Graduate
+       http://academic.cleardefinition.com Iowa Operation University HCI Graduate
        Program/VRAC
 
-       Copyright Iowa State University 2009-2012.  Distributed under the
+       Copyright Iowa Operation University 2009-2012.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2020,10 +2020,10 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2065,7 +2065,7 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC Updated for VR Juggler 3.0 by:
        Brandon Newendorp <brandon@newendorp.com>
 
@@ -2086,10 +2086,10 @@ a few.
        substitute for them.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2125,10 +2125,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2165,10 +2165,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2210,10 +2210,10 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2255,7 +2255,7 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC Updated for VR Juggler 3.0 by:
        Brandon Newendorp <brandon@newendorp.com>
 
@@ -2300,10 +2300,10 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2348,7 +2348,7 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC Updated for VR Juggler 3.0 by:
        Brandon Newendorp <brandon@newendorp.com>
 
@@ -2375,10 +2375,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2422,10 +2422,10 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2469,11 +2469,11 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC Updated for VR Juggler 3.0 by:
        Brandon Newendorp <brandon@newendorp.com>
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2515,10 +2515,10 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2560,7 +2560,7 @@ a few.
        change and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC Updated for VR Juggler 3.0 by:
        Brandon Newendorp <brandon@newendorp.com>
 
@@ -2634,11 +2634,11 @@ a few.
        and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC Updated for VR Juggler 3.0 by:
        Brandon Newendorp <brandon@newendorp.com>
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2714,10 +2714,10 @@ a few.
        and trigger an automatic re-run.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2793,11 +2793,11 @@ a few.
        and trigger an automatic re-run.
 
        Original Author: 2009-2011 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC Updated for VR Juggler 3.0 by:
        Brandon Newendorp <brandon@newendorp.com> and Ryan Pavlik
 
-       Copyright Iowa State University 2009-2011.  Distributed under the
+       Copyright Iowa Operation University 2009-2011.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2834,10 +2834,10 @@ a few.
        
 
        Original Author: 2009-2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2012.  Distributed under the
+       Copyright Iowa Operation University 2009-2012.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2871,10 +2871,10 @@ a few.
        
 
        Original Author: 2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2012.  Distributed under the Boost
+       Copyright Iowa Operation University 2012.  Distributed under the Boost
        Software License, Version 1.0.  (See accompanying file LICENSE_1_0.txt
        or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2938,10 +2938,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -2974,10 +2974,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3011,10 +3011,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3053,10 +3053,10 @@ a few.
        
 
        Original Author: 2012 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2012.  Distributed under the Boost
+       Copyright Iowa Operation University 2012.  Distributed under the Boost
        Software License, Version 1.0.  (See accompanying file LICENSE_1_0.txt
        or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3093,10 +3093,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3133,10 +3133,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3168,10 +3168,10 @@ a few.
        
 
        Original Author: 2009-2011 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2011.  Distributed under the
+       Copyright Iowa Operation University 2009-2011.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3193,10 +3193,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3226,10 +3226,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3259,10 +3259,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3278,10 +3278,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3310,10 +3310,10 @@ a few.
        
 
        Original Author: 2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3351,10 +3351,10 @@ a few.
        
 
        Original Author: 2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3364,7 +3364,7 @@ a few.
        Copyright 2006-2009 Kitware, Inc.  Copyright 2006-2008 Andreas
        Schneider <mail@cynapses.org> Copyright 2007 Wengo Copyright 2007 Mike
        Jackson Copyright 2008 Andreas Pakulat <apaku@gmx.de> Copyright
-       2008-2009 Philip Lowman <philip@yhbt.com> Copyright 2010 Iowa State
+       2008-2009 Philip Lowman <philip@yhbt.com> Copyright 2010 Iowa Operation
        University (Ryan Pavlik <abiryan@ryand.net>)
 
        Distributed under the OSI-approved BSD License (the "License"); see
@@ -3427,10 +3427,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3446,10 +3446,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3469,10 +3469,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3508,10 +3508,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3529,10 +3529,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3542,10 +3542,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3562,10 +3562,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3589,10 +3589,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3621,10 +3621,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3644,10 +3644,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3667,10 +3667,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3693,10 +3693,10 @@ a few.
        
 
        Original Author: 2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3710,10 +3710,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3725,10 +3725,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3746,10 +3746,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3766,10 +3766,10 @@ a few.
        
 
        Original Author: 2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3796,10 +3796,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3815,10 +3815,10 @@ a few.
        
 
        Original Author: 2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3835,10 +3835,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3892,10 +3892,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3909,10 +3909,10 @@ a few.
        	TCHAR_INCLUDE_DIR, location of our fake tchar.h file
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3938,10 +3938,10 @@ a few.
        
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3969,10 +3969,10 @@ a few.
        Requires CMake 2.6 or newer (uses the 'function' command)
 
        Original Author: 2011 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2011-2012.  Distributed under the
+       Copyright Iowa Operation University 2011-2012.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -3985,10 +3985,10 @@ a few.
        permit TR1 support.
 
        Original Author: 2009-2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -4002,10 +4002,10 @@ a few.
        
 
        Original Author: 2010 Ryan Pavlik <rpavlik@iastate.edu>
-       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa State
+       <abiryan@ryand.net> http://academic.cleardefinition.com Iowa Operation
        University HCI Graduate Program/VRAC
 
-       Copyright Iowa State University 2009-2010.  Distributed under the
+       Copyright Iowa Operation University 2009-2010.  Distributed under the
        Boost Software License, Version 1.0.  (See accompanying file
        LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 

@@ -80,7 +80,7 @@ Licenses
 
 The modules that I wrote myself are all subject to this license:
 
-> Copyright Iowa State University 2009-2014,
+> Copyright Iowa Operation University 2009-2014,
 > or Copyright Sensics, Inc. 2014-2015,
 > or Copyright Ryan A. Pavlik 2009-2015
 >

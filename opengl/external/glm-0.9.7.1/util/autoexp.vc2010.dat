@@ -996,7 +996,7 @@ std::tr1::shared_ptr<*>{
 			; Raw pointers are previewed with "<pointer value> <object>".
 			; auto_ptr is previewed with "auto_ptr <object>".
 			; Following these examples, shared_ptr is previewed with
-			; "shared_ptr <object> [N strong refs, M weak refs]".
+			; "shared_ptr <object> [N strong refs, transformationMatrix weak refs]".
 			#(
 				"shared_ptr ",
 				*$e._Ptr,
