@@ -36,7 +36,7 @@ Limb* limbs = (Limb*) malloc(1 * sizeof(Limb));
 enum Operation {
     BASE,
     ROTATE,
-    ROTATE_RIGHT,
+    ROTATE_LIMB,
     TRANSLATE
 };
 
@@ -81,6 +81,7 @@ void resetMatrix() {
     state.previousMouseX = 0.0;
     state.previousMouseY = 0.0;
     state.rotationAngle = 0.0;
+    state.limbRotationAngle = 0.0;
     state.scaleFactorX = 1.0;
     state.scaleFactorY = 1.0;
     state.translateX = 0.0;
@@ -172,7 +173,7 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
     } else if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_CONTROL) {
         state.operation = TRANSLATE;
     } else if (button == GLFW_MOUSE_BUTTON_LEFT && mods == GLFW_MOD_SHIFT) {
-        state.operation = ROTATE_RIGHT;
+        state.operation = ROTATE_LIMB;
     }
 }
 
@@ -190,7 +191,7 @@ static void cursor_pos_callback(GLFWwindow* window, double xPos, double yPos) {
             state.rotationAngle -= 2 * pi;
         else if (state.rotationAngle < - 2 * pi)
             state.rotationAngle += 2 * pi;
-    } else if (state.operation == ROTATE_RIGHT) {
+    } else if (state.operation == ROTATE_LIMB) {
         state.limbRotationAngle += 2.0f * (float) dx / (float) window_width * pi;
         if (state.limbRotationAngle > 2 * pi)
             state.limbRotationAngle -= 2 * pi;
@@ -369,7 +370,7 @@ int main() {
             printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", transformationMatrix[0], transformationMatrix[4], transformationMatrix[8], transformationMatrix[12], transformationMatrix[1], transformationMatrix[5], transformationMatrix[9], transformationMatrix[13], transformationMatrix[2], transformationMatrix[6], transformationMatrix[10], transformationMatrix[14], transformationMatrix[3], transformationMatrix[7], transformationMatrix[11], transformationMatrix[15]);
         }
 
-        if (state.operation == ROTATE_RIGHT) {
+        if (state.operation == ROTATE_LIMB) {
             updateLimbMatrix(limbTransformationMatrix);
             glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, limbTransformationMatrix);
             glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
