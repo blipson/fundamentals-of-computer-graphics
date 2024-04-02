@@ -8,6 +8,7 @@
 #include <fstream>
 #include <string>
 #include <cfloat>
+#include <vector>
 
 
 #define DEBUG_ON 0
@@ -21,6 +22,16 @@ typedef struct {
 typedef struct {
     GLfloat r, g, b;
 } ColorType3D;
+
+typedef struct {
+    FloatType2D* vertices;
+    int numVertices;
+    ColorType3D* colors;
+    GLfloat rotationAngle;
+} Limb;
+
+int numLimbs = 0;
+Limb* limbs = (Limb*) malloc(1 * sizeof(Limb));
 
 enum Operation {
     BASE,
@@ -46,6 +57,7 @@ typedef struct {
     GLdouble previousMouseX;
     GLdouble previousMouseY;
     GLfloat rotationAngle;
+    GLfloat limbRotationAngle;
     GLfloat scaleFactorX;
     GLfloat scaleFactorY;
     GLfloat translateX;
@@ -75,6 +87,8 @@ void resetMatrix() {
     state.translateY = 0.0;
 }
 
+
+
 void updateMatrix(GLfloat transformationMatrix[16]) {
     for (int i = 0; i < 16; i++) {
         transformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
@@ -91,6 +105,24 @@ void updateMatrix(GLfloat transformationMatrix[16]) {
 
     transformationMatrix[12] = state.translateX;
     transformationMatrix[13] = state.translateY;
+}
+
+void updateLimbMatrix(GLfloat limbTransformationMatrix[16]) {
+    for (int i = 0; i < 16; i++) {
+        limbTransformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+    }
+
+    GLfloat cosTheta = cos(state.limbRotationAngle);
+    GLfloat sinTheta = sin(state.limbRotationAngle);
+
+    limbTransformationMatrix[0] = cosTheta * state.scaleFactorX;
+    limbTransformationMatrix[1] = -sinTheta * state.scaleFactorY;
+    limbTransformationMatrix[4] = sinTheta * state.scaleFactorX;
+    limbTransformationMatrix[5] = cosTheta * state.scaleFactorY;
+    limbTransformationMatrix[8] = cosTheta * state.scaleFactorX;
+
+    limbTransformationMatrix[12] = state.translateX;
+    limbTransformationMatrix[13] = state.translateY;
 }
 
 
@@ -158,6 +190,12 @@ static void cursor_pos_callback(GLFWwindow* window, double xPos, double yPos) {
             state.rotationAngle -= 2 * pi;
         else if (state.rotationAngle < - 2 * pi)
             state.rotationAngle += 2 * pi;
+    } else if (state.operation == ROTATE_RIGHT) {
+        state.limbRotationAngle += 2.0f * (float) dx / (float) window_width * pi;
+        if (state.limbRotationAngle > 2 * pi)
+            state.limbRotationAngle -= 2 * pi;
+        else if (state.limbRotationAngle < - 2 * pi)
+            state.limbRotationAngle += 2 * pi;
     } else if (state.operation == TRANSLATE) {
         if ((dx > 0 && state.translateX < 0.99) || (dx < 0 && state.translateX > -0.99)) {
             state.translateX += (float) dx / ((float) window_width/ 2);
@@ -174,7 +212,12 @@ void readVerticesFromFile(const std::string& filename, FloatType2D vertices[], C
         std::cerr << "Unable to open file: " << filename << std::endl;
         exit(EXIT_FAILURE);
     }
-
+    limbs[0] = (Limb) {
+            .vertices = (FloatType2D *) malloc(3 * sizeof(FloatType2D)),
+            .numVertices = 0,
+            .colors= (ColorType3D *) malloc(3 * sizeof(ColorType3D)),
+            .rotationAngle = 0.0f,
+    };
     std::string line;
     numVertices = 0;
     while (std::getline(file, line)) {
@@ -186,9 +229,29 @@ void readVerticesFromFile(const std::string& filename, FloatType2D vertices[], C
         iss >> type;
         float z;
 
-        if (type == 'v') {
-            iss >> vertices[numVertices].x >> vertices[numVertices].y >> z >> colors[numVertices].r >> colors[numVertices].g >> colors[numVertices].b;
-            numVertices++;
+        if (limbs[0].numVertices < 3) {
+            if (type == 'v') {
+                float x, y, r, g, b;
+                iss >> x >> y >> z >> r >> g >> b;
+                limbs[0].vertices[limbs[0].numVertices].x = x;
+                limbs[0].vertices[limbs[0].numVertices].y = y;
+                limbs[0].colors[limbs[0].numVertices].r = r;
+                limbs[0].colors[limbs[0].numVertices].g = g;
+                limbs[0].colors[limbs[0].numVertices].b = b;
+                limbs[0].numVertices++;
+
+                vertices[numVertices].x = x;
+                vertices[numVertices].y = y;
+                colors[numVertices].r = r;
+                colors[numVertices].g = g;
+                colors[numVertices].b = b;
+                numVertices++;
+            }
+        } else {
+            if (type == 'v') {
+                iss >> vertices[numVertices].x >> vertices[numVertices].y >> z >> colors[numVertices].r >> colors[numVertices].g >> colors[numVertices].b;
+                numVertices++;
+            }
         }
     }
 
@@ -292,17 +355,35 @@ int main() {
 
 	// TODO: fix this
     init(&transformationMatrixLocation);
+    GLfloat limbTransformationMatrix[16];
 
+    for (int i = 0; i < 16; i++) {
+        limbTransformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+    }
+    glDrawArrays(GL_TRIANGLES, 3, numberOfVertices );
+    glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
     while (!glfwWindowShouldClose(window)) {
 		glClear( GL_COLOR_BUFFER_BIT );
-        updateMatrix(transformationMatrix);
 
         if (DEBUG_ON){
             printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", transformationMatrix[0], transformationMatrix[4], transformationMatrix[8], transformationMatrix[12], transformationMatrix[1], transformationMatrix[5], transformationMatrix[9], transformationMatrix[13], transformationMatrix[2], transformationMatrix[6], transformationMatrix[10], transformationMatrix[14], transformationMatrix[3], transformationMatrix[7], transformationMatrix[11], transformationMatrix[15]);
         }
 
-        glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, transformationMatrix );
-		glDrawArrays(GL_TRIANGLES, 0, numberOfVertices );
+        if (state.operation == ROTATE_RIGHT) {
+            updateLimbMatrix(limbTransformationMatrix);
+            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, limbTransformationMatrix);
+            glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
+            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, transformationMatrix );
+            glDrawArrays(GL_TRIANGLES, 3, numberOfVertices );
+        } else {
+            updateMatrix(transformationMatrix);
+            updateLimbMatrix(limbTransformationMatrix);
+            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, limbTransformationMatrix);
+            glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
+            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, transformationMatrix );
+            glDrawArrays(GL_TRIANGLES, 3, numberOfVertices );
+        }
+
 		glFlush();
         glfwSwapBuffers(window);
         glfwWaitEvents();
