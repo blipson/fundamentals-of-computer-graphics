@@ -40,7 +40,7 @@ enum Operation {
     TRANSLATE
 };
 
-GLint window_width= 500;
+GLint window_width = 500;
 GLint window_height = 500;
 GLfloat pi = 4.0f*atanf(1.0);
 
@@ -108,8 +108,27 @@ void updateMatrix(GLfloat transformationMatrix[16]) {
     transformationMatrix[13] = state.translateY;
 }
 
+void computeCentroid(FloatType2D vertices[], int numVertices, FloatType2D& centroid) {
+    centroid.x = 0.0f;
+    centroid.y = 0.0f;
+    for (int i = 0; i < numVertices; ++i) {
+        FloatType2D scaledVertex;
+        scaledVertex.x = vertices[i].x * state.scaleFactorX;
+        scaledVertex.y = vertices[i].y * state.scaleFactorY;
+
+        centroid.x += scaledVertex.x;
+        centroid.y += scaledVertex.y;
+    }
+    centroid.x /= numVertices;
+    centroid.y /= numVertices;
+}
+
+
 void updateLimbMatrix(GLfloat limbTransformationMatrix[16]) {
-    for (int i = 0; i < 16; i++) {
+    FloatType2D centroid;
+    computeCentroid(limbs[0].vertices, limbs[0].numVertices, centroid);
+
+     for (int i = 0; i < 16; i++) {
         limbTransformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
     }
 
@@ -122,8 +141,8 @@ void updateLimbMatrix(GLfloat limbTransformationMatrix[16]) {
     limbTransformationMatrix[5] = cosTheta * state.scaleFactorY;
     limbTransformationMatrix[8] = cosTheta * state.scaleFactorX;
 
-    limbTransformationMatrix[12] = state.translateX;
-    limbTransformationMatrix[13] = state.translateY;
+    limbTransformationMatrix[12] = state.translateX + centroid.x - centroid.y * sinTheta - centroid.x * cosTheta;
+    limbTransformationMatrix[13] = state.translateY + centroid.y - centroid.x * sinTheta - centroid.y * cosTheta;
 }
 
 
@@ -372,18 +391,15 @@ int main() {
 
         if (state.operation == ROTATE_LIMB) {
             updateLimbMatrix(limbTransformationMatrix);
-            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, limbTransformationMatrix);
-            glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
-            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, transformationMatrix );
-            glDrawArrays(GL_TRIANGLES, 3, numberOfVertices );
         } else {
-            updateMatrix(transformationMatrix);
             updateLimbMatrix(limbTransformationMatrix);
-            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, limbTransformationMatrix);
-            glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
-            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, transformationMatrix );
-            glDrawArrays(GL_TRIANGLES, 3, numberOfVertices );
+            updateMatrix(transformationMatrix);
         }
+
+        glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, limbTransformationMatrix);
+        glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
+        glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, transformationMatrix );
+        glDrawArrays(GL_TRIANGLES, 3, numberOfVertices );
 
 		glFlush();
         glfwSwapBuffers(window);
