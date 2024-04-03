@@ -90,37 +90,57 @@ void resetMatrix() {
     state.translateY = 0.0;
 }
 
-// TODO: use this???
-void computeCentroid(FloatType2D vertices[], int numVertices, FloatType2D& centroid) {
-    centroid.x = 0.0f;
-    centroid.y = 0.0f;
-    for (int i = 0; i < numVertices; ++i) {
-        FloatType2D scaledVertex;
-        scaledVertex.x = vertices[i].x * state.scaleFactorX;
-        scaledVertex.y = vertices[i].y * state.scaleFactorY;
-        centroid.x += scaledVertex.x;
-        centroid.y += scaledVertex.y;
-    }
-    centroid.x /= numVertices;
-    centroid.y /= numVertices;
+void applyTranslation(GLfloat transformationMatrix[16]) {
+    transformationMatrix[12] = state.translateX;
+    transformationMatrix[13] = state.translateY;
 }
 
-void updateMatrix(GLfloat limbTransformationMatrix[16]) {
-    for (int i = 0; i < 16; i++) {
-        limbTransformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
-    }
-
+void applyLimbTranslation(GLfloat transformationMatrix[16]) {
+    state.centroid.x = 0;
+    state.centroid.y = 0.58333f * state.scaleFactorY;
     GLfloat cosTheta = cos(state.limbRotationAngle + state.rotationAngle);
     GLfloat sinTheta = sin(state.limbRotationAngle + state.rotationAngle);
+    transformationMatrix[12] = state.translateX + state.centroid.x - state.centroid.y * sinTheta - state.centroid.x * cosTheta;
+    transformationMatrix[13] = state.translateY + state.centroid.y - state.centroid.x * sinTheta - state.centroid.y * cosTheta;
+}
 
-    limbTransformationMatrix[0] = cosTheta * state.scaleFactorX;
-    limbTransformationMatrix[1] = -sinTheta * state.scaleFactorY;
-    limbTransformationMatrix[4] = sinTheta * state.scaleFactorX;
-    limbTransformationMatrix[5] = cosTheta * state.scaleFactorY;
-    limbTransformationMatrix[8] = cosTheta * state.scaleFactorX;
+void applyRotation(GLfloat transformationMatrix[16]) {
+    GLfloat cosTheta = cos(state.rotationAngle);
+    GLfloat sinTheta = sin(state.rotationAngle);
 
-    limbTransformationMatrix[12] = state.translateX + state.centroid.x - state.centroid.y * sinTheta - state.centroid.x * cosTheta;
-    limbTransformationMatrix[13] = state.translateY + state.centroid.y - state.centroid.x * sinTheta - state.centroid.y * cosTheta;
+    transformationMatrix[0] = cosTheta;
+    transformationMatrix[1] = -sinTheta;
+    transformationMatrix[4] = sinTheta;
+    transformationMatrix[5] = cosTheta;
+    transformationMatrix[8] = cosTheta;
+}
+
+void applyLimbRotation(GLfloat transformationMatrix[16]) {
+    // Translate the object to the origin
+    GLfloat cosTheta = cos(state.limbRotationAngle);
+    GLfloat sinTheta = sin(state.limbRotationAngle);
+    transformationMatrix[12] = -state.centroid.x;
+    transformationMatrix[13] = -state.centroid.y;
+
+    // Rotate around the pivot point
+    GLfloat cosThetaGlobal = cos(state.rotationAngle);
+    GLfloat sinThetaGlobal = sin(state.rotationAngle);
+    transformationMatrix[0] = cosTheta * cosThetaGlobal - sinTheta * sinThetaGlobal;
+    transformationMatrix[1] = -sinTheta * cosThetaGlobal - cosTheta * sinThetaGlobal;
+    transformationMatrix[4] = sinTheta * cosThetaGlobal + cosTheta * sinThetaGlobal;
+    transformationMatrix[5] = cosTheta * cosThetaGlobal - sinTheta * sinThetaGlobal;
+
+    // Translate back to the original position
+    transformationMatrix[12] += state.centroid.x;
+    transformationMatrix[13] += state.centroid.y;
+}
+
+void applyScaling(GLfloat transformationMatrix[16]) {
+    transformationMatrix[0] *= state.scaleFactorX;
+    transformationMatrix[1] *= state.scaleFactorY;
+    transformationMatrix[4] *= state.scaleFactorX;
+    transformationMatrix[5] *= state.scaleFactorY;
+    transformationMatrix[8] *= state.scaleFactorX;
 }
 
 
@@ -371,16 +391,45 @@ int main() {
             printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", transformationMatrix[0], transformationMatrix[4], transformationMatrix[8], transformationMatrix[12], transformationMatrix[1], transformationMatrix[5], transformationMatrix[9], transformationMatrix[13], transformationMatrix[2], transformationMatrix[6], transformationMatrix[10], transformationMatrix[14], transformationMatrix[3], transformationMatrix[7], transformationMatrix[11], transformationMatrix[15]);
         }
 
-        if (state.operation == ROTATE_LIMB) {
-            state.centroid.x = 0;
-            state.centroid.y = 0.58333f * state.scaleFactorY;
-            updateMatrix(limbTransformationMatrix);
-        } else if (state.operation != BASE) {
-            state.centroid.x = 0;
-            state.centroid.y = 0;
-            updateMatrix(limbTransformationMatrix);
-            updateMatrix(transformationMatrix);
+        // // TODO: use this???
+        //void computeCentroid(FloatType2D vertices[], int numVertices, FloatType2D& centroid) {
+        //    centroid.x = 0.0f;
+        //    centroid.y = 0.0f;
+        //    for (int i = 0; i < numVertices; ++i) {
+        //        FloatType2D scaledVertex;
+        //        scaledVertex.x = vertices[i].x * state.scaleFactorX;
+        //        scaledVertex.y = vertices[i].y * state.scaleFactorY;
+        //        centroid.x += scaledVertex.x;
+        //        centroid.y += scaledVertex.y;
+        //    }
+        //    centroid.x /= numVertices;
+        //    centroid.y /= numVertices;
+        //}
+        for (int i = 0; i < 16; i++) {
+            transformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
         }
+
+        applyLimbRotation(limbTransformationMatrix);
+
+        applyLimbTranslation(limbTransformationMatrix);
+        applyTranslation(transformationMatrix);
+
+        applyRotation(transformationMatrix);
+
+        applyScaling(limbTransformationMatrix);
+        applyScaling(transformationMatrix);
+
+
+//        if (state.operation == ROTATE_LIMB) {
+//            state.centroid.x = 0;
+//            state.centroid.y = 0.58333f * state.scaleFactorY;
+//            updateMatrix(limbTransformationMatrix);
+//        } else if (state.operation != BASE) {
+//            state.centroid.x = 0;
+//            state.centroid.y = 0;
+//            updateMatrix(limbTransformationMatrix);
+//            updateMatrix(transformationMatrix);
+//        }
 
         glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, limbTransformationMatrix);
         glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
