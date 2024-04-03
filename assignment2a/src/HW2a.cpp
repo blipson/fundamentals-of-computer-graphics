@@ -35,7 +35,9 @@ enum Operation {
     BASE,
     ROTATE,
     ROTATE_LIMB,
-    TRANSLATE
+    TRANSLATE,
+    SCALE,
+    RESET,
 };
 
 GLint window_width = 500;
@@ -66,7 +68,7 @@ typedef struct {
 State state = (State) {
     .mouseX = 0,
     .mouseY = 0,
-    .operation = BASE,
+    .operation = RESET,
     .previousMouseX = 0,
     .previousMouseY = 0,
     .rotationAngle = 0,
@@ -133,22 +135,27 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
     switch (key) {
         case GLFW_KEY_LEFT:
+            state.operation = SCALE;
             if (state.scaleFactorX > 0.01) {
                 state.scaleFactorX *= 0.9;
             }
             break;
         case GLFW_KEY_RIGHT:
+            state.operation = SCALE;
             state.scaleFactorX *= 1.1;
             break;
         case GLFW_KEY_UP:
+            state.operation = SCALE;
             state.scaleFactorY *= 1.1;
             break;
         case GLFW_KEY_DOWN:
+            state.operation = SCALE;
             if (state.scaleFactorY > 0.01) {
                 state.scaleFactorY *= 0.9;
             }
             break;
         case GLFW_KEY_R:
+            state.operation = RESET;
             resetMatrix();
             break;
         case GLFW_KEY_Q:
@@ -347,13 +354,14 @@ int main() {
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_pos_callback);
 
-	// TODO: fix this
     init(&transformationMatrixLocation);
     GLfloat limbTransformationMatrix[16];
 
     for (int i = 0; i < 16; i++) {
         limbTransformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
     }
+
+    // Q: what's the difference between triangles and triangle strips?
     glDrawArrays(GL_TRIANGLES, 3, numberOfVertices );
     glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
     while (!glfwWindowShouldClose(window)) {
@@ -367,11 +375,11 @@ int main() {
             state.centroid.x = 0;
             state.centroid.y = 0.58333f * state.scaleFactorY;
             updateMatrix(limbTransformationMatrix);
-        } else {
+        } else if (state.operation != BASE) {
             state.centroid.x = 0;
             state.centroid.y = 0;
-            updateMatrix(transformationMatrix);
             updateMatrix(limbTransformationMatrix);
+            updateMatrix(transformationMatrix);
         }
 
         glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, limbTransformationMatrix);
