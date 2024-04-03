@@ -62,6 +62,7 @@ typedef struct {
     GLfloat scaleFactorY;
     GLfloat translateX;
     GLfloat translateY;
+    FloatType2D centroid;
 } State;
 
 State state = (State) {
@@ -74,7 +75,8 @@ State state = (State) {
     .scaleFactorX = 1,
     .scaleFactorY = 1,
     .translateX = 0,
-    .translateY = 0
+    .translateY = 0,
+    .centroid = (FloatType2D) { .x = 0, .y = 0 },
 };
 
 void resetMatrix() {
@@ -88,6 +90,22 @@ void resetMatrix() {
     state.translateY = 0.0;
 }
 
+void computeCentroid(FloatType2D vertices[], int numVertices, FloatType2D& centroid) {
+    centroid.x = 0.0f;
+    centroid.y = 0.0f;
+    for (int i = 0; i < numVertices; ++i) {
+        FloatType2D scaledVertex;
+        scaledVertex.x = vertices[i].x * state.scaleFactorX;
+        scaledVertex.y = vertices[i].y * state.scaleFactorY;
+
+        // TODO: take global rotation into account somehow
+
+        centroid.x += scaledVertex.x;
+        centroid.y += scaledVertex.y;
+    }
+    centroid.x /= numVertices;
+    centroid.y /= numVertices;
+}
 
 
 void updateMatrix(GLfloat transformationMatrix[16]) {
@@ -108,32 +126,15 @@ void updateMatrix(GLfloat transformationMatrix[16]) {
     transformationMatrix[13] = state.translateY;
 }
 
-void computeCentroid(FloatType2D vertices[], int numVertices, FloatType2D& centroid) {
-    centroid.x = 0.0f;
-    centroid.y = 0.0f;
-    for (int i = 0; i < numVertices; ++i) {
-        FloatType2D scaledVertex;
-        scaledVertex.x = vertices[i].x * state.scaleFactorX;
-        scaledVertex.y = vertices[i].y * state.scaleFactorY;
-
-        centroid.x += scaledVertex.x;
-        centroid.y += scaledVertex.y;
-    }
-    centroid.x /= numVertices;
-    centroid.y /= numVertices;
-}
-
-
 void updateLimbMatrix(GLfloat limbTransformationMatrix[16]) {
-    FloatType2D centroid;
-    computeCentroid(limbs[0].vertices, limbs[0].numVertices, centroid);
 
-     for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++) {
         limbTransformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
     }
 
-    GLfloat cosTheta = cos(state.limbRotationAngle);
-    GLfloat sinTheta = sin(state.limbRotationAngle);
+    // TODO: add the global rotation to this things position somehow?
+    GLfloat cosTheta = cos(state.limbRotationAngle + state.rotationAngle);
+    GLfloat sinTheta = sin(state.limbRotationAngle + state.rotationAngle);
 
     limbTransformationMatrix[0] = cosTheta * state.scaleFactorX;
     limbTransformationMatrix[1] = -sinTheta * state.scaleFactorY;
@@ -141,8 +142,12 @@ void updateLimbMatrix(GLfloat limbTransformationMatrix[16]) {
     limbTransformationMatrix[5] = cosTheta * state.scaleFactorY;
     limbTransformationMatrix[8] = cosTheta * state.scaleFactorX;
 
-    limbTransformationMatrix[12] = state.translateX + centroid.x - centroid.y * sinTheta - centroid.x * cosTheta;
-    limbTransformationMatrix[13] = state.translateY + centroid.y - centroid.x * sinTheta - centroid.y * cosTheta;
+
+//    limbTransformationMatrix[12] = state.translateX;
+//    limbTransformationMatrix[13] = state.translateY;
+
+    limbTransformationMatrix[12] = state.translateX + state.centroid.x - state.centroid.y * sinTheta - state.centroid.x * cosTheta;
+    limbTransformationMatrix[13] = state.translateY + state.centroid.y - state.centroid.x * sinTheta - state.centroid.y * cosTheta;
 }
 
 
@@ -390,6 +395,7 @@ int main() {
         }
 
         if (state.operation == ROTATE_LIMB) {
+            computeCentroid(limbs[0].vertices, limbs[0].numVertices, state.centroid);
             updateLimbMatrix(limbTransformationMatrix);
         } else {
             updateLimbMatrix(limbTransformationMatrix);
