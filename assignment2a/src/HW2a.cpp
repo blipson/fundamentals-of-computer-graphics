@@ -408,7 +408,7 @@ int main() {
         state.centroid.y = 0;
 
         glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, transformationMatrix );
-        glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
+//        glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
 
         for (int i = 0; i < 16; i++) {
             transformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;

@@ -34,5 +34,10 @@ assignment1d/*.png
 assignment1d/showcase/showcase.ppm
 assignment2a/cmake-build-debug
 assignment2a/.idea
+assignment2a/CMakeCache.txt
+assignment2a/CMakeFiles/
+assignment2a/Makefile
+assignment2a/cmake_install.cmake
+assignment2a/HW2a
 opengl/cmake-build-debug
 opengl/.idea
