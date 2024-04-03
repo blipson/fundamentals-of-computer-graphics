@@ -16,7 +16,7 @@ $ make
 
 # Showcase
 ### Base assignment
-![Assignment 2A](Assignment2a.mov "Assignment 2A")
+https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/2aac9e89-9e82-491d-8c60-97b57c537eb2
 
 ### Rendering from a .obj file
 ![cow](cow.png "Cow")
