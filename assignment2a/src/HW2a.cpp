@@ -96,8 +96,6 @@ void applyTranslation(GLfloat transformationMatrix[16]) {
 }
 
 void applyLimbTranslation(GLfloat transformationMatrix[16]) {
-    state.centroid.x = 0;
-    state.centroid.y = 0.58333f * state.scaleFactorY;
     GLfloat cosTheta = cos(state.limbRotationAngle + state.rotationAngle);
     GLfloat sinTheta = sin(state.limbRotationAngle + state.rotationAngle);
     transformationMatrix[12] = state.translateX + state.centroid.x - state.centroid.y * sinTheta - state.centroid.x * cosTheta;
@@ -112,23 +110,20 @@ void applyRotation(GLfloat transformationMatrix[16]) {
     transformationMatrix[1] = -sinTheta;
     transformationMatrix[4] = sinTheta;
     transformationMatrix[5] = cosTheta;
-    transformationMatrix[8] = cosTheta;
 }
 
 void applyLimbRotation(GLfloat transformationMatrix[16]) {
     // Translate the object to the origin
-    GLfloat cosTheta = cos(state.limbRotationAngle);
-    GLfloat sinTheta = sin(state.limbRotationAngle);
     transformationMatrix[12] = -state.centroid.x;
     transformationMatrix[13] = -state.centroid.y;
 
     // Rotate around the pivot point
-    GLfloat cosThetaGlobal = cos(state.rotationAngle);
-    GLfloat sinThetaGlobal = sin(state.rotationAngle);
-    transformationMatrix[0] = cosTheta * cosThetaGlobal - sinTheta * sinThetaGlobal;
-    transformationMatrix[1] = -sinTheta * cosThetaGlobal - cosTheta * sinThetaGlobal;
-    transformationMatrix[4] = sinTheta * cosThetaGlobal + cosTheta * sinThetaGlobal;
-    transformationMatrix[5] = cosTheta * cosThetaGlobal - sinTheta * sinThetaGlobal;
+    GLfloat cosTheta = cos(state.limbRotationAngle + state.rotationAngle);
+    GLfloat sinTheta = sin(state.limbRotationAngle + state.rotationAngle);
+    transformationMatrix[0] = cosTheta;
+    transformationMatrix[1] = -sinTheta;
+    transformationMatrix[4] = sinTheta;
+    transformationMatrix[5] = cosTheta;
 
     // Translate back to the original position
     transformationMatrix[12] += state.centroid.x;
@@ -375,11 +370,6 @@ int main() {
     glfwSetCursorPosCallback(window, cursor_pos_callback);
 
     init(&transformationMatrixLocation);
-    GLfloat limbTransformationMatrix[16];
-
-    for (int i = 0; i < 16; i++) {
-        limbTransformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
-    }
 
     // Q: what's the difference between triangles and triangle strips?
     glDrawArrays(GL_TRIANGLES, 3, numberOfVertices );
@@ -409,30 +399,24 @@ int main() {
             transformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
         }
 
-        applyLimbRotation(limbTransformationMatrix);
+        state.centroid.x = 0;
+        state.centroid.y = 0.58333f * state.scaleFactorY;
+        applyLimbRotation(transformationMatrix);
+        applyLimbTranslation(transformationMatrix);
+        applyScaling(transformationMatrix);
+        state.centroid.x = 0;
+        state.centroid.y = 0;
 
-        applyLimbTranslation(limbTransformationMatrix);
+        glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, transformationMatrix );
+        glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
+
+        for (int i = 0; i < 16; i++) {
+            transformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+        }
         applyTranslation(transformationMatrix);
-
         applyRotation(transformationMatrix);
-
-        applyScaling(limbTransformationMatrix);
         applyScaling(transformationMatrix);
 
-
-//        if (state.operation == ROTATE_LIMB) {
-//            state.centroid.x = 0;
-//            state.centroid.y = 0.58333f * state.scaleFactorY;
-//            updateMatrix(limbTransformationMatrix);
-//        } else if (state.operation != BASE) {
-//            state.centroid.x = 0;
-//            state.centroid.y = 0;
-//            updateMatrix(limbTransformationMatrix);
-//            updateMatrix(transformationMatrix);
-//        }
-
-        glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, limbTransformationMatrix);
-        glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
         glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, transformationMatrix );
         glDrawArrays(GL_TRIANGLES, 3, numberOfVertices );
 
