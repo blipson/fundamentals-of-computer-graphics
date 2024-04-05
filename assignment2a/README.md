@@ -235,7 +235,7 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/0281
   represents a step beyond what was there before. (3 pts) OR The submitted program is capable of
   rendering (in 2D) a model whose geometry (and optionally colors) are read in from a file (5 pts).
   - The program can read in any `.obj` file and render it.
-  - **IMPORTANT: be sure to uncomment `scaleAndTranslate(vertices, numVertices);` to correctly scale and translate `.obj` files.**
+  - **IMPORTANT: be sure to uncomment `normalizeVerticesToWindow(vertices, numVertices);` to correctly scale and translate `.obj` files.**
   - **IMPORTANT: be sure to uncomment `glDrawArrays(GL_TRIANGLES, 3 * numLimbs, numberOfVertices );` to correctly draw `.obj` files.**
   - **IMPORTANT: be sure to uncomment `readVerticesFromFile("../src/cow-nonormals.obj", vertices, colors, numVertices);` to correctly draw the cow `.obj` file.**
   - **IMPORTANT: be sure to uncomment `int numLimbs = 0;` to correctly draw the `.obj` files.**

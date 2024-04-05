@@ -246,7 +246,7 @@ void readVerticesFromFile(const std::string& filename, FloatType2D vertices[], C
     file.close();
 }
 
-void scaleAndTranslate(FloatType2D vertices[], int numVertices) {
+void normalizeVerticesToWindow(FloatType2D vertices[], int numVertices) {
     FloatType2D minCoords = {FLT_MAX, FLT_MAX};
     FloatType2D maxCoords = {-FLT_MAX, -FLT_MAX};
     for (int i = 0; i < numVertices; ++i) {
@@ -313,6 +313,36 @@ void multiplyMatrices(GLfloat result[16], const GLfloat matrix1[16], const GLflo
     }
 }
 
+void scale(GLfloat transformationMatrix[16], GLfloat x, GLfloat y) {
+    transformationMatrix[0] *= x;
+    transformationMatrix[5] *= y;
+}
+
+void rotate(GLfloat transformationMatrix[16], GLfloat angle) {
+    GLfloat cosTheta = cos(angle);
+    GLfloat sinTheta = sin(angle);
+
+    GLfloat a = transformationMatrix[0];
+    GLfloat b = transformationMatrix[1];
+    GLfloat c = transformationMatrix[4];
+    GLfloat d = transformationMatrix[5];
+
+    transformationMatrix[0] = a * cosTheta + b * sinTheta;
+    transformationMatrix[1] = -a * sinTheta + b * cosTheta;
+    transformationMatrix[4] = c * cosTheta + d * sinTheta;
+    transformationMatrix[5] = -c * sinTheta + d * cosTheta;
+}
+
+void translate(GLfloat transformationMatrix[16], GLfloat x, GLfloat y) {
+    transformationMatrix[12] += x;
+    transformationMatrix[13] += y;
+}
+
+void reset(GLfloat transformationMatrix[16]) {
+    for (int i = 0; i < 16; i++) {
+        transformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+    }
+}
 
 int main() {
     GLint transformationMatrixLocation;
@@ -353,17 +383,25 @@ int main() {
 
     // Q: what's the difference between triangles and triangle strips?
     GLfloat transformationMatrix[16];
-    GLfloat scalingMatrix[16];
-    for (int i = 0; i < 16; i++) {
-        scalingMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+
+    GLfloat limbTransformationMatrix[16];
+    GLfloat limbRotationMatrix[16];
+    for (int j = 0; j < 16; j++) {
+        limbRotationMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
     }
-    GLfloat scalingApplied[16];
-    GLfloat rotationMatrix[16];
-    for (int i = 0; i < 16; i++) {
-        rotationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+    GLfloat limbRotationApplied[16];
+    GLfloat limbRotationOnPivotApplied[16];
+    GLfloat limbTranslationToOriginApplied[16];
+    GLfloat limbGlobalScalingMatrix[16];
+    for (int j = 0; j < 16; j++) {
+        limbGlobalScalingMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
     }
-    GLfloat rotationApplied[16];
-    GLfloat translationApplied[16];
+    GLfloat limbGlobalScalingApplied[16];
+    GLfloat limbGlobalRotationMatrix[16];
+    for (int j = 0; j < 16; j++) {
+        limbGlobalRotationMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
+    }
+    GLfloat limbGlobalRotationApplied[16];
 
 
     while (!glfwWindowShouldClose(window)) {
@@ -375,26 +413,7 @@ int main() {
 
         // --------------- LIMB --------------- //
         for (int i = 0; i < numLimbs; i++) {
-            GLfloat limbTransformationMatrix[16];
-            GLfloat limbRotationMatrix[16];
-            for (int j = 0; j < 16; j++) {
-                limbRotationMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
-            }
-            GLfloat limbRotationApplied[16];
-            GLfloat limbRotationOnPivotApplied[16];
-            GLfloat limbTranslationToOriginApplied[16];
-            GLfloat limbTranslationBackApplied[16];
-            GLfloat limbGlobalScalingMatrix[16];
-            for (int j = 0; j < 16; j++) {
-                limbGlobalScalingMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
-            }
-            GLfloat limbGlobalScalingApplied[16];
-            GLfloat limbGlobalRotationMatrix[16];
-            for (int j = 0; j < 16; j++) {
-                limbGlobalRotationMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
-            }
-            GLfloat limbGlobalRotationApplied[16];
-            GLfloat limbGlobalTranslationApplied[16];
+
 
             for (int j = 0; j < 16; j++) {
                 limbTransformationMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
@@ -426,23 +445,17 @@ int main() {
             limbRotationMatrix[5] = cosLimbTheta;
             multiplyMatrices(limbRotationApplied, limbTransformationMatrix, limbRotationMatrix);
 
-            // Q: Why is this in the opposite order?
+            // Translation must happen after rotation
             multiplyMatrices(limbRotationOnPivotApplied, limbRotationApplied, limbTranslationToOriginApplied);
 
             // translate the limb back
-            for (int j = 0; j < 16; j++) {
-                if (j == 12) {
-                    limbTranslationBackApplied[j] = limbRotationOnPivotApplied[j] + scaledCentroid.x;
-                } else if (j == 13) {
-                    limbTranslationBackApplied[j] = limbRotationOnPivotApplied[j] + scaledCentroid.y;
-                } else {
-                    limbTranslationBackApplied[j] = limbRotationOnPivotApplied[j];
-                }
-            }
+            translate(limbRotationOnPivotApplied, scaledCentroid.x, scaledCentroid.y);
+
             // apply global scaling
             limbGlobalScalingMatrix[0] = state.scaleFactorX;
             limbGlobalScalingMatrix[5] = state.scaleFactorY;
-            multiplyMatrices(limbGlobalScalingApplied, limbTranslationBackApplied, limbGlobalScalingMatrix);
+            // Rotation must happen after scaling
+            multiplyMatrices(limbGlobalScalingApplied, limbRotationOnPivotApplied, limbGlobalScalingMatrix);
 
             // apply global rotation
             GLfloat globalCosTheta = cos(state.rotationAngle);
@@ -451,55 +464,25 @@ int main() {
             limbGlobalRotationMatrix[1] = -globalSinTheta;
             limbGlobalRotationMatrix[4] = globalSinTheta;
             limbGlobalRotationMatrix[5] = globalCosTheta;
+            // Translation must happen after rotation
             multiplyMatrices(limbGlobalRotationApplied, limbGlobalRotationMatrix, limbGlobalScalingApplied);
 
             // apply global translation
-            for (int j = 0; j < 16; j++) {
-                if (j == 12) {
-                    limbGlobalTranslationApplied[j] = limbGlobalRotationApplied[j] + state.translateX;
-                } else if (j == 13) {
-                    limbGlobalTranslationApplied[j] = limbGlobalRotationApplied[j] + state.translateY;
-                } else {
-                    limbGlobalTranslationApplied[j] = limbGlobalRotationApplied[j];
-                }
-            }
+            translate(limbGlobalRotationApplied, state.translateX, state.translateY);
 
-            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, limbGlobalTranslationApplied);
+            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, limbGlobalRotationApplied);
             glDrawArrays(GL_TRIANGLES, i * 3, limbs[i].numVertices);
         }
 
         // --------------- REST OF MODEL --------------- //
-        // set the transformation matrix to the unit matrix
-        for (int i = 0; i < 16; i++) {
-            transformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
-        }
+        reset(transformationMatrix);
 
-        // apply global scaling
-        scalingMatrix[0] = state.scaleFactorX;
-        scalingMatrix[5] = state.scaleFactorY;
-        multiplyMatrices(scalingApplied, transformationMatrix, scalingMatrix);
+        scale(transformationMatrix, state.scaleFactorX, state.scaleFactorY);
+        rotate(transformationMatrix, state.rotationAngle);
+        translate(transformationMatrix, state.translateX, state.translateY);
 
-        // apply global rotation
-        GLfloat cosTheta = cos(state.rotationAngle);
-        GLfloat sinTheta = sin(state.rotationAngle);
-        rotationMatrix[0] = cosTheta;
-        rotationMatrix[1] = -sinTheta;
-        rotationMatrix[4] = sinTheta;
-        rotationMatrix[5] = cosTheta;
-        multiplyMatrices(rotationApplied, scalingApplied, rotationMatrix);
+        glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, transformationMatrix );
 
-        // apply global translation
-        for (int i = 0; i < 16; i++) {
-            if (i == 12) {
-                translationApplied[i] = rotationApplied[i] + state.translateX;
-            } else if (i == 13) {
-                translationApplied[i] = rotationApplied[i] + state.translateY;
-            } else {
-                translationApplied[i] = rotationApplied[i];
-            }
-        }
-
-        glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, translationApplied );
         // uncomment for .obj file
         // glDrawArrays(GL_TRIANGLES, 3 * numLimbs, numberOfVertices );
 
