@@ -266,7 +266,7 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/0281
             iss >> type;
             float z;
     
-            if (limbs[currentLimb].numVertices < 3) {
+            if (numLimbs > 0 && limbs[currentLimb].numVertices < 3) {
                 if (type == 'v') {
                     float x, y, r, g, b;
                     iss >> x >> y >> z >> r >> g >> b;

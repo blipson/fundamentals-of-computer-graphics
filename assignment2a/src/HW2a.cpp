@@ -272,10 +272,10 @@ void init(GLint* transformationMatrixLocation)
     int numVertices = 0;
     GLuint vao[1], buffer, program, location1, location2;
 
-//    readVerticesFromFile("../src/model.txt", vertices, colors, numVertices);
-    readVerticesFromFile("../src/cow-nonormals.obj", vertices, colors, numVertices);
+    readVerticesFromFile("../src/model.txt", vertices, colors, numVertices);
     // needed for .obj files
-     scaleAndTranslate(vertices, numVertices);
+    // readVerticesFromFile("../src/cow-nonormals.obj", vertices, colors, numVertices);
+    // scaleAndTranslate(vertices, numVertices);
 
     glGenVertexArrays( 1, vao );
     glBindVertexArray( vao[0] );
@@ -501,7 +501,7 @@ int main() {
 
         glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, translationApplied );
         // uncomment for .obj file
-         glDrawArrays(GL_TRIANGLES, 3 * numLimbs, numberOfVertices );
+        // glDrawArrays(GL_TRIANGLES, 3 * numLimbs, numberOfVertices );
 
 		glFlush();
         glfwSwapBuffers(window);
