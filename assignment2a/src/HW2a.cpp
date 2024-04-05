@@ -27,6 +27,8 @@ typedef struct {
     ColorType3D* colors;
 } Limb;
 
+// Uncomment for .obj files
+// int numLimbs = 0;
 int numLimbs = 3;
 Limb* limbs = (Limb*) malloc(numLimbs * sizeof(Limb));
 
@@ -212,7 +214,7 @@ void readVerticesFromFile(const std::string& filename, FloatType2D vertices[], C
         iss >> type;
         float z;
 
-        if (limbs[currentLimb].numVertices < 3) {
+        if (numLimbs > 0 && limbs[currentLimb].numVertices < 3) {
             if (type == 'v') {
                 float x, y, r, g, b;
                 iss >> x >> y >> z >> r >> g >> b;
@@ -270,9 +272,10 @@ void init(GLint* transformationMatrixLocation)
     int numVertices = 0;
     GLuint vao[1], buffer, program, location1, location2;
 
-    readVerticesFromFile("/Users/Z003YW4/github.com/fundamentals-of-computer-graphics/assignment2a/src/model.txt", vertices, colors, numVertices);
+//    readVerticesFromFile("../src/model.txt", vertices, colors, numVertices);
+    readVerticesFromFile("../src/cow-nonormals.obj", vertices, colors, numVertices);
     // needed for .obj files
-    // scaleAndTranslate(vertices, numVertices);
+     scaleAndTranslate(vertices, numVertices);
 
     glGenVertexArrays( 1, vao );
     glBindVertexArray( vao[0] );
@@ -498,7 +501,7 @@ int main() {
 
         glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, translationApplied );
         // uncomment for .obj file
-        // glDrawArrays(GL_TRIANGLES, 3 * numLimbs, numberOfVertices );
+         glDrawArrays(GL_TRIANGLES, 3 * numLimbs, numberOfVertices );
 
 		glFlush();
         glfwSwapBuffers(window);
