@@ -23,6 +23,8 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/2aac
 - **Please note that most `.obj` files are defined in 3D space so rendering them in 2D can make them look like segments are missing. This is normal, expected behavior.**
 
 ### Rotating individual limbs
+https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/02818a5b-3192-4a5f-8901-2653c37c9b3a
+
 
 # Grading Criteria
 - The program correctly recognizes when one of the arrow keys has been pressed, and an
