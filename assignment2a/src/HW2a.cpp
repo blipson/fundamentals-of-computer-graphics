@@ -85,6 +85,19 @@ void resetMatrix() {
     state.translateY = 0.0;
 }
 
+FloatType2D computeCentroid(FloatType2D vertices[], int numVertices) {
+    FloatType2D result;
+    result.x = 0.0f;
+    result.y = 0.0f;
+    for (int i = 0; i < numVertices; ++i) {
+        result.x += vertices[i].x;
+        result.y += vertices[i].y;
+    }
+    result.x /= (float) numVertices;
+    result.y /= (float) numVertices;
+    return result;
+}
+
 static void error_callback(int error, const char* description){
     fputs(description, stderr);
 }
@@ -140,18 +153,6 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
     }
 }
 
-FloatType2D computeCentroid(FloatType2D vertices[], int numVertices) {
-    FloatType2D result;
-    result.x = 0.0f;
-    result.y = 0.0f;
-    for (int i = 0; i < numVertices; ++i) {
-        result.x += vertices[i].x;
-        result.y += vertices[i].y;
-    }
-    result.x /= (float) numVertices;
-    result.y /= (float) numVertices;
-    return result;
-}
 
 static void cursor_pos_callback(GLFWwindow* window, double xPos, double yPos) {
     double dx = xPos - state.previousMouseX;
@@ -348,8 +349,6 @@ int main() {
     init(&transformationMatrixLocation);
 
     // Q: what's the difference between triangles and triangle strips?
-
-
     GLfloat transformationMatrix[16];
     GLfloat scalingMatrix[16];
     for (int i = 0; i < 16; i++) {
@@ -498,7 +497,8 @@ int main() {
         }
 
         glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, translationApplied );
-//        glDrawArrays(GL_TRIANGLES, 3, numberOfVertices );
+        // uncomment for .obj file
+        // glDrawArrays(GL_TRIANGLES, 3 * numLimbs, numberOfVertices );
 
 		glFlush();
         glfwSwapBuffers(window);

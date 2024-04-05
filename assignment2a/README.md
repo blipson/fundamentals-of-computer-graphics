@@ -12,7 +12,7 @@ $ make
 - Use the arrow keys to scale the model.
 - Use the mouse button + mouse movement left and right to rotate the model.
 - Use the ctrl key + mouse button + mouse movement to translate the model.
-- Use the shift key + mouse button + mouse movement to rotate the limb.
+- Use the shift key + mouse button + mouse movement to rotate the triangles as individual limbs.
 
 # Showcase
 ### Base assignment
@@ -22,6 +22,7 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/2aac
 ![cow](cow.png "Cow")
 - **Please note that most `.obj` files are defined in 3D space so rendering them in 2D can make them look like segments are missing. This is normal, expected behavior.**
 
+### Rotating individual limbs
 
 # Grading Criteria
 - The program correctly recognizes when one of the arrow keys has been pressed, and an
@@ -29,41 +30,41 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/2aac
   intended to control the scaling of the model). (5 pts)
 - ```c++
   static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-      if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-          glfwSetWindowShouldClose(window, GL_TRUE);
-      }
-    
-      switch (key) {
-          case GLFW_KEY_LEFT:
-              state.operation = SCALE;
-              if (state.scaleFactorX > 0.01) {
-                  state.scaleFactorX *= 0.9;
-              }
-              break;
-          case GLFW_KEY_RIGHT:
-              state.operation = SCALE;
-              state.scaleFactorX *= 1.1;
-              break;
-          case GLFW_KEY_UP:
-              state.operation = SCALE;
-              state.scaleFactorY *= 1.1;
-              break;
-          case GLFW_KEY_DOWN:
-              state.operation = SCALE;
-              if (state.scaleFactorY > 0.01) {
-                  state.scaleFactorY *= 0.9;
-              }
-              break;
-          case GLFW_KEY_R:
-              state.operation = RESET;
-              resetMatrix();
-              break;
-          case GLFW_KEY_Q:
-              glfwSetWindowShouldClose(window, GL_TRUE);
-              break;
-          default:
-              break;
-      }
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, GL_TRUE);
+    }
+
+    switch (key) {
+        case GLFW_KEY_LEFT:
+            state.operation = SCALE;
+            if (state.scaleFactorX > 0.01) {
+                state.scaleFactorX *= 0.9;
+            }
+            break;
+        case GLFW_KEY_RIGHT:
+            state.operation = SCALE;
+            state.scaleFactorX *= 1.1;
+            break;
+        case GLFW_KEY_UP:
+            state.operation = SCALE;
+            state.scaleFactorY *= 1.1;
+            break;
+        case GLFW_KEY_DOWN:
+            state.operation = SCALE;
+            if (state.scaleFactorY > 0.01) {
+                state.scaleFactorY *= 0.9;
+            }
+            break;
+        case GLFW_KEY_R:
+            state.operation = RESET;
+            resetMatrix();
+            break;
+        case GLFW_KEY_Q:
+            glfwSetWindowShouldClose(window, GL_TRUE);
+            break;
+        default:
+            break;
+    }
   }
   ```
 - The program successfully enables the user to separately adjust the intrinsic width and
@@ -94,7 +95,7 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/2aac
   alternative key is pressed, the program attempts to use the cursor’s movement to modify
   parameters pertaining to the object’s rotation. (5 pts)
   - ```c++
-      
+    
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
         glfwGetCursorPos(window, &state.mouseX, &state.mouseY);
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && mods != GLFW_MOD_CONTROL && mods != GLFW_MOD_SHIFT) {
@@ -109,33 +110,36 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/2aac
     }
     
     static void cursor_pos_callback(GLFWwindow* window, double xPos, double yPos) {
-        double dx = xPos - state.previousMouseX;
-        double dy = yPos - state.previousMouseY;
-        state.previousMouseX = xPos;
-        state.previousMouseY = yPos;
-        if (xPos < 0 || xPos > window_width || yPos < 0 || yPos > window_height) {
-            return;
-        }
-        if (state.operation == ROTATE) {
-            state.rotationAngle += 2.0f * (float) dx / (float) window_width * pi;
-            if (state.rotationAngle > 2 * pi)
-                state.rotationAngle -= 2 * pi;
-            else if (state.rotationAngle < - 2 * pi)
-                state.rotationAngle += 2 * pi;
-        } else if (state.operation == ROTATE_LIMB) {
-            state.limbRotationAngle += 2.0f * (float) dx / (float) window_width * pi;
-            if (state.limbRotationAngle > 2 * pi)
-                state.limbRotationAngle -= 2 * pi;
-            else if (state.limbRotationAngle < - 2 * pi)
-                state.limbRotationAngle += 2 * pi;
-        } else if (state.operation == TRANSLATE) {
-            if ((dx > 0 && state.translateX < 0.99) || (dx < 0 && state.translateX > -0.99)) {
-                state.translateX += (float) dx / ((float) window_width/ 2);
-            }
-            if ((dy < 0 && state.translateY < 0.99) || (dy > 0 && state.translateY > -0.99)) {
-                state.translateY += -((float) dy) / ((float) window_height / 2);
-            }
-        }
+      double dx = xPos - state.previousMouseX;
+      double dy = yPos - state.previousMouseY;
+      state.previousMouseX = xPos;
+      state.previousMouseY = yPos;
+      if (xPos < 0 || xPos > window_width || yPos < 0 || yPos > window_height) {
+          return;
+      }
+      if (state.operation == ROTATE) {
+          state.rotationAngle += 2.0f * (float) dx / (float) window_width * pi;
+          if (state.rotationAngle > 2 * pi) {
+              state.rotationAngle -= 2 * pi;
+          }
+          else if (state.rotationAngle < - 2 * pi) {
+              state.rotationAngle += 2 * pi;
+          }
+      } else if (state.operation == ROTATE_LIMB) {
+          state.limbRotationAngle += 2.0f * (float) dx / (float) window_width * pi;
+          if (state.limbRotationAngle > 2 * pi) {
+              state.limbRotationAngle -= 2 * pi;
+          } else if (state.limbRotationAngle < - 2 * pi) {
+              state.limbRotationAngle += 2 * pi;
+          }
+      } else if (state.operation == TRANSLATE) {
+          if ((dx > 0 && state.translateX < 0.99) || (dx < 0 && state.translateX > -0.99)) {
+              state.translateX += (float) dx / ((float) window_width/ 2);
+          }
+          if ((dy < 0 && state.translateY < 0.99) || (dy > 0 && state.translateY > -0.99)) {
+              state.translateY += -((float) dy) / ((float) window_height / 2);
+          }
+      }
     }
     ```
 - The program successfully enables the user to interactively rotate a 2D geometric object
@@ -168,12 +172,30 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/2aac
   within the viewing window (15 pts)
   - The order is correctly defined
   - ```c++
-    for (int i = 0; i < 16; i++) {
-        transformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+    // apply global scaling
+    limbGlobalScalingMatrix[0] = state.scaleFactorX;
+    limbGlobalScalingMatrix[5] = state.scaleFactorY;
+    multiplyMatrices(limbGlobalScalingApplied, limbTranslationBackApplied, limbGlobalScalingMatrix);
+
+    // apply global rotation
+    GLfloat globalCosTheta = cos(state.rotationAngle);
+    GLfloat globalSinTheta = sin(state.rotationAngle);
+    limbGlobalRotationMatrix[0] = globalCosTheta;
+    limbGlobalRotationMatrix[1] = -globalSinTheta;
+    limbGlobalRotationMatrix[4] = globalSinTheta;
+    limbGlobalRotationMatrix[5] = globalCosTheta;
+    multiplyMatrices(limbGlobalRotationApplied, limbGlobalRotationMatrix, limbGlobalScalingApplied);
+
+    // apply global translation
+    for (int j = 0; j < 16; j++) {
+        if (j == 12) {
+            limbGlobalTranslationApplied[j] = limbGlobalRotationApplied[j] + state.translateX;
+        } else if (j == 13) {
+            limbGlobalTranslationApplied[j] = limbGlobalRotationApplied[j] + state.translateY;
+        } else {
+            limbGlobalTranslationApplied[j] = limbGlobalRotationApplied[j];
+        }
     }
-    applyTranslation(transformationMatrix);
-    applyRotation(transformationMatrix);
-    applyScaling(transformationMatrix);
     ```
 - The program prevents the user from entering a failure state in which the window appears
   empty because the object has been completely moved to an unseen location off screen. Although
@@ -215,20 +237,21 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/2aac
   - **Please note that most `.obj` files are defined in 3D space so rendering them in 2D can make them look like segments are missing. This is normal, expected behavior.**
   - ```c++
     void readVerticesFromFile(const std::string& filename, FloatType2D vertices[], ColorType3D colors[], int& numVertices) {
-    
         std::ifstream file(filename);
         if (!file.is_open()) {
             std::cerr << "Unable to open file: " << filename << std::endl;
             exit(EXIT_FAILURE);
         }
-        limbs[0] = (Limb) {
-            .vertices = (FloatType2D *) malloc(3 * sizeof(FloatType2D)),
-            .numVertices = 0,
-            .colors= (ColorType3D *) malloc(3 * sizeof(ColorType3D)),
-            .rotationAngle = 0.0f,
-        };
+        for (int i = 0; i < numLimbs; i++) {
+            limbs[i] = (Limb) {
+                    .vertices = (FloatType2D*) malloc(3 * sizeof(FloatType2D)),
+                    .numVertices = 0,
+                    .colors= (ColorType3D*) malloc(3 * sizeof(ColorType3D)),
+            };
+        }
         std::string line;
         numVertices = 0;
+        int currentLimb = 0;
         while (std::getline(file, line)) {
             if (line.empty()) {
                 continue;
@@ -237,24 +260,27 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/2aac
             char type;
             iss >> type;
             float z;
-
-            if (limbs[0].numVertices < 3) {
+    
+            if (limbs[currentLimb].numVertices < 3) {
                 if (type == 'v') {
                     float x, y, r, g, b;
                     iss >> x >> y >> z >> r >> g >> b;
-                    limbs[0].vertices[limbs[0].numVertices].x = x;
-                    limbs[0].vertices[limbs[0].numVertices].y = y;
-                    limbs[0].colors[limbs[0].numVertices].r = r;
-                    limbs[0].colors[limbs[0].numVertices].g = g;
-                    limbs[0].colors[limbs[0].numVertices].b = b;
-                    limbs[0].numVertices++;
-
+                    limbs[currentLimb].vertices[limbs[currentLimb].numVertices].x = x;
+                    limbs[currentLimb].vertices[limbs[currentLimb].numVertices].y = y;
+                    limbs[currentLimb].colors[limbs[currentLimb].numVertices].r = r;
+                    limbs[currentLimb].colors[limbs[currentLimb].numVertices].g = g;
+                    limbs[currentLimb].colors[limbs[currentLimb].numVertices].b = b;
+                    limbs[currentLimb].numVertices++;
+    
                     vertices[numVertices].x = x;
                     vertices[numVertices].y = y;
                     colors[numVertices].r = r;
                     colors[numVertices].g = g;
                     colors[numVertices].b = b;
                     numVertices++;
+                    if (numVertices % 3 == 0) {
+                        currentLimb++;
+                    }
                 }
             } else {
                 if (type == 'v') {
@@ -263,7 +289,7 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/2aac
                 }
             }
         }
-
+    
         file.close();
     }
     ```
@@ -273,19 +299,47 @@ https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/2aac
   one of the limbs of the figure around a specific joint, the program should still ensure that the
   limb will be appropriately translated and scaled along with the rest of the body when those global
   operations are applied to the whole figure. (5 pts)
-  - ```c++
-    for (int i = 0; i < 16; i++) {
-        transformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
-    }
+- ```c++
+  for (int j = 0; j < 16; j++) {
+      limbTransformationMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
+  }
+  state.centroid = computeCentroid(limbs[i].vertices, limbs[i].numVertices);
 
-    state.centroid.x = 0;
-    state.centroid.y = 0.58333f * state.scaleFactorY;
-    applyLimbRotation(transformationMatrix);
-    applyLimbTranslation(transformationMatrix);
-    applyScaling(transformationMatrix);
-    state.centroid.x = 0;
-    state.centroid.y = 0;
+  FloatType2D scaledCentroid = (FloatType2D) {
+          .x = state.centroid.x * state.scaleFactorX,
+          .y = state.centroid.y * state.scaleFactorY
+  };
 
-    glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, transformationMatrix );
-    glDrawArrays(GL_TRIANGLES, 0, limbs[0].numVertices);
-    ```
+  // translate the limb to 0,0
+  for (int j = 0; j < 16; j++) {
+      if (j == 12) {
+          limbTranslationToOriginApplied[j] = limbTransformationMatrix[j] - scaledCentroid.x;
+      } else if (j == 13) {
+          limbTranslationToOriginApplied[j] = limbTransformationMatrix[j] - scaledCentroid.y;
+      } else {
+          limbTranslationToOriginApplied[j] = limbTransformationMatrix[j];
+      }
+  }
+
+  // apply limb rotation
+  GLfloat cosLimbTheta = cos(state.limbRotationAngle);
+  GLfloat sinLimbTheta = sin(state.limbRotationAngle);
+  limbRotationMatrix[0] = cosLimbTheta;
+  limbRotationMatrix[1] = -sinLimbTheta;
+  limbRotationMatrix[4] = sinLimbTheta;
+  limbRotationMatrix[5] = cosLimbTheta;
+  multiplyMatrices(limbRotationApplied, limbTransformationMatrix, limbRotationMatrix);
+
+  multiplyMatrices(limbRotationOnPivotApplied, limbRotationApplied, limbTranslationToOriginApplied);
+
+  // translate the limb back
+  for (int j = 0; j < 16; j++) {
+      if (j == 12) {
+          limbTranslationBackApplied[j] = limbRotationOnPivotApplied[j] + scaledCentroid.x;
+      } else if (j == 13) {
+          limbTranslationBackApplied[j] = limbRotationOnPivotApplied[j] + scaledCentroid.y;
+      } else {
+          limbTranslationBackApplied[j] = limbRotationOnPivotApplied[j];
+      }
+  }
+  ```
