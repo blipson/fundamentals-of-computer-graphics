@@ -39,5 +39,10 @@ assignment2a/CMakeFiles/
 assignment2a/Makefile
 assignment2a/cmake_install.cmake
 assignment2a/HW2a
+assignment2b/.idea
+assignment2b/CMakeCache.txt
+assignment2b/CMakeFiles/
+assignment2b/Makefile
+assignment2b/cmake_install.cmake
 opengl/cmake-build-debug
 opengl/.idea
