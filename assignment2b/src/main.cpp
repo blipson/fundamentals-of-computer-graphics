@@ -25,6 +25,11 @@ public:
 		m[2] = 0.f;  m[6] = 0.f;  m[10] = 1.f;  m[14] = 0.f;
 		m[3] = 0.f;  m[7] = 0.f;  m[11] = 0.f;  m[15] = 1.f;
 	}
+
+    void make_scale(float x, float y, float z){
+        make_identity();
+        m[0] = x; m[5] = y; m[10] = z;
+    }
 };
 
 static inline Vec3f operator*(const Mat4x4 &m, const Vec3f &v) {
@@ -96,26 +101,6 @@ Vec3f normalize(const Vec3f &v) {
 }
 
 
-void resetView() {
-    Globals::view.make_identity();
-    Vec3f cameraForward(0.0f, 0.0f, -1.0f);
-    Vec3f cameraRight(1.0f, 0.0f, 0.0f);
-    Vec3f cameraUp(0.0f, 1.0f, 0.0f);
-
-    Mat4x4 rotationMatrix;
-    rotationMatrix.m[0] = cameraRight[0];
-    rotationMatrix.m[1] = cameraRight[1];
-    rotationMatrix.m[2] = cameraRight[2];
-    rotationMatrix.m[4] = cameraUp[0];
-    rotationMatrix.m[5] = cameraUp[1];
-    rotationMatrix.m[6] = cameraUp[2];
-    rotationMatrix.m[8] = -cameraForward[0];
-    rotationMatrix.m[9] = -cameraForward[1];
-    rotationMatrix.m[10] = -cameraForward[2];
-
-    Globals::view = rotationMatrix;
-}
-
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         float move_speed = 0.1f;
@@ -141,13 +126,14 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
                 Globals::view.m[14] -= move_speed;
                 break;
             case GLFW_KEY_A:
+                // u v n are the rows
                 Globals::view = Globals::view * rotation_y(-rotate_speed);
                 break;
             case GLFW_KEY_D:
                 Globals::view = Globals::view * rotation_y(rotate_speed);
                 break;
             case GLFW_KEY_R:
-                resetView();
+                Globals::view.make_identity();
                 break;
             case GLFW_KEY_UP:
                 angle = rotation_speed;
@@ -176,7 +162,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         rotation_matrix.m[8] = rotation_axis[2] * rotation_axis[0] * one_minus_cos_theta - rotation_axis[1] * sin_theta;
         rotation_matrix.m[9] = rotation_axis[2] * rotation_axis[1] * one_minus_cos_theta + rotation_axis[0] * sin_theta;
         rotation_matrix.m[10] = cos_theta + rotation_axis[2] * rotation_axis[2] * one_minus_cos_theta;
-        Globals::view = rotation_matrix * Globals::view;
+        // rebuild the view matrix
+        // change the camera location and the view dir
+        Globals::view = Globals::view * rotation_matrix;
     }
 }
 
@@ -239,6 +227,33 @@ int main() {
     Globals::mesh.print_details();
 
 
+    // Forcibly scale the mesh vertices so that the entire model fits within a (-1,1) volume: the code below is a temporary measure that is needed to enable the entire model to be visible in the template app, before the student has defined the proper viewing and projection matrices
+    // This code should eventually be replaced by the use of an appropriate projection matrix
+    // FYI: the model dimensions are: center = (0,0,0); height: 30.6; length: 40.3; width: 17.0
+    // find the extremum of the vertex locations (this approach works because the model is known to be centered; a more complicated method would be required in the general case)
+    float min, max, scale;
+    min = Globals::mesh.vertices[0][0]; max = Globals::mesh.vertices[0][0];
+    for( int i=0; i<Globals::mesh.vertices.size(); ++i ){
+        if (Globals::mesh.vertices[i][0] < min) min = Globals::mesh.vertices[i][0];
+        else if (Globals::mesh.vertices[i][0] > max) max = Globals::mesh.vertices[i][0];
+        if (Globals::mesh.vertices[i][1] < min) min = Globals::mesh.vertices[i][1];
+        else if (Globals::mesh.vertices[i][1] > max) max = Globals::mesh.vertices[i][1];
+        if (Globals::mesh.vertices[i][2] < min) min = Globals::mesh.vertices[i][2];
+        else if (Globals::mesh.vertices[i][2] > max) max = Globals::mesh.vertices[i][2];
+    }
+    // work with positive numbers
+    if (min < 0) min = -min;
+    // scale so that the component that is most different from 0 is mapped to 1 (or -1); all other values will then by definition fall between -1 and 1
+    if (max > min) scale = 1/max; else scale = 1/min;
+
+    // scale the model vertices by brute force
+    Mat4x4 mscale; mscale.make_scale( scale, scale, scale );
+    for( int i=0; i<Globals::mesh.vertices.size(); ++i ){
+        Globals::mesh.vertices[i] = mscale*Globals::mesh.vertices[i];
+    }
+    // The above can be removed once a proper projection matrix is defined
+
+
     GLFWwindow* window;
     glfwSetErrorCallback(&error_callback);
     if (!glfwInit()) {
@@ -288,6 +303,10 @@ int main() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Globals::faces_ibo[0]);
 
     while (!glfwWindowShouldClose(window)) {
+        if (true){
+//            printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", Globals::projection.m[0], Globals::projection.m[4], Globals::projection.m[8], Globals::projection.m[12], Globals::projection.m[1], Globals::projection.m[5], Globals::projection.m[9], Globals::projection.m[13], Globals::projection.m[2], Globals::projection.m[6], Globals::projection.m[10], Globals::projection.m[14], Globals::projection.m[3], Globals::projection.m[7], Globals::projection.m[11], Globals::projection.m[15]);
+            printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", Globals::view.m[0], Globals::view.m[4], Globals::view.m[8], Globals::view.m[12], Globals::view.m[1], Globals::view.m[5], Globals::view.m[9], Globals::view.m[13], Globals::view.m[2], Globals::view.m[6], Globals::view.m[10], Globals::view.m[14], Globals::view.m[3], Globals::view.m[7], Globals::view.m[11], Globals::view.m[15]);
+        }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUniformMatrix4fv((GLint) shader.uniform("model"), 1, GL_FALSE, Globals::model.m);

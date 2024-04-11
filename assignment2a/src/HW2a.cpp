@@ -63,17 +63,17 @@ typedef struct {
 } State;
 
 State state = (State) {
-    .mouseX = 0,
-    .mouseY = 0,
-    .operation = RESET,
-    .previousMouseX = 0,
-    .previousMouseY = 0,
-    .rotationAngle = 0,
-    .scaleFactorX = 1,
-    .scaleFactorY = 1,
-    .translateX = 0,
-    .translateY = 0,
-    .centroid = (FloatType2D) { .x = 0, .y = 0 },
+        .mouseX = 0,
+        .mouseY = 0,
+        .operation = RESET,
+        .previousMouseX = 0,
+        .previousMouseY = 0,
+        .rotationAngle = 0,
+        .scaleFactorX = 1,
+        .scaleFactorY = 1,
+        .translateX = 0,
+        .translateY = 0,
+        .centroid = (FloatType2D) { .x = 0, .y = 0 },
 };
 
 void resetMatrix() {
@@ -313,34 +313,53 @@ void multiplyMatrices(GLfloat result[16], const GLfloat matrix1[16], const GLflo
     }
 }
 
+void makeIdentity(GLfloat transformationMatrix[16]) {
+    for (int i = 0; i < 16; i++) {
+        transformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+    }
+}
+
 void scale(GLfloat transformationMatrix[16], GLfloat x, GLfloat y) {
-    transformationMatrix[0] *= x;
-    transformationMatrix[5] *= y;
+    GLfloat scaleMatrix[16];
+    makeIdentity(scaleMatrix);
+    scaleMatrix[0] = x;
+    scaleMatrix[5] = y;
+
+    GLfloat tempMatrix[16];
+    multiplyMatrices(tempMatrix, scaleMatrix, transformationMatrix);
+    for (int i = 0; i < 16; i++) {
+        transformationMatrix[i] = tempMatrix[i];
+    }
 }
 
 void rotate(GLfloat transformationMatrix[16], GLfloat angle) {
     GLfloat cosTheta = cos(angle);
     GLfloat sinTheta = sin(angle);
 
-    GLfloat a = transformationMatrix[0];
-    GLfloat b = transformationMatrix[1];
-    GLfloat c = transformationMatrix[4];
-    GLfloat d = transformationMatrix[5];
+    GLfloat rotateMatrix[16];
+    makeIdentity(rotateMatrix);
+    rotateMatrix[0] = cosTheta;
+    rotateMatrix[1] = sinTheta;
+    rotateMatrix[4] = -sinTheta;
+    rotateMatrix[5] = cosTheta;
 
-    transformationMatrix[0] = a * cosTheta + b * sinTheta;
-    transformationMatrix[1] = -a * sinTheta + b * cosTheta;
-    transformationMatrix[4] = c * cosTheta + d * sinTheta;
-    transformationMatrix[5] = -c * sinTheta + d * cosTheta;
+    GLfloat tempMatrix[16];
+    multiplyMatrices(tempMatrix, rotateMatrix, transformationMatrix);
+    for (int i = 0; i < 16; i++) {
+        transformationMatrix[i] = tempMatrix[i];
+    }
 }
 
 void translate(GLfloat transformationMatrix[16], GLfloat x, GLfloat y) {
-    transformationMatrix[12] += x;
-    transformationMatrix[13] += y;
-}
+    GLfloat translateMatrix[16];
+    makeIdentity(translateMatrix);
+    translateMatrix[12] = x;
+    translateMatrix[13] = y;
 
-void reset(GLfloat transformationMatrix[16]) {
+    GLfloat tempMatrix[16];
+    multiplyMatrices(tempMatrix, translateMatrix, transformationMatrix);
     for (int i = 0; i < 16; i++) {
-        transformationMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+        transformationMatrix[i] = tempMatrix[i];
     }
 }
 
@@ -357,24 +376,24 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	window = glfwCreateWindow(window_width, window_height, "HW2a", NULL, NULL);
+    window = glfwCreateWindow(window_width, window_height, "HW2a", NULL, NULL);
 
     if (!window) {
         printf("GLFW failed to create window; terminating\n");
         glfwTerminate();
         exit(EXIT_FAILURE);
-	}
+    }
 
-	glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(window);
 
     // Load all OpenGL functions (needed if using Windows)
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		printf("gladLoadGLLoader failed; terminating\n");
-		glfwTerminate();
-		exit(EXIT_FAILURE);
-	}
+        printf("gladLoadGLLoader failed; terminating\n");
+        glfwTerminate();
+        exit(EXIT_FAILURE);
+    }
 
-	glfwSwapInterval(1);  // tells the system to wait for the rendered frame to finish updating before swapping buffers; can help to avoid tearing
+    glfwSwapInterval(1);  // tells the system to wait for the rendered frame to finish updating before swapping buffers; can help to avoid tearing
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_pos_callback);
@@ -382,36 +401,22 @@ int main() {
     init(&transformationMatrixLocation);
 
     GLfloat transformationMatrix[16];
-
-
-    GLfloat limbTransformationMatrixStepOne[16];
-    GLfloat limbTransformationMatrixStepTwo[16];
-    GLfloat limbTransformationMatrixStepThree[16];
-    GLfloat limbTransformationMatrixStepFour[16];
-    GLfloat finalLimbTransformationMatrix[16];
-    GLfloat limbGlobalScalingMatrix[16];
-    GLfloat limbGlobalRotationMatrix[16];
-
-    for (int j = 0; j < 16; j++) {
-        limbTransformationMatrixStepFour[j] = (j % 5 == 0) ? 1.0f : 0.0f;
-        limbTransformationMatrixStepThree[j] = (j % 5 == 0) ? 1.0f : 0.0f;
-        limbGlobalScalingMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
-        limbGlobalRotationMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
-    }
+    GLfloat limbTransformationMatrix[16];
+    GLfloat final[16];
 
     while (!glfwWindowShouldClose(window)) {
-		glClear( GL_COLOR_BUFFER_BIT );
+        glClear( GL_COLOR_BUFFER_BIT );
 
         if (DEBUG_ON){
             printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", transformationMatrix[0], transformationMatrix[4], transformationMatrix[8], transformationMatrix[12], transformationMatrix[1], transformationMatrix[5], transformationMatrix[9], transformationMatrix[13], transformationMatrix[2], transformationMatrix[6], transformationMatrix[10], transformationMatrix[14], transformationMatrix[3], transformationMatrix[7], transformationMatrix[11], transformationMatrix[15]);
         }
 
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < numLimbs; i++) {
             for (int j = 0; j < 16; j++) {
-                limbTransformationMatrixStepOne[j] = (j % 5 == 0) ? 1.0f : 0.0f;
-                limbTransformationMatrixStepTwo[j] = (j % 5 == 0) ? 1.0f : 0.0f;
-                finalLimbTransformationMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
+                transformationMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
+                limbTransformationMatrix[j] = (j % 5 == 0) ? 1.0f : 0.0f;
             }
+
             state.centroid = computeCentroid(limbs[i].vertices, limbs[i].numVertices);
 
             FloatType2D scaledCentroid = (FloatType2D) {
@@ -419,41 +424,21 @@ int main() {
                     .y = state.centroid.y * state.scaleFactorY
             };
 
-            // step 1: no scaling, no rotation, translate to 0,0
-            translate(limbTransformationMatrixStepOne, -scaledCentroid.x, -scaledCentroid.y);
+            translate(limbTransformationMatrix, -scaledCentroid.x, -scaledCentroid.y);
+            rotate(limbTransformationMatrix, state.limbRotationAngle);
+            translate(limbTransformationMatrix, scaledCentroid.x, scaledCentroid.y);
 
-            // step 2: no scaling, rotate around 0,0, translate back to centroid, scale globally
-            rotate(limbTransformationMatrixStepTwo, state.limbRotationAngle);
-            // Translation must happen after rotation
-            multiplyMatrices(limbTransformationMatrixStepThree, limbTransformationMatrixStepTwo, limbTransformationMatrixStepOne);
-            translate(limbTransformationMatrixStepThree, scaledCentroid.x, scaledCentroid.y);
+            scale(transformationMatrix, state.scaleFactorX, state.scaleFactorY);
+            rotate(transformationMatrix, state.rotationAngle);
+            translate(transformationMatrix, state.translateX, state.translateY);
 
+            multiplyMatrices(final, transformationMatrix, limbTransformationMatrix);
 
-            // step 3: scale globally
-            limbGlobalScalingMatrix[0] = state.scaleFactorX;
-            limbGlobalScalingMatrix[5] = state.scaleFactorY;
-            multiplyMatrices(limbTransformationMatrixStepFour, limbTransformationMatrixStepThree, limbGlobalScalingMatrix);
-
-            // step 4: rotate globally, translate globally
-            // apply global rotation
-            GLfloat globalCosTheta = cos(state.rotationAngle);
-            GLfloat globalSinTheta = sin(state.rotationAngle);
-            limbGlobalRotationMatrix[0] = globalCosTheta;
-            limbGlobalRotationMatrix[1] = -globalSinTheta;
-            limbGlobalRotationMatrix[4] = globalSinTheta;
-            limbGlobalRotationMatrix[5] = globalCosTheta;
-            // Rotation must happen after scaling, so why are these in this order???
-            // The previous step contains rotation and translation stuff, so it must come after this?
-            multiplyMatrices(finalLimbTransformationMatrix, limbGlobalRotationMatrix, limbTransformationMatrixStepFour);
-
-            // apply global translation
-            translate(finalLimbTransformationMatrix, state.translateX, state.translateY);
-
-            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, finalLimbTransformationMatrix);
+            glUniformMatrix4fv(transformationMatrixLocation, 1, GL_FALSE, final);
             glDrawArrays(GL_TRIANGLES, i * 3, limbs[i].numVertices);
         }
 
-        reset(transformationMatrix);
+        makeIdentity(transformationMatrix);
 
         scale(transformationMatrix, state.scaleFactorX, state.scaleFactorY);
         rotate(transformationMatrix, state.rotationAngle);
@@ -464,12 +449,12 @@ int main() {
         // uncomment for .obj file
         // glDrawArrays(GL_TRIANGLES, 3 * numLimbs, numberOfVertices );
 
-		glFlush();
+        glFlush();
         glfwSwapBuffers(window);
         glfwWaitEvents();
-	}
+    }
 
-	glfwDestroyWindow(window);
-	glfwTerminate();
-	exit(EXIT_SUCCESS);
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    exit(EXIT_SUCCESS);
 }
