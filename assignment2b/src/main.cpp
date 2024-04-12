@@ -104,6 +104,10 @@ Mat4x4 operator*(const Mat4x4 &a, const Mat4x4 &b) {
     return multiply(a, b);
 }
 
+Vec3f normalize(const Vec3f &v) {
+    float length = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    return Vec3f(v[0] / length, v[1] / length, v[2] / length);
+}
 
 namespace Globals {
     float win_width, win_height;
@@ -113,6 +117,10 @@ namespace Globals {
     Vec3f eye = Vec3f(0.0f, -15.0f, 0.0f);
     Vec3f viewDir = Vec3f(-1.0f, 0.0f, 0.0f);
     Vec3f upDir = Vec3f(0.0f, 1.0f, 0.0f);
+
+    Vec3f n = normalize(Globals::viewDir * -1.0f);
+    Vec3f u = normalize(Globals::upDir.cross(n));
+    Vec3f v = normalize(n.cross(u));
 
     Mat4x4 model;
     Mat4x4 view;
@@ -141,16 +149,8 @@ static void error_callback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
 }
 
-Vec3f normalize(const Vec3f &v) {
-    float length = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    return Vec3f(v[0] / length, v[1] / length, v[2] / length);
-}
-
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        Vec3f n = normalize(Globals::viewDir * -1.0f);
-        Vec3f u = normalize(Globals::upDir.cross(n));
-        Vec3f v = normalize(n.cross(u));
         switch (key) {
             case GLFW_KEY_LEFT_BRACKET:
                 Globals::eye[1] -= 0.1f;
@@ -169,26 +169,40 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
                 Globals::eye += Globals::viewDir * -0.1f;
                 break;
             case GLFW_KEY_A:
-                Globals::eye += u * -0.1f;
+                Globals::eye += Globals::u * -0.1f;
                 break;
             case GLFW_KEY_D:
-                Globals::eye += u * 0.1f;
+                Globals::eye += Globals::u * 0.1f;
                 break;
             case GLFW_KEY_R:
                 Globals::eye = Vec3f(0.0f, -15.0f, 0.0f);
                 Globals::viewDir = Vec3f(-1.0f, 0.0f, 0.0f);
                 break;
             case GLFW_KEY_UP:
-                Globals::viewDir = rotation(u, -0.1f) * Globals::viewDir;
+                // TODO:
+                // 1. Translate p by a vector that causes a to pass through
+                //the origin (it already does)
+                // 2. Rotate p by a matrix that causes a to coincide with
+                //any axis (we can choose y)
+                // 3. Rotate p by 30 ̊ about the x axis
+                // 4. Unrotate, Untranslate
+                Globals::viewDir = rotation(Globals::u, -0.1f) * Globals::viewDir;
                 break;
             case GLFW_KEY_DOWN:
-                Globals::viewDir = rotation(u, 0.1f) * Globals::viewDir;
+                // TODO:
+                // 1. Translate p by a vector that causes a to pass through
+                //the origin (it already does)
+                // 2. Rotate p by a matrix that causes a to coincide with
+                //any axis (we can choose y)
+                // 3. Rotate p by 30 ̊ about the x axis
+                // 4. Unrotate, Untranslate
+                Globals::viewDir = rotation(Globals::u, 0.1f) * Globals::viewDir;
                 break;
             case GLFW_KEY_RIGHT:
-                Globals::viewDir = rotation(v, 0.1f) * Globals::viewDir;
+                Globals::viewDir = rotation_y(-0.1f) * Globals::viewDir;
                 break;
             case GLFW_KEY_LEFT:
-                Globals::viewDir = rotation(v, -0.1f) * Globals::viewDir;
+                Globals::viewDir = rotation_y(0.1f) * Globals::viewDir;
                 break;
             default:
                 break;
@@ -305,21 +319,21 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Vec3f n = normalize(Globals::viewDir * -1.0f);
-        Vec3f u = normalize(Globals::upDir.cross(n));
-        Vec3f v = normalize(n.cross(u));
-        float dx = -(Globals::eye.dot(u));
-        float dy = -(Globals::eye.dot(v));
-        float dz = -(Globals::eye.dot(n));
-        Globals::view.m[0] = u[0];
-        Globals::view.m[1] = v[0];
-        Globals::view.m[2] = n[0];
-        Globals::view.m[4] = u[1];
-        Globals::view.m[5] = v[1];
-        Globals::view.m[6] = n[1];
-        Globals::view.m[8] = u[2];
-        Globals::view.m[9] = v[2];
-        Globals::view.m[10] = n[2];
+        Globals::n = normalize(Globals::viewDir * -1.0f);
+        Globals::u = normalize(Globals::upDir.cross(Globals::n));
+        Globals::v = normalize(Globals::n.cross(Globals::u));
+        float dx = -(Globals::eye.dot(Globals::u));
+        float dy = -(Globals::eye.dot(Globals::v));
+        float dz = -(Globals::eye.dot(Globals::n));
+        Globals::view.m[0] = Globals::u[0];
+        Globals::view.m[1] = Globals::v[0];
+        Globals::view.m[2] = Globals::n[0];
+        Globals::view.m[4] = Globals::u[1];
+        Globals::view.m[5] = Globals::v[1];
+        Globals::view.m[6] = Globals::n[1];
+        Globals::view.m[8] = Globals::u[2];
+        Globals::view.m[9] = Globals::v[2];
+        Globals::view.m[10] = Globals::n[2];
         Globals::view.m[12] = dx;
         Globals::view.m[13] = dy;
         Globals::view.m[14] = dz;
