@@ -30,6 +30,14 @@ public:
         make_identity();
         m[0] = x; m[5] = y; m[10] = z;
     }
+
+    void make_translation(float x, float y, float z) {
+        make_identity();
+        m[12] = x;
+        m[13] = y;
+        m[14] = z;
+    }
+
 };
 
 static inline Vec3f operator*(const Mat4x4 &m, const Vec3f &v) {
@@ -47,6 +55,35 @@ static Mat4x4 rotation_y(float angle) {
     rot.m[2] = -sinA;
     rot.m[8] = sinA;
     rot.m[10] = cosA;
+    return rot;
+}
+
+static Mat4x4 rotation(const Vec3f &axis, float angle) {
+    Mat4x4 rot;
+    float cosA = cos(angle);
+    float sinA = sin(angle);
+    float oneMinusCosA = 1 - cosA;
+
+    rot.m[0] = cosA + axis[0] * axis[0] * oneMinusCosA;
+    rot.m[1] = axis[0] * axis[1] * oneMinusCosA - axis[2] * sinA;
+    rot.m[2] = axis[0] * axis[2] * oneMinusCosA + axis[1] * sinA;
+    rot.m[3] = 0.0f;
+
+    rot.m[4] = axis[1] * axis[0] * oneMinusCosA + axis[2] * sinA;
+    rot.m[5] = cosA + axis[1] * axis[1] * oneMinusCosA;
+    rot.m[6] = axis[1] * axis[2] * oneMinusCosA - axis[0] * sinA;
+    rot.m[7] = 0.0f;
+
+    rot.m[8] = axis[2] * axis[0] * oneMinusCosA - axis[1] * sinA;
+    rot.m[9] = axis[2] * axis[1] * oneMinusCosA + axis[0] * sinA;
+    rot.m[10] = cosA + axis[2] * axis[2] * oneMinusCosA;
+    rot.m[11] = 0.0f;
+
+    rot.m[12] = 0.0f;
+    rot.m[13] = 0.0f;
+    rot.m[14] = 0.0f;
+    rot.m[15] = 1.0f;
+
     return rot;
 }
 
@@ -73,22 +110,31 @@ namespace Globals {
     float aspect;
     GLuint verts_vbo[1], colors_vbo[1], normals_vbo[1], faces_ibo[1], tris_vao;
     TriMesh mesh;
+    Vec3f eye = Vec3f(0.0f, -15.0f, 0.0f);
+    Vec3f viewDir = Vec3f(-1.0f, 0.0f, 0.0f);
+    Vec3f upDir = Vec3f(0.0f, 1.0f, 0.0f);
 
     Mat4x4 model;
     Mat4x4 view;
     Mat4x4 projection;
 }
 
+float cotf(float angle) {
+    return 1.0f / tanf(angle);
+}
+
 static Mat4x4 perspective(float aspect) {
-    Mat4x4 proj;
-    float f = 1.0f / tanf(45.0 * 0.5f * (M_PI / 180.0f));
-    proj.m[0] = f / aspect;
-    proj.m[5] = f;
-    proj.m[10] = (100.0 + 0.1) / (0.1 - 100.0);
-    proj.m[11] = -1.0f;
-    proj.m[14] = (2.0f * 100.0 * 0.1) / (0.1 - 100.0);
-    proj.m[15] = 0.0f;
-    return proj;
+    float near = 0.5f;
+    float far = 100.0f;
+    float vfov = 15.0f * (M_PI / 180.0f);
+
+    Mat4x4 perspective;
+    perspective.m[0] = cotf(vfov) / aspect;  perspective.m[4] = 0.0f;                   perspective.m[8] = 0.0f;                             perspective.m[12] = 0.0f;
+    perspective.m[1] = 0.0f;                       perspective.m[5] = cotf(vfov/2.0f);  perspective.m[9] = 0.0f;                             perspective.m[13] = 0.0f;
+    perspective.m[2] = 0.0f;                       perspective.m[6] = 0.0f;                   perspective.m[10] = -((far + near) / (far - near));  perspective.m[14] = (-2.0f * far * near) / (far - near);
+    perspective.m[3] = 0.0f;                       perspective.m[7] = 0.0f;                   perspective.m[11] = -1.0f;                           perspective.m[15] = 0.0f;
+
+    return perspective;
 }
 
 static void error_callback(int error, const char* description) {
@@ -100,71 +146,53 @@ Vec3f normalize(const Vec3f &v) {
     return Vec3f(v[0] / length, v[1] / length, v[2] / length);
 }
 
-
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        float move_speed = 0.1f;
-        float rotate_speed = 0.1f;
-        float translation_speed = 0.1f;
-        float rotation_speed = 0.1f;
-        float angle;
+        Vec3f n = normalize(Globals::viewDir * -1.0f);
+        Vec3f u = normalize(Globals::upDir.cross(n));
+        Vec3f v = normalize(n.cross(u));
         switch (key) {
             case GLFW_KEY_LEFT_BRACKET:
-                Globals::view.m[13] -= translation_speed;
+                Globals::eye[1] -= 0.1f;
                 break;
             case GLFW_KEY_RIGHT_BRACKET:
-                Globals::view.m[13] += translation_speed;
+                Globals::eye[1] += 0.1f;
                 break;
             case GLFW_KEY_ESCAPE:
             case GLFW_KEY_Q:
                 glfwSetWindowShouldClose(window, GL_TRUE);
                 break;
             case GLFW_KEY_W:
-                Globals::view.m[14] += move_speed;
+                Globals::eye += Globals::viewDir * 0.1f;
                 break;
             case GLFW_KEY_S:
-                Globals::view.m[14] -= move_speed;
+                Globals::eye += Globals::viewDir * -0.1f;
                 break;
             case GLFW_KEY_A:
-                // u v n are the rows
-                Globals::view = Globals::view * rotation_y(-rotate_speed);
+                Globals::eye += u * -0.1f;
                 break;
             case GLFW_KEY_D:
-                Globals::view = Globals::view * rotation_y(rotate_speed);
+                Globals::eye += u * 0.1f;
                 break;
             case GLFW_KEY_R:
-                Globals::view.make_identity();
+                Globals::eye = Vec3f(0.0f, -15.0f, 0.0f);
+                Globals::viewDir = Vec3f(-1.0f, 0.0f, 0.0f);
                 break;
             case GLFW_KEY_UP:
-                angle = rotation_speed;
+                Globals::viewDir = rotation(u, -0.1f) * Globals::viewDir;
                 break;
             case GLFW_KEY_DOWN:
-                angle = -rotation_speed;
+                Globals::viewDir = rotation(u, 0.1f) * Globals::viewDir;
+                break;
+            case GLFW_KEY_RIGHT:
+                Globals::viewDir = rotation(v, 0.1f) * Globals::viewDir;
+                break;
+            case GLFW_KEY_LEFT:
+                Globals::viewDir = rotation(v, -0.1f) * Globals::viewDir;
                 break;
             default:
                 break;
         }
-
-        // TODO: fix this axis?
-        Vec3f view_direction = Vec3f(-Globals::view.m[8], -Globals::view.m[9], -Globals::view.m[10]);
-        Vec3f up(0.0f, 1.0f, 0.0f);
-        Vec3f rotation_axis = normalize(view_direction.cross(up));
-        Mat4x4 rotation_matrix;
-        float cos_theta = cos(angle);
-        float sin_theta = sin(angle);
-        float one_minus_cos_theta = 1.0f - cos_theta;
-        rotation_matrix.m[0] = cos_theta + rotation_axis[0] * rotation_axis[0] * one_minus_cos_theta;
-        rotation_matrix.m[1] = rotation_axis[0] * rotation_axis[1] * one_minus_cos_theta - rotation_axis[2] * sin_theta;
-        rotation_matrix.m[2] = rotation_axis[0] * rotation_axis[2] * one_minus_cos_theta + rotation_axis[1] * sin_theta;
-        rotation_matrix.m[4] = rotation_axis[1] * rotation_axis[0] * one_minus_cos_theta + rotation_axis[2] * sin_theta;
-        rotation_matrix.m[5] = cos_theta + rotation_axis[1] * rotation_axis[1] * one_minus_cos_theta;
-        rotation_matrix.m[6] = rotation_axis[1] * rotation_axis[2] * one_minus_cos_theta - rotation_axis[0] * sin_theta;
-        rotation_matrix.m[8] = rotation_axis[2] * rotation_axis[0] * one_minus_cos_theta - rotation_axis[1] * sin_theta;
-        rotation_matrix.m[9] = rotation_axis[2] * rotation_axis[1] * one_minus_cos_theta + rotation_axis[0] * sin_theta;
-        rotation_matrix.m[10] = cos_theta + rotation_axis[2] * rotation_axis[2] * one_minus_cos_theta;
-        // rebuild the view matrix
-        // change the camera location and the view dir
-        Globals::view = Globals::view * rotation_matrix;
     }
 }
 
@@ -226,34 +254,6 @@ int main() {
     if (!Globals::mesh.load_obj(obj_file.str())) { return 0; }
     Globals::mesh.print_details();
 
-
-    // Forcibly scale the mesh vertices so that the entire model fits within a (-1,1) volume: the code below is a temporary measure that is needed to enable the entire model to be visible in the template app, before the student has defined the proper viewing and projection matrices
-    // This code should eventually be replaced by the use of an appropriate projection matrix
-    // FYI: the model dimensions are: center = (0,0,0); height: 30.6; length: 40.3; width: 17.0
-    // find the extremum of the vertex locations (this approach works because the model is known to be centered; a more complicated method would be required in the general case)
-    float min, max, scale;
-    min = Globals::mesh.vertices[0][0]; max = Globals::mesh.vertices[0][0];
-    for( int i=0; i<Globals::mesh.vertices.size(); ++i ){
-        if (Globals::mesh.vertices[i][0] < min) min = Globals::mesh.vertices[i][0];
-        else if (Globals::mesh.vertices[i][0] > max) max = Globals::mesh.vertices[i][0];
-        if (Globals::mesh.vertices[i][1] < min) min = Globals::mesh.vertices[i][1];
-        else if (Globals::mesh.vertices[i][1] > max) max = Globals::mesh.vertices[i][1];
-        if (Globals::mesh.vertices[i][2] < min) min = Globals::mesh.vertices[i][2];
-        else if (Globals::mesh.vertices[i][2] > max) max = Globals::mesh.vertices[i][2];
-    }
-    // work with positive numbers
-    if (min < 0) min = -min;
-    // scale so that the component that is most different from 0 is mapped to 1 (or -1); all other values will then by definition fall between -1 and 1
-    if (max > min) scale = 1/max; else scale = 1/min;
-
-    // scale the model vertices by brute force
-    Mat4x4 mscale; mscale.make_scale( scale, scale, scale );
-    for( int i=0; i<Globals::mesh.vertices.size(); ++i ){
-        Globals::mesh.vertices[i] = mscale*Globals::mesh.vertices[i];
-    }
-    // The above can be removed once a proper projection matrix is defined
-
-
     GLFWwindow* window;
     glfwSetErrorCallback(&error_callback);
     if (!glfwInit()) {
@@ -303,11 +303,29 @@ int main() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Globals::faces_ibo[0]);
 
     while (!glfwWindowShouldClose(window)) {
-        if (true){
-//            printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", Globals::projection.m[0], Globals::projection.m[4], Globals::projection.m[8], Globals::projection.m[12], Globals::projection.m[1], Globals::projection.m[5], Globals::projection.m[9], Globals::projection.m[13], Globals::projection.m[2], Globals::projection.m[6], Globals::projection.m[10], Globals::projection.m[14], Globals::projection.m[3], Globals::projection.m[7], Globals::projection.m[11], Globals::projection.m[15]);
-            printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", Globals::view.m[0], Globals::view.m[4], Globals::view.m[8], Globals::view.m[12], Globals::view.m[1], Globals::view.m[5], Globals::view.m[9], Globals::view.m[13], Globals::view.m[2], Globals::view.m[6], Globals::view.m[10], Globals::view.m[14], Globals::view.m[3], Globals::view.m[7], Globals::view.m[11], Globals::view.m[15]);
-        }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        Vec3f n = normalize(Globals::viewDir * -1.0f);
+        Vec3f u = normalize(Globals::upDir.cross(n));
+        Vec3f v = normalize(n.cross(u));
+        float dx = -(Globals::eye.dot(u));
+        float dy = -(Globals::eye.dot(v));
+        float dz = -(Globals::eye.dot(n));
+        Globals::view.m[0] = u[0];
+        Globals::view.m[1] = v[0];
+        Globals::view.m[2] = n[0];
+        Globals::view.m[4] = u[1];
+        Globals::view.m[5] = v[1];
+        Globals::view.m[6] = n[1];
+        Globals::view.m[8] = u[2];
+        Globals::view.m[9] = v[2];
+        Globals::view.m[10] = n[2];
+        Globals::view.m[12] = dx;
+        Globals::view.m[13] = dy;
+        Globals::view.m[14] = dz;
+
+//        printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", Globals::projection.m[0], Globals::projection.m[4], Globals::projection.m[8], Globals::projection.m[12], Globals::projection.m[1], Globals::projection.m[5], Globals::projection.m[9], Globals::projection.m[13], Globals::projection.m[2], Globals::projection.m[6], Globals::projection.m[10], Globals::projection.m[14], Globals::projection.m[3], Globals::projection.m[7], Globals::projection.m[11], Globals::projection.m[15]);
+//        printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", Globals::view.m[0], Globals::view.m[4], Globals::view.m[8], Globals::view.m[12], Globals::view.m[1], Globals::view.m[5], Globals::view.m[9], Globals::view.m[13], Globals::view.m[2], Globals::view.m[6], Globals::view.m[10], Globals::view.m[14], Globals::view.m[3], Globals::view.m[7], Globals::view.m[11], Globals::view.m[15]);
 
         glUniformMatrix4fv((GLint) shader.uniform("model"), 1, GL_FALSE, Globals::model.m);
         glUniformMatrix4fv((GLint) shader.uniform("view"), 1, GL_FALSE, Globals::view.m);
@@ -317,7 +335,6 @@ int main() {
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-
     }
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
