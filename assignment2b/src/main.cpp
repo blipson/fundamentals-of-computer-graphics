@@ -6,6 +6,8 @@
 
 #define WIN_WIDTH 500
 #define WIN_HEIGHT 500
+#define FRUSTUM_WIDTH 0.5
+#define FRUSTUM_HEIGHT 0.5
 
 class Mat4x4 {
 public:
@@ -49,12 +51,12 @@ static inline Vec3f operator*(const Mat4x4 &m, const Vec3f &v) {
 
 static Mat4x4 rotation_y(float angle) {
     Mat4x4 rot;
-    float cosA = cos(angle);
-    float sinA = sin(angle);
-    rot.m[0] = cosA;
-    rot.m[2] = -sinA;
-    rot.m[8] = sinA;
-    rot.m[10] = cosA;
+    float cosTheta = cos(angle);
+    float sinTheta = sin(angle);
+    rot.m[0] = cosTheta;
+    rot.m[2] = -sinTheta;
+    rot.m[8] = sinTheta;
+    rot.m[10] = cosTheta;
     return rot;
 }
 
@@ -111,16 +113,23 @@ Vec3f normalize(const Vec3f &v) {
 
 namespace Globals {
     float win_width, win_height;
+    float near = 0.5f;
+    float far = 100.0f;
+    float left = -FRUSTUM_WIDTH;
+    float right = FRUSTUM_WIDTH;
+    float bottom = -FRUSTUM_HEIGHT;
+    float top = FRUSTUM_HEIGHT;
     float aspect;
+
     GLuint verts_vbo[1], colors_vbo[1], normals_vbo[1], faces_ibo[1], tris_vao;
     TriMesh mesh;
-    Vec3f eye = Vec3f(0.0f, -15.0f, 0.0f);
+    Vec3f eye = Vec3f(-5.0f, -10.0f, 0.0f);
     Vec3f viewDir = Vec3f(-1.0f, 0.0f, 0.0f);
     Vec3f upDir = Vec3f(0.0f, 1.0f, 0.0f);
 
-    Vec3f n = normalize(Globals::viewDir * -1.0f);
-    Vec3f u = normalize(Globals::upDir.cross(n));
-    Vec3f v = normalize(n.cross(u));
+    Vec3f u = normalize(viewDir.cross(upDir));
+    Vec3f v = normalize(u.cross(upDir));
+    Vec3f n = normalize(viewDir * -1.0f);
 
     Mat4x4 model;
     Mat4x4 view;
@@ -131,78 +140,149 @@ float cotf(float angle) {
     return 1.0f / tanf(angle);
 }
 
-static Mat4x4 perspective(float aspect) {
-    float near = 0.5f;
-    float far = 100.0f;
-    float vfov = 15.0f * (M_PI / 180.0f);
-
-    Mat4x4 perspective;
-    perspective.m[0] = cotf(vfov) / aspect;  perspective.m[4] = 0.0f;                   perspective.m[8] = 0.0f;                             perspective.m[12] = 0.0f;
-    perspective.m[1] = 0.0f;                       perspective.m[5] = cotf(vfov/2.0f);  perspective.m[9] = 0.0f;                             perspective.m[13] = 0.0f;
-    perspective.m[2] = 0.0f;                       perspective.m[6] = 0.0f;                   perspective.m[10] = -((far + near) / (far - near));  perspective.m[14] = (-2.0f * far * near) / (far - near);
-    perspective.m[3] = 0.0f;                       perspective.m[7] = 0.0f;                   perspective.m[11] = -1.0f;                           perspective.m[15] = 0.0f;
-
-    return perspective;
-}
-
 static void error_callback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    float speed = 0.1f;
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         switch (key) {
-            case GLFW_KEY_LEFT_BRACKET:
-                Globals::eye[1] -= 0.1f;
-                break;
-            case GLFW_KEY_RIGHT_BRACKET:
-                Globals::eye[1] += 0.1f;
-                break;
             case GLFW_KEY_ESCAPE:
             case GLFW_KEY_Q:
                 glfwSetWindowShouldClose(window, GL_TRUE);
                 break;
-            case GLFW_KEY_W:
-                Globals::eye += Globals::viewDir * 0.1f;
-                break;
-            case GLFW_KEY_S:
-                Globals::eye += Globals::viewDir * -0.1f;
-                break;
-            case GLFW_KEY_A:
-                Globals::eye += Globals::u * -0.1f;
-                break;
-            case GLFW_KEY_D:
-                Globals::eye += Globals::u * 0.1f;
-                break;
             case GLFW_KEY_R:
-                Globals::eye = Vec3f(0.0f, -15.0f, 0.0f);
+                Globals::eye = Vec3f(-5.0f, -10.0f, 0.0f);
                 Globals::viewDir = Vec3f(-1.0f, 0.0f, 0.0f);
                 break;
+
+
+            case GLFW_KEY_W:
+                Globals::eye += Globals::viewDir * speed;
+                break;
+            case GLFW_KEY_A:
+                Globals::eye += Globals::u * -speed;
+                break;
+            case GLFW_KEY_S:
+                Globals::eye += Globals::viewDir * -speed;
+                break;
+            case GLFW_KEY_D:
+                Globals::eye += Globals::u * speed;
+                break;
+
+            case GLFW_KEY_LEFT_BRACKET:
+                Globals::eye[1] -= speed;
+                break;
+            case GLFW_KEY_RIGHT_BRACKET:
+                Globals::eye[1] += speed;
+                break;
+
             case GLFW_KEY_UP:
-                // TODO:
-                // 1. Translate p by a vector that causes a to pass through
-                //the origin (it already does)
-                // 2. Rotate p by a matrix that causes a to coincide with
-                //any axis (we can choose y)
-                // 3. Rotate p by 30 ̊ about the x axis
+            {
+                // 1. Translate p by a vector that causes a to pass through the origin
+                Mat4x4 translate;
+                translate.m[12] = -Globals::eye[0];
+                translate.m[13] = -Globals::eye[1];
+                translate.m[14] = -Globals::eye[2];
+
+                // 2. Rotate p by a matrix that causes a to coincide with any axis
+                Mat4x4 rotate;
+                rotate.m[0] = Globals::u[0];
+                rotate.m[4] = Globals::u[1];
+                rotate.m[8] = Globals::u[2];
+                rotate.m[1] = Globals::v[0];
+                rotate.m[5] = Globals::v[1];
+                rotate.m[9] = Globals::v[2];
+                rotate.m[2] = Globals::n[0];
+                rotate.m[6] = Globals::n[1];
+                rotate.m[10] = Globals::n[2];
+
+                Globals::viewDir = rotate * (translate * Globals::viewDir);
+
+                // 3. Rotate p about the y axis
+                float new_y = Globals::viewDir[1] * cos(speed) - Globals::viewDir[2] * sin(speed);
+                float new_z = Globals::viewDir[1] * sin(speed) + Globals::viewDir[2] * cos(speed);
+                Globals::viewDir[1] = new_y;
+                Globals::viewDir[2] = new_z;
+
                 // 4. Unrotate, Untranslate
-                Globals::viewDir = rotation(Globals::u, -0.1f) * Globals::viewDir;
+                Mat4x4 unrotate;
+                unrotate.m[0] = Globals::u[0];
+                unrotate.m[1] = Globals::u[1];
+                unrotate.m[2] = Globals::u[2];
+                unrotate.m[4] = Globals::v[0];
+                unrotate.m[5] = Globals::v[1];
+                unrotate.m[6] = Globals::v[2];
+                unrotate.m[8] = Globals::n[0];
+                unrotate.m[9] = Globals::n[1];
+                unrotate.m[10] = Globals::n[2];
+
+                Mat4x4 untranslate;
+                untranslate.m[12] = Globals::eye[0];
+                untranslate.m[13] = Globals::eye[1];
+                untranslate.m[14] = Globals::eye[2];
+
+                Globals::viewDir = untranslate * (unrotate * Globals::viewDir);
+
+                Globals::viewDir = rotation(Globals::u, -speed) * Globals::viewDir;
                 break;
+            }
             case GLFW_KEY_DOWN:
-                // TODO:
-                // 1. Translate p by a vector that causes a to pass through
-                //the origin (it already does)
-                // 2. Rotate p by a matrix that causes a to coincide with
-                //any axis (we can choose y)
-                // 3. Rotate p by 30 ̊ about the x axis
+            {
+                // 1. Translate p by a vector that causes a to pass through the origin
+                Mat4x4 translate;
+                translate.m[12] = -Globals::eye[0];
+                translate.m[13] = -Globals::eye[1];
+                translate.m[14] = -Globals::eye[2];
+
+                // 2. Rotate p by a matrix that causes a to coincide with any axis
+                Mat4x4 rotate;
+                rotate.m[0] = Globals::u[0];
+                rotate.m[4] = Globals::u[1];
+                rotate.m[8] = Globals::u[2];
+                rotate.m[1] = Globals::v[0];
+                rotate.m[5] = Globals::v[1];
+                rotate.m[9] = Globals::v[2];
+                rotate.m[2] = Globals::n[0];
+                rotate.m[6] = Globals::n[1];
+                rotate.m[10] = Globals::n[2];
+
+                Globals::viewDir = rotate * (translate * Globals::viewDir);
+
+                // 3. Rotate p about the y axis
+                float new_y = Globals::viewDir[1] * cos(-speed) - Globals::viewDir[2] * sin(-speed);
+                float new_z = Globals::viewDir[1] * sin(-speed) + Globals::viewDir[2] * cos(-speed);
+                Globals::viewDir[1] = new_y;
+                Globals::viewDir[2] = new_z;
+
                 // 4. Unrotate, Untranslate
-                Globals::viewDir = rotation(Globals::u, 0.1f) * Globals::viewDir;
+                Mat4x4 unrotate;
+                unrotate.m[0] = Globals::u[0];
+                unrotate.m[1] = Globals::u[1];
+                unrotate.m[2] = Globals::u[2];
+                unrotate.m[4] = Globals::v[0];
+                unrotate.m[5] = Globals::v[1];
+                unrotate.m[6] = Globals::v[2];
+                unrotate.m[8] = Globals::n[0];
+                unrotate.m[9] = Globals::n[1];
+                unrotate.m[10] = Globals::n[2];
+
+                Mat4x4 untranslate;
+                untranslate.m[12] = Globals::eye[0];
+                untranslate.m[13] = Globals::eye[1];
+                untranslate.m[14] = Globals::eye[2];
+
+                Globals::viewDir = untranslate * (unrotate * Globals::viewDir);
+
+                Globals::viewDir = rotation(Globals::u, speed) * Globals::viewDir;
                 break;
+            }
             case GLFW_KEY_RIGHT:
-                Globals::viewDir = rotation_y(-0.1f) * Globals::viewDir;
+                Globals::viewDir = rotation_y(-speed) * Globals::viewDir;
                 break;
             case GLFW_KEY_LEFT:
-                Globals::viewDir = rotation_y(0.1f) * Globals::viewDir;
+                Globals::viewDir = rotation_y(speed) * Globals::viewDir;
                 break;
             default:
                 break;
@@ -211,11 +291,30 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 }
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    Globals::win_width = static_cast<float>(width);
-    Globals::win_height = static_cast<float>(height);
+    Globals::win_width = float(width);
+    Globals::win_height = float(height);
     Globals::aspect = Globals::win_width / Globals::win_height;
     glViewport(0, 0, width, height);
-    Globals::projection = perspective(Globals::aspect);
+
+    if (Globals::aspect > 1) {
+        float newBoundary = (Globals::aspect * (Globals::top - Globals::bottom)) / 2.0f;
+        Globals::left = -newBoundary;
+        Globals::right = newBoundary;
+    } else {
+        float newBoundary = ((Globals::right - Globals::left) / Globals::aspect) / 2.0f;
+        Globals::bottom = -newBoundary;
+        Globals::top = newBoundary;
+    }
+
+
+    Globals::projection.m[0] = 2 * Globals::near / (Globals::right - Globals::left);
+    Globals::projection.m[5] = 2 * Globals::near / (Globals::top - Globals::bottom);
+    Globals::projection.m[8] = (Globals::right + Globals::left) / (Globals::right - Globals::left);
+    Globals::projection.m[9] = (Globals::top + Globals::bottom) / (Globals::top - Globals::bottom);
+    Globals::projection.m[10] = -(Globals::far + Globals::near) / (Globals::far - Globals::near);
+    Globals::projection.m[11] = -1;
+    Globals::projection.m[14] = -2 * Globals::far * Globals::near / (Globals::far - Globals::near);
+    Globals::projection.m[15] = 0;
 }
 
 
