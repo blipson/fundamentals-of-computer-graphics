@@ -212,7 +212,7 @@ Vector3 applyTransparency(Scene* scene, Intersection intersection, RayState rayS
     Ray nextIncident = (Ray) {
             .origin = intersection.intersectionPoint,
             .direction = add(
-                    multiply(multiply(intersection.surfaceNormal, -1.0f),cosThetaExiting),
+                    multiply(multiply(intersection.surfaceNormal, -1.0f), cosThetaExiting),
                     multiply(refractionDirToMultiply, refractionCoefficient)
             )
     };
