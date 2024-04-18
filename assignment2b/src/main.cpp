@@ -203,6 +203,17 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     }
 }
 
+static void updateProjectionTransform() {
+    Globals::projection.m[0] = 2 * Globals::near / (Globals::right - Globals::left);
+    Globals::projection.m[5] = 2 * Globals::near / (Globals::top - Globals::bottom);
+    Globals::projection.m[8] = (Globals::right + Globals::left) / (Globals::right - Globals::left);
+    Globals::projection.m[9] = (Globals::top + Globals::bottom) / (Globals::top - Globals::bottom);
+    Globals::projection.m[10] = -(Globals::far + Globals::near) / (Globals::far - Globals::near);
+    Globals::projection.m[11] = -1;
+    Globals::projection.m[14] = -2 * Globals::far * Globals::near / (Globals::far - Globals::near);
+    Globals::projection.m[15] = 0;
+}
+
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     Globals::win_width = float(width);
     Globals::win_height = float(height);
@@ -219,17 +230,8 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
         Globals::top = newBoundary;
     }
 
-
-    Globals::projection.m[0] = 2 * Globals::near / (Globals::right - Globals::left);
-    Globals::projection.m[5] = 2 * Globals::near / (Globals::top - Globals::bottom);
-    Globals::projection.m[8] = (Globals::right + Globals::left) / (Globals::right - Globals::left);
-    Globals::projection.m[9] = (Globals::top + Globals::bottom) / (Globals::top - Globals::bottom);
-    Globals::projection.m[10] = -(Globals::far + Globals::near) / (Globals::far - Globals::near);
-    Globals::projection.m[11] = -1;
-    Globals::projection.m[14] = -2 * Globals::far * Globals::near / (Globals::far - Globals::near);
-    Globals::projection.m[15] = 0;
+    updateProjectionTransform();
 }
-
 
 void init_scene() {
     using namespace Globals;
@@ -272,6 +274,27 @@ void init_scene() {
     glVertexAttribPointer(2, vert_dim, GL_FLOAT, GL_FALSE, sizeof(mesh.normals[0]), 0);
 
     glBindVertexArray(0);
+}
+
+void updateViewTransform() {
+    Globals::n = normalize(Globals::viewDir * -1.0f);
+    Globals::u = normalize(Globals::upDir.cross(Globals::n));
+    Globals::v = normalize(Globals::n.cross(Globals::u));
+    float dx = -(Globals::eye.dot(Globals::u));
+    float dy = -(Globals::eye.dot(Globals::v));
+    float dz = -(Globals::eye.dot(Globals::n));
+    Globals::view.m[0] = Globals::u[0];
+    Globals::view.m[1] = Globals::v[0];
+    Globals::view.m[2] = Globals::n[0];
+    Globals::view.m[4] = Globals::u[1];
+    Globals::view.m[5] = Globals::v[1];
+    Globals::view.m[6] = Globals::n[1];
+    Globals::view.m[8] = Globals::u[2];
+    Globals::view.m[9] = Globals::v[2];
+    Globals::view.m[10] = Globals::n[2];
+    Globals::view.m[12] = dx;
+    Globals::view.m[13] = dy;
+    Globals::view.m[14] = dz;
 }
 
 int main() {
@@ -331,27 +354,7 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Globals::n = normalize(Globals::viewDir * -1.0f);
-        Globals::u = normalize(Globals::upDir.cross(Globals::n));
-        Globals::v = normalize(Globals::n.cross(Globals::u));
-        float dx = -(Globals::eye.dot(Globals::u));
-        float dy = -(Globals::eye.dot(Globals::v));
-        float dz = -(Globals::eye.dot(Globals::n));
-        Globals::view.m[0] = Globals::u[0];
-        Globals::view.m[1] = Globals::v[0];
-        Globals::view.m[2] = Globals::n[0];
-        Globals::view.m[4] = Globals::u[1];
-        Globals::view.m[5] = Globals::v[1];
-        Globals::view.m[6] = Globals::n[1];
-        Globals::view.m[8] = Globals::u[2];
-        Globals::view.m[9] = Globals::v[2];
-        Globals::view.m[10] = Globals::n[2];
-        Globals::view.m[12] = dx;
-        Globals::view.m[13] = dy;
-        Globals::view.m[14] = dz;
-
-//        printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", Globals::projection.m[0], Globals::projection.m[4], Globals::projection.m[8], Globals::projection.m[12], Globals::projection.m[1], Globals::projection.m[5], Globals::projection.m[9], Globals::projection.m[13], Globals::projection.m[2], Globals::projection.m[6], Globals::projection.m[10], Globals::projection.m[14], Globals::projection.m[3], Globals::projection.m[7], Globals::projection.m[11], Globals::projection.m[15]);
-//        printf("M = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n", Globals::view.m[0], Globals::view.m[4], Globals::view.m[8], Globals::view.m[12], Globals::view.m[1], Globals::view.m[5], Globals::view.m[9], Globals::view.m[13], Globals::view.m[2], Globals::view.m[6], Globals::view.m[10], Globals::view.m[14], Globals::view.m[3], Globals::view.m[7], Globals::view.m[11], Globals::view.m[15]);
+        updateViewTransform();
 
         glUniformMatrix4fv((GLint) shader.uniform("model"), 1, GL_FALSE, Globals::model.m);
         glUniformMatrix4fv((GLint) shader.uniform("view"), 1, GL_FALSE, Globals::view.m);
