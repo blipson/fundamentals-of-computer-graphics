@@ -16,8 +16,10 @@ $ make
 
 # Showcase
 ### Base assignment
+https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/88e56907-468f-4b92-9baf-40f70caf6400
 
 ### Extra credit - translating up and down & rotating up and down
+https://github.com/blipson/fundamentals-of-computer-graphics/assets/4571819/38198164-503f-43ca-8cf9-be0ff8df6939
 
 # Grading Criteria
 - The student has submitted a program that compiles and runs. The program contains at
